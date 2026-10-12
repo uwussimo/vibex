@@ -12,9 +12,11 @@ final class SimulatorModel {
     private(set) var errorMessage: String?
     private(set) var isSimslimInstalled = Simslim.isInstalled
 
-    var selectedUDID: String? = Defaults.selectedDeviceUDID {
-        didSet { Defaults.selectedDeviceUDID = selectedUDID }
+    var selectedUDID: String? {
+        didSet { onSelectionChange(selectedUDID) }
     }
+    /// The window persists the selection per project.
+    var onSelectionChange: (String?) -> Void = { _ in }
 
     var isSlimPreferred: Bool = Defaults.slimPreferred {
         didSet { Defaults.slimPreferred = isSlimPreferred }

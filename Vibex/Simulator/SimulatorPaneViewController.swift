@@ -15,6 +15,7 @@ final class SimulatorPaneViewController: NSViewController, NSMenuItemValidation 
     }
 
     let model = SimulatorModel()
+    let session: ProjectSession
 
     var onPreferredWidthChange: (CGFloat) -> Void = { _ in }
     /// Runs a shell command in a new terminal tab (used to install simslim in plain sight).
@@ -37,6 +38,15 @@ final class SimulatorPaneViewController: NSViewController, NSMenuItemValidation 
     private var hasStarted = false
 
     static let gutter: CGFloat = 8
+
+    init(session: ProjectSession) {
+        self.session = session
+        super.init(nibName: nil, bundle: nil)
+        model.selectedUDID = session.state.deviceUDID
+        model.onSelectionChange = { [weak session] udid in session?.update { $0.deviceUDID = udid } }
+    }
+
+    required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
 
     override func loadView() {
         let root = NSView()

@@ -19,12 +19,20 @@ final class TerminalPaneViewController: NSViewController {
         }
     }
 
+    let session: ProjectSession
     private var tabs: [Tab] = []
     private var selectedID: UUID?
     private let tabBarModel = TerminalTabBarModel()
     private let container = NSView()
     private var hasRestored = false
     private var clickMonitor: Any?
+
+    init(session: ProjectSession) {
+        self.session = session
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
 
     override func loadView() {
         let root = NSView()
@@ -83,9 +91,9 @@ final class TerminalPaneViewController: NSViewController {
         super.viewDidAppear()
         guard !hasRestored else { return }
         hasRestored = true
-        let directories = Defaults.terminalTabDirectories
+        let directories = session.state.terminalDirectories.filter { FileManager.default.fileExists(atPath: $0) }
         if directories.isEmpty {
-            openTab(directory: nil)
+            openTab(directory: session.project.path)
         } else {
             for directory in directories { openTab(directory: directory) }
         }
@@ -98,7 +106,10 @@ final class TerminalPaneViewController: NSViewController {
 
     @discardableResult
     private func openTab(directory: String?) -> Tab {
-        let session = TerminalSession.login(directory: directory ?? selectedTab?.directory)
+        let session = TerminalSession.login(
+            directory: directory ?? selectedTab?.directory ?? self.session.project.path,
+            environment: self.session.terminalEnvironment
+        )
         let terminal = LocalProcessTerminalView(frame: container.bounds)
         terminal.autoresizingMask = [.width, .height]
         TerminalTheme.apply(to: terminal)
@@ -196,7 +207,8 @@ final class TerminalPaneViewController: NSViewController {
     }
 
     func persistTabs() {
-        Defaults.terminalTabDirectories = tabs.compactMap(\.directory)
+        let directories = tabs.compactMap(\.directory)
+        session.update { $0.terminalDirectories = directories }
     }
 
     // MARK: - Menu actions

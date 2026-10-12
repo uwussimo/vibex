@@ -7,10 +7,10 @@ struct TerminalSession {
     let environment: [String]
     let directory: String
 
-    /// Extra environment every new shell gets (the MCP server address, for Claude Code).
+    /// Environment every new shell gets app-wide (the MCP server address, for Claude Code).
     nonisolated(unsafe) static var extraEnvironment: [String: String] = [:]
 
-    static func login(directory: String? = nil) -> TerminalSession {
+    static func login(directory: String? = nil, environment windowEnvironment: [String: String] = [:]) -> TerminalSession {
         let shell = preferredShell()
         var env = ProcessInfo.processInfo.environment
         env["TERM"] = "xterm-256color"
@@ -19,6 +19,7 @@ struct TerminalSession {
         env["TERM_PROGRAM_VERSION"] = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0"
         if env["LANG"] == nil { env["LANG"] = "en_US.UTF-8" }
         for (key, value) in extraEnvironment { env[key] = value }
+        for (key, value) in windowEnvironment { env[key] = value }
         env.removeValue(forKey: "TERM_SESSION_ID")
         let home = FileManager.default.homeDirectoryForCurrentUser.path
         let cwd = directory.flatMap { FileManager.default.fileExists(atPath: $0) ? $0 : nil } ?? home

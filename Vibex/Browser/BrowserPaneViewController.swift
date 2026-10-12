@@ -6,6 +6,7 @@ import WebKit
 /// Netflix-first mini browser with tabs: a tab strip, a slim toolbar and one web view per tab.
 /// Background tabs stay alive (and keep playing) while out of the view hierarchy.
 final class BrowserPaneViewController: NSViewController, NSMenuItemValidation {
+    let session: ProjectSession
     private(set) var tabs: [BrowserTab] = []
     private(set) var selectedID: UUID?
 
@@ -17,6 +18,13 @@ final class BrowserPaneViewController: NSViewController, NSMenuItemValidation {
     var selectedTab: BrowserTab? { tabs.first { $0.id == selectedID } }
     /// The web view of the selected tab, for focus and the responder chain.
     var webView: WKWebView? { selectedTab?.webView }
+
+    init(session: ProjectSession) {
+        self.session = session
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
 
     override func loadView() {
         let root = NSView()
@@ -127,20 +135,23 @@ final class BrowserPaneViewController: NSViewController, NSMenuItemValidation {
     private func restoreTabs() {
         guard !hasRestored else { return }
         hasRestored = true
-        let urls = Defaults.browserTabURLs.compactMap(URL.init(string:))
+        let urls = session.state.browserTabURLs.compactMap(URL.init(string:))
         if urls.isEmpty {
-            openTab(url: Defaults.lastURL ?? WebViewFactory.homeURL)
+            openTab(url: nil)
         } else {
             for url in urls { openTab(url: url, select: false) }
-            let index = min(max(Defaults.browserSelectedTab, 0), tabs.count - 1)
+            let index = min(max(session.state.browserSelectedTab, 0), tabs.count - 1)
             select(tabs[index].id)
         }
     }
 
     private func persistTabs() {
-        Defaults.browserTabURLs = tabs.map { $0.url?.absoluteString ?? "" }.filter { $0.hasPrefix("http") }
-        if let selectedID, let index = tabs.firstIndex(where: { $0.id == selectedID }) {
-            Defaults.browserSelectedTab = index
+        guard hasRestored else { return }
+        let urls = tabs.map { $0.url?.absoluteString ?? "" }.filter { $0.hasPrefix("http") }
+        let index = selectedID.flatMap { id in tabs.firstIndex { $0.id == id } } ?? 0
+        session.update {
+            $0.browserTabURLs = urls
+            $0.browserSelectedTab = index
         }
     }
 
@@ -157,9 +168,6 @@ final class BrowserPaneViewController: NSViewController, NSMenuItemValidation {
         toolbarModel.canGoForward = tab.canGoForward
         toolbarModel.isLoading = tab.isLoading
         toolbarModel.isSecure = tab.isSecure
-        if let url = tab.url, let scheme = url.scheme, scheme == "http" || scheme == "https" {
-            Defaults.lastURL = url
-        }
     }
 
     /// Re-syncs toolbar and strip whenever any tab's observed state changes.

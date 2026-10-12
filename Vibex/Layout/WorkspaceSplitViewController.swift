@@ -4,12 +4,13 @@ import os
 /// Three columns: terminal | simulator slot | browser. Owns layout modes and the spring that moves
 /// the dividers between them.
 final class WorkspaceSplitViewController: NSSplitViewController, NSMenuItemValidation {
-    let terminalPane = TerminalPaneViewController()
-    let simulatorPane = SimulatorPaneViewController()
-    let browserPane = BrowserPaneViewController()
+    let session: ProjectSession
+    let terminalPane: TerminalPaneViewController
+    let simulatorPane: SimulatorPaneViewController
+    let browserPane: BrowserPaneViewController
 
     private(set) var mode: LayoutMode = .balanced
-    private var manualWidths: ColumnWidths? = Defaults.manualWidths
+    private var manualWidths: ColumnWidths?
     private var simulatorWidth: CGFloat = 0
     private var isSettingPositions = false
     private var hasAppliedInitialLayout = false
@@ -18,6 +19,17 @@ final class WorkspaceSplitViewController: NSSplitViewController, NSMenuItemValid
     private var terminalItem: NSSplitViewItem { splitViewItems[0] }
     private var simulatorItem: NSSplitViewItem { splitViewItems[1] }
     private var browserItem: NSSplitViewItem { splitViewItems[2] }
+
+    init(session: ProjectSession) {
+        self.session = session
+        terminalPane = TerminalPaneViewController(session: session)
+        simulatorPane = SimulatorPaneViewController(session: session)
+        browserPane = BrowserPaneViewController(session: session)
+        manualWidths = session.state.columnWidths
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
 
     override func loadView() {
         let split = WorkspaceSplitView()
@@ -65,7 +77,7 @@ final class WorkspaceSplitViewController: NSSplitViewController, NSMenuItemValid
         super.viewDidAppear()
         guard !hasAppliedInitialLayout else { return }
         hasAppliedInitialLayout = true
-        mode = Defaults.layoutMode
+        mode = session.state.layout
         apply(mode: mode, animated: false)
         simulatorPane.start()
     }
@@ -89,7 +101,7 @@ final class WorkspaceSplitViewController: NSSplitViewController, NSMenuItemValid
             captureManualWidths()
         }
         mode = newMode
-        Defaults.layoutMode = newMode
+        session.update { $0.layout = newMode }
         Log.layout.info("layout mode → \(newMode.rawValue, privacy: .public)")
 
         let target = targetWidths()
@@ -163,7 +175,7 @@ final class WorkspaceSplitViewController: NSSplitViewController, NSMenuItemValid
             browser: browserItem.viewController.view.frame.width
         )
         manualWidths = widths
-        Defaults.manualWidths = widths
+        session.update { $0.columnWidths = widths }
     }
 
     private func simulatorPreferredWidthChanged(_ width: CGFloat) {
@@ -214,6 +226,7 @@ final class WorkspaceSplitViewController: NSSplitViewController, NSMenuItemValid
         terminalPane.persistTabs()
         browserPane.prepareForTermination()
         simulatorPane.prepareForTermination()
+        session.saveNow()
     }
 
     func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
