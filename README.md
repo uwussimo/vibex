@@ -14,6 +14,10 @@
 - **Browser**: a tabbed WebKit browser. Netflix plays here; your localhost previews open in their own tabs.
 - **MCP**: a built-in server so Claude Code can see and drive the simulator and the browser.
 
+<p align="center">
+  <img src="docs/screenshot.png" alt="Vibex window: terminal tabs on the left, an iPhone 17 Pro Max simulator running a habits app in the middle, and a browser tab on the right">
+</p>
+
 ## Requirements
 
 - macOS 26, Xcode 26 with at least one iOS simulator runtime
