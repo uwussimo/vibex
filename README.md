@@ -9,6 +9,8 @@
   <b>terminal · embedded iOS Simulator · side browser</b> in one window, driven by Claude Code over MCP.
 </p>
 
+<p align="center"><a href="https://uwussimo.github.io/vibex/">uwussimo.github.io/vibex</a></p>
+
 - **Terminal**: real PTY terminals with tabs (SwiftTerm, Metal renderer), fish by default. Run Claude Code here.
 - **Simulator**: the iOS Simulator rendered inside Vibex from CoreSimulator's framebuffer, with touch, keyboard and buttons. No Simulator.app window.
 - **Browser**: a tabbed WebKit browser. Netflix plays here; your localhost previews open in their own tabs.
