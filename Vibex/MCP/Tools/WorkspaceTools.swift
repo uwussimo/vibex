@@ -1,0 +1,73 @@
+import AppKit
+import Foundation
+import UserNotifications
+
+/// Tools that change what the user sees: layout, focus, toasts, and terminal tabs.
+enum WorkspaceTools {
+    static func make(workspace: WorkspaceSplitViewController, toast: ToastModel) -> [Tool] {
+        [
+            Tool(
+                name: "vibex_notify",
+                description: "Show a toast in the Vibex window (and a system notification if Vibex is in the background). Use it when a long task finishes or needs the user's attention.",
+                inputSchema: Schema.object(["title": Schema.string("Short headline"), "message": Schema.string("Optional detail, one or two sentences")], required: ["title"])
+            ) { args in
+                let title = try args.requireString("title")
+                let message = args.string("message")
+                toast.show(title: title, message: message)
+                if !NSApp.isActive { await Self.postSystemNotification(title: title, message: message) }
+                return .text("Shown.")
+            },
+            Tool(
+                name: "vibex_layout",
+                description: "Switch the window layout. build: wide terminal, simulator at natural size, small browser. watch: wide browser, simulator hidden. balanced: the user's own divider positions.",
+                inputSchema: Schema.object(["mode": Schema.string("Layout mode", enum: ["build", "watch", "balanced"])], required: ["mode"])
+            ) { args in
+                let raw = try args.requireString("mode")
+                guard let mode = LayoutMode(rawValue: raw) else { throw ToolError("unknown mode \(raw)") }
+                workspace.apply(mode: mode, animated: true)
+                return .text("Layout: \(raw).")
+            },
+            Tool(
+                name: "vibex_focus",
+                description: "Give keyboard focus to a pane: terminal, simulator or browser.",
+                inputSchema: Schema.object(["pane": Schema.string("Pane", enum: ["terminal", "simulator", "browser"])], required: ["pane"])
+            ) { args in
+                switch try args.requireString("pane") {
+                case "terminal": workspace.focusTerminal(nil)
+                case "simulator": workspace.focusSimulator(nil)
+                case "browser": workspace.focusBrowser(nil)
+                default: throw ToolError("pane must be terminal, simulator or browser")
+                }
+                return .text("Focused.")
+            },
+            Tool(
+                name: "terminal_run",
+                description: "Open a new terminal tab and type a command into it, where the user can watch it and stop it. Good for dev servers and long-running processes. Returns the tab id. Does not capture output.",
+                inputSchema: Schema.object(["command": Schema.string("Shell command to run"), "cwd": Schema.string("Directory to start in (optional)")], required: ["command"])
+            ) { args in
+                let command = try args.requireString("command")
+                let id = workspace.terminalPane.runCommandInNewTab(command, directory: args.string("cwd"))
+                return .text("Running in terminal tab \(id.uuidString).")
+            },
+            Tool(
+                name: "terminal_tabs",
+                description: "List the terminal tabs: id, title and working directory.",
+                inputSchema: Schema.object()
+            ) { _ in
+                let lines = workspace.terminalPane.tabSummaries().map { "\($0.id.uuidString)  \($0.title)  \($0.directory ?? "")" }
+                return .text(lines.isEmpty ? "No terminal tabs." : lines.joined(separator: "\n"))
+            },
+        ]
+    }
+
+    private static func postSystemNotification(title: String, message: String?) async {
+        let center = UNUserNotificationCenter.current()
+        let granted = (try? await center.requestAuthorization(options: [.alert, .sound])) ?? false
+        guard granted else { return }
+        let content = UNMutableNotificationContent()
+        content.title = title
+        if let message { content.body = message }
+        content.sound = .default
+        try? await center.add(UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil))
+    }
+}
