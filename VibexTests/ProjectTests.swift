@@ -64,3 +64,57 @@ import Testing
         #expect(session.terminalEnvironment["VIBEX_PROJECT"] == project.path)
     }
 }
+
+@Suite struct RunDetectorTests {
+    private func folder(_ files: [String: String]) throws -> URL {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent("vibex-run-\(UUID().uuidString)")
+        for (path, contents) in files {
+            let url = dir.appendingPathComponent(path)
+            try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+            try contents.write(to: url, atomically: true, encoding: .utf8)
+        }
+        return dir
+    }
+
+    @Test func `xcodegen iOS project builds after generating`() throws {
+        let dir = try folder(["project.yml": "name: Shop\ntargets:\n  Shop:\n    platform: iOS\n"])
+        let config = try #require(RunDetector.detect(in: dir))
+        #expect(config.kind == .ios)
+        #expect(config.scheme == "Shop")
+        #expect(config.project == "Shop.xcodeproj")
+        #expect(config.prepare == "xcodegen generate")
+    }
+
+    @Test func `macOS-only xcodegen project runs as a Mac app`() throws {
+        let dir = try folder(["project.yml": "name: Vibex\ntargets:\n  Vibex:\n    platform: macOS\n  VibexTests:\n    platform: macOS\n"])
+        #expect(RunDetector.detect(in: dir)?.kind == .macos)
+    }
+
+    @Test func `vite project with pnpm`() throws {
+        let dir = try folder([
+            "package.json": #"{"scripts":{"dev":"vite"},"devDependencies":{"vite":"^6"}}"#,
+            "pnpm-lock.yaml": "",
+        ])
+        let config = try #require(RunDetector.detect(in: dir))
+        #expect(config.kind == .web)
+        #expect(config.command == "pnpm dev")
+        #expect(config.url == "http://localhost:5173")
+    }
+
+    @Test func `explicit port flag wins`() {
+        #expect(RunDetector.guessPort(deps: ["next": "15"], script: "next dev -p 4000") == 4000)
+        #expect(RunDetector.guessPort(deps: [:], script: "node server.js") == 3000)
+    }
+
+    @Test func `swift package and vibex json`() throws {
+        let dir = try folder(["Package.swift": "// swift-tools-version:6.0"])
+        #expect(RunDetector.detect(in: dir)?.command == "swift run")
+        try RunConfig(kind: .web, command: "bun dev", url: "http://localhost:3001").write(to: dir)
+        #expect(RunConfig.load(from: dir)?.url == "http://localhost:3001")
+    }
+
+    @Test func `transcripts lose their escape codes`() {
+        #expect(Runner.stripANSI("\u{04}\u{08}\u{08}\u{1B}[31mred\u{1B}[0m\r\nok\r") == "red\nok")
+        #expect(Runner.quote("it's") == "'it'\\''s'")
+    }
+}
