@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vibex — terminal, iOS Simulator and browser in one window</title>
+<meta name="description" content="A native macOS workstation for vibe coding: a terminal for Claude Code, the iOS Simulator embedded in the window, and a side browser, all driven by Claude over MCP.">
+<meta name="theme-color" content="#0d0f0c">
+<link rel="icon" type="image/png" href="icon.png">
+<link rel="apple-touch-icon" href="icon.png">
+<meta property="og:title" content="Vibex">
+<meta property="og:description" content="Terminal, embedded iOS Simulator and side browser in one native macOS window, driven by Claude Code.">
+<meta property="og:image" content="https://uwussimo.github.io/vibex/screenshot.png">
+<meta property="og:url" content="https://uwussimo.github.io/vibex/">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+  :root {
+    --bg: #0d0f0c;
+    --bg-raised: #151813;
+    --line: rgba(255, 255, 255, 0.08);
+    --text: #f2f4ee;
+    --muted: #9aa294;
+    --accent: #b4f04c;
+    --accent-ink: #1d2a06;
+    --green: #2fbf71;
+    --radius: 18px;
+    --shadow: 0 40px 120px -30px rgba(0, 0, 0, 0.7), 0 0 0 1px var(--line);
+    color-scheme: dark;
+  }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --bg: #f6f7f2;
+      --bg-raised: #ffffff;
+      --line: rgba(20, 30, 10, 0.1);
+      --text: #12160e;
+      --muted: #5c6556;
+      --accent: #4d7c0f;
+      --accent-ink: #ffffff;
+      --shadow: 0 40px 100px -40px rgba(30, 50, 10, 0.35), 0 0 0 1px var(--line);
+      color-scheme: light;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 16px/1.6 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Inter, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  a { color: inherit; }
+  code, pre, kbd { font-family: ui-monospace, "SF Mono", Menlo, monospace; }
+  .wrap { width: min(1120px, 100% - 32px); margin-inline: auto; }
+
+  /* Nav */
+  nav {
+    position: sticky; top: 0; z-index: 10;
+    backdrop-filter: saturate(180%) blur(16px);
+    -webkit-backdrop-filter: saturate(180%) blur(16px);
+    background: color-mix(in srgb, var(--bg) 72%, transparent);
+    border-bottom: 1px solid var(--line);
+  }
+  nav .wrap { display: flex; align-items: center; justify-content: space-between; height: 56px; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 650; text-decoration: none; letter-spacing: -0.01em; }
+  .brand img { width: 28px; height: 28px; }
+  nav .links { display: flex; gap: 22px; align-items: center; font-size: 14px; }
+  nav .links a { text-decoration: none; color: var(--muted); transition: color 150ms ease; }
+  nav .links a:hover { color: var(--text); }
+  @media (max-width: 640px) { nav .links a:not(.btn) { display: none; } }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    height: 44px; padding: 0 20px; border-radius: 12px;
+    font-weight: 600; font-size: 15px; text-decoration: none;
+    transition: transform 120ms ease, background-color 150ms ease, border-color 150ms ease;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn-primary { background: var(--accent); color: var(--accent-ink); }
+  .btn-primary:hover { background: color-mix(in srgb, var(--accent) 88%, white); }
+  .btn-ghost { border: 1px solid var(--line); color: var(--text); background: var(--bg-raised); }
+  .btn-ghost:hover { border-color: color-mix(in srgb, var(--text) 25%, transparent); }
+  nav .btn { height: 34px; padding: 0 14px; font-size: 13.5px; border-radius: 9px; }
+
+  /* Hero */
+  .hero { position: relative; text-align: center; padding: 88px 0 56px; }
+  .hero::before {
+    content: ""; position: absolute; inset: -120px 0 auto; height: 620px; z-index: -1;
+    background:
+      radial-gradient(600px 300px at 50% 20%, color-mix(in srgb, var(--green) 28%, transparent), transparent 70%),
+      radial-gradient(400px 220px at 62% 35%, color-mix(in srgb, #5b9bff 18%, transparent), transparent 70%);
+    filter: blur(10px);
+  }
+  .hero-icon { width: 120px; height: 120px; filter: drop-shadow(0 18px 30px rgba(0,0,0,0.35)); }
+  h1 {
+    margin: 22px 0 14px;
+    font-size: clamp(40px, 7vw, 76px); line-height: 1.02; letter-spacing: -0.035em; font-weight: 750;
+  }
+  h1 .accent {
+    background: linear-gradient(180deg, #d9fb7a, var(--green));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .lede { max-width: 640px; margin: 0 auto; color: var(--muted); font-size: clamp(17px, 2.2vw, 20px); }
+  .cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 32px; }
+  .meta { margin-top: 18px; font-size: 13px; color: var(--muted); }
+
+  .shot { margin: 56px auto 0; max-width: 1120px; }
+  /* The screenshot carries its own macOS window shadow. */
+  .shot img { display: block; width: 100%; height: auto; }
+
+  /* Sections */
+  section { padding: 96px 0; }
+  .eyebrow { color: var(--accent); font-weight: 650; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; }
+  h2 { font-size: clamp(30px, 4.4vw, 46px); line-height: 1.08; letter-spacing: -0.025em; margin: 10px 0 14px; font-weight: 720; }
+  .section-lede { color: var(--muted); max-width: 640px; font-size: 18px; margin: 0; }
+
+  .grid { display: grid; gap: 16px; margin-top: 44px; }
+  .grid-3 { grid-template-columns: repeat(3, 1fr); }
+  .grid-2 { grid-template-columns: repeat(2, 1fr); }
+  @media (max-width: 860px) { .grid-3, .grid-2 { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--bg-raised); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 26px;
+  }
+  .card h3 { margin: 14px 0 8px; font-size: 19px; letter-spacing: -0.01em; }
+  .card p { margin: 0; color: var(--muted); font-size: 15.5px; }
+  .glyph {
+    width: 40px; height: 40px; border-radius: 11px; display: grid; place-items: center;
+    font-size: 20px;
+  }
+  .g-term { background: #1f2420; color: var(--accent); font-family: ui-monospace, monospace; font-weight: 700; font-size: 16px; }
+  .g-sim { background: linear-gradient(180deg, #5b9bff, #2459e0); color: #fff; }
+  .g-web { background: linear-gradient(180deg, #fff, #e9e9ee); color: #111; }
+
+  /* MCP */
+  .split { display: grid; grid-template-columns: 1fr 1.1fr; gap: 48px; align-items: center; }
+  @media (max-width: 960px) { .split { grid-template-columns: 1fr; } }
+  .chat {
+    background: #0a0c09; border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 22px; font: 14px/1.65 ui-monospace, "SF Mono", Menlo, monospace; color: #d7dcd2;
+    box-shadow: var(--shadow); overflow-x: auto; white-space: pre;
+  }
+  .chat .you { color: var(--accent); }
+  .chat .dim { color: #6f7869; }
+  .chat .tool { color: #7fb4ff; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 26px; }
+  .chip {
+    font: 12.5px/1 ui-monospace, "SF Mono", Menlo, monospace; padding: 8px 10px; border-radius: 8px;
+    background: var(--bg-raised); border: 1px solid var(--line); color: var(--muted);
+  }
+
+  /* Shortcuts */
+  .keys { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 40px; }
+  @media (max-width: 860px) { .keys { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 520px) { .keys { grid-template-columns: 1fr; } }
+  .key { display: flex; justify-content: space-between; align-items: center; gap: 12px;
+    padding: 14px 16px; border-radius: 12px; background: var(--bg-raised); border: 1px solid var(--line); font-size: 14.5px; }
+  kbd { font-size: 13px; padding: 4px 8px; border-radius: 7px; border: 1px solid var(--line);
+    background: color-mix(in srgb, var(--text) 6%, transparent); white-space: nowrap; }
+
+  /* Install */
+  pre.install {
+    margin: 32px 0 0; padding: 22px 24px; border-radius: var(--radius);
+    background: #0a0c09; color: #d7dcd2; border: 1px solid var(--line); overflow-x: auto;
+    font-size: 14.5px; line-height: 1.8;
+  }
+  pre.install .c { color: #6f7869; }
+  .req { margin-top: 20px; color: var(--muted); font-size: 14.5px; }
+
+  footer { border-top: 1px solid var(--line); padding: 36px 0 48px; color: var(--muted); font-size: 14px; }
+  footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; align-items: center; }
+  footer a { text-decoration: none; }
+  footer a:hover { color: var(--text); }
+
+  /* Reveal on scroll, only when motion is welcome */
+  @media (prefers-reduced-motion: no-preference) {
+    .reveal { opacity: 0; transform: translateY(14px); transition: opacity 600ms cubic-bezier(.2,.7,.2,1), transform 600ms cubic-bezier(.2,.7,.2,1); }
+    .reveal.in { opacity: 1; transform: none; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <a class="brand" href="#"><img src="icon.png" alt="">Vibex</a>
+    <div class="links">
+      <a href="#features">Features</a>
+      <a href="#mcp">Claude Code</a>
+      <a href="#install">Install</a>
+      <a class="btn btn-ghost" href="https://github.com/uwussimo/vibex">GitHub</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <img class="hero-icon" src="icon.png" alt="Vibex icon: stacked terminal, browser and device windows">
+    <h1>Build, watch, ship.<br><span class="accent">One window.</span></h1>
+    <p class="lede">Vibex is a native macOS workstation: a terminal for Claude Code, the iOS Simulator embedded right in the window, and a browser on the side. Claude can see and drive all of it.</p>
+    <div class="cta">
+      <a class="btn btn-primary" href="#install">Get started</a>
+      <a class="btn btn-ghost" href="https://github.com/uwussimo/vibex">View on GitHub</a>
+    </div>
+    <p class="meta">Free and open source · macOS 26 · Swift</p>
+    <div class="shot">
+      <img src="screenshot.png" width="2000" height="1144" alt="The Vibex window: terminal tabs on the left, an iPhone simulator running a habits app in the middle, and a browser tab on the right">
+    </div>
+  </div>
+</header>
+
+<section id="features">
+  <div class="wrap">
+    <div class="reveal">
+      <div class="eyebrow">Three panes, zero juggling</div>
+      <h2>Everything you look at while building, side by side.</h2>
+      <p class="section-lede">Made for a big display and a long session. No more ⌘-Tab between Terminal, Simulator and a browser.</p>
+    </div>
+    <div class="grid grid-3">
+      <div class="card reveal">
+        <div class="glyph g-term">&gt;_</div>
+        <h3>Terminal</h3>
+        <p>Real PTY tabs on SwiftTerm with a Metal renderer. Fish by default, starts in your project folder. Run Claude Code here.</p>
+      </div>
+      <div class="card reveal">
+        <div class="glyph g-sim"><svg width="16" height="22" viewBox="0 0 16 22" aria-hidden="true"><rect x="1" y="1" width="14" height="20" rx="3.5" fill="none" stroke="currentColor" stroke-width="2"/><rect x="5.5" y="3.2" width="5" height="1.6" rx=".8" fill="currentColor"/></svg></div>
+        <h3>Embedded Simulator</h3>
+        <p>The iOS Simulator drawn straight from CoreSimulator's framebuffer, with touch, keyboard and hardware buttons. No Simulator.app window. Boots slim with simslim.</p>
+      </div>
+      <div class="card reveal">
+        <div class="glyph g-web"><svg width="22" height="18" viewBox="0 0 22 18" aria-hidden="true"><rect x="1" y="1" width="20" height="16" rx="3.5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="5" cy="5" r="1.2" fill="#ff5f57"/><circle cx="8.5" cy="5" r="1.2" fill="#febc2e"/><circle cx="12" cy="5" r="1.2" fill="#28c840"/></svg></div>
+        <h3>Side browser</h3>
+        <p>A tabbed WebKit browser. Your localhost preview opens in one tab while a show keeps playing in another.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="mcp">
+  <div class="wrap split">
+    <div class="reveal">
+      <div class="eyebrow">Built-in MCP server</div>
+      <h2>Claude Code gets hands.</h2>
+      <p class="section-lede">Vibex registers itself with Claude Code on launch. Claude can screenshot and tap the simulator, read its accessibility tree, install and launch your app, open browser tabs, click by element ref, and read console and network logs.</p>
+      <div class="chips">
+        <span class="chip">simulator_describe</span>
+        <span class="chip">simulator_tap_element</span>
+        <span class="chip">simulator_screenshot</span>
+        <span class="chip">simulator_launch_app</span>
+        <span class="chip">browser_snapshot</span>
+        <span class="chip">browser_click</span>
+        <span class="chip">browser_console</span>
+        <span class="chip">vibex_run</span>
+        <span class="chip">terminal_run</span>
+      </div>
+    </div>
+    <div class="chat reveal" aria-label="Example Claude Code session"><span class="you">&gt; run the app and tap Continue on the onboarding screen</span>
+
+<span class="tool">● vibex_run</span>
+  <span class="dim">Started: iOS · HelloVibex. Phase: Building…</span>
+<span class="tool">● vibex_run_status</span>
+  <span class="dim">phase: Launched HelloVibex · exit code: 0</span>
+<span class="tool">● simulator_describe</span>
+  <span class="dim">app "HelloVibex" [ref=r1]</span>
+  <span class="dim">  text "Welcome" [ref=r2] (90,446 260x41)</span>
+  <span class="dim">  button "Continue" [ref=r3] (180,503 80x34)</span>
+<span class="tool">● simulator_tap_element</span> <span class="dim">{ ref: "r3" }</span>
+  <span class="dim">Tapped button "Continue" at (220, 520).</span>
+
+Done. Onboarding is complete.</div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="reveal">
+      <div class="eyebrow">For many projects at once</div>
+      <h2>Works the way you already do.</h2>
+    </div>
+    <div class="grid grid-2">
+      <div class="card reveal">
+        <h3>One window per project</h3>
+        <p>Open a folder like in VS Code. Each window remembers its terminal tabs, browser tabs, simulator and layout. Claude in a project's terminal drives that project's window, never another one.</p>
+      </div>
+      <div class="card reveal">
+        <h3>Run with ⇧⌘R</h3>
+        <p>iOS apps build for the window's simulator, then install and launch. Web projects start their dev server and open a preview tab. Swift, Cargo and Go projects just run. Tweak it in <code>.vibex.json</code>.</p>
+      </div>
+      <div class="card reveal">
+        <h3>Command palette</h3>
+        <p>⇧⌘P finds every command, project, tab and device. Type a URL to open it, or <code>$ npm test</code> to run it in a new terminal tab.</p>
+      </div>
+      <div class="card reveal">
+        <h3>Build and Watch modes</h3>
+        <p>⇧⌘B gives the terminal room and shrinks the browser to a mini player. ⌥⌘W flips it for a break. Dividers spring between layouts.</p>
+      </div>
+    </div>
+    <div class="keys reveal">
+      <div class="key">Command palette <kbd>⇧⌘P</kbd></div>
+      <div class="key">Open folder <kbd>⌘O</kbd></div>
+      <div class="key">Run / stop <kbd>⇧⌘R · ⌘.</kbd></div>
+      <div class="key">Focus pane <kbd>⌘1 ⌘2 ⌘3</kbd></div>
+      <div class="key">Build mode <kbd>⇧⌘B</kbd></div>
+      <div class="key">Watch mode <kbd>⌥⌘W</kbd></div>
+    </div>
+  </div>
+</section>
+
+<section id="install">
+  <div class="wrap">
+    <div class="reveal">
+      <div class="eyebrow">Get started</div>
+      <h2>Build it in a minute.</h2>
+      <p class="section-lede">Vibex is built from source with Xcode. Clone it, then <code>make run</code>.</p>
+    </div>
+<pre class="install reveal"><span class="c"># needs Xcode 26 with an iOS simulator runtime</span>
+brew install xcodegen
+brew install mobai-app/tap/simslim   <span class="c"># optional: lighter simulators</span>
+
+git clone https://github.com/uwussimo/vibex.git
+cd vibex
+make run</pre>
+    <p class="req reveal">Requires macOS 26 and Xcode 26. To build it yourself, set your own signing identity in <code>project.yml</code>. The simulator embedding relies on private CoreSimulator API verified on Xcode 26.6.</p>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>Vibex · made by <a href="https://github.com/uwussimo">Yusuf Abdurakhimov</a></span>
+    <a href="https://github.com/uwussimo/vibex">github.com/uwussimo/vibex</a>
+  </div>
+</footer>
+
+<script>
+  // Fade sections in as they enter the viewport. Without the observer, everything stays visible.
+  (() => {
+    const items = document.querySelectorAll('.reveal');
+    if (!('IntersectionObserver' in window) || matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      items.forEach((el) => el.classList.add('in'));
+      return;
+    }
+    const io = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) { entry.target.classList.add('in'); io.unobserve(entry.target); }
+      }
+    }, { rootMargin: '0px 0px -8% 0px' });
+    items.forEach((el) => io.observe(el));
+  })();
+</script>
+</body>
+</html>
