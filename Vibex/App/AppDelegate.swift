@@ -9,7 +9,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.mainMenu = MainMenu.build()
     }
 
+    /// Unit tests run inside the app; they must not open windows, bind the MCP port or touch Claude Code's config.
+    static let isRunningTests = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+        || NSClassFromString("XCTestCase") != nil
+
     func applicationDidFinishLaunching(_ notification: Notification) {
+        guard !Self.isRunningTests else { return }
         mcp.choosePort()
         TerminalSession.extraEnvironment = mcp.environmentVariables()
         windows.mcp = mcp
@@ -88,6 +93,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationWillTerminate(_ notification: Notification) {
+        guard !Self.isRunningTests else { return }
         windows.prepareForTermination()
     }
 }

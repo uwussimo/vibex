@@ -34,6 +34,11 @@ final class MCPService {
         if port == 0 { choosePort() }
         let server = MCPServer(registry: registry)
         server.onActivity = { [weak self] in self?.lastActivity = Date() }
+        server.projectLabel = {
+            let manager = WindowManager.shared
+            guard manager.windows.count > 1, let window = try? manager.toolTarget() else { return nil }
+            return "[project: \(window.project.name)]"
+        }
         let resolver = CallerResolver()
         server.resolveCaller = { port in
             let candidates = WindowManager.shared.windows.map {

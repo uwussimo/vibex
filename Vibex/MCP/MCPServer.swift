@@ -13,6 +13,8 @@ final class MCPServer {
     var onActivity: () -> Void = {}
     /// Maps a request's client port to the project window that sent it (nil: unknown caller).
     var resolveCaller: (UInt16) -> String? = { _ in nil }
+    /// A line naming the window that acted, added to results when several projects are open.
+    var projectLabel: () -> String? = { nil }
 
     init(registry: ToolRegistry) {
         self.registry = registry
@@ -70,8 +72,8 @@ final class MCPServer {
             do {
                 var result = try await withTimeout(seconds: 60) { try await tool.handler(arguments) }
                 // With several projects open, say which window acted so the model can tell.
-                if WindowManager.shared.windows.count > 1, let window = try? WindowManager.shared.toolTarget() {
-                    result.content.insert(.text("[project: \(window.project.name)]"), at: 0)
+                if let label = projectLabel() {
+                    result.content.insert(.text(label), at: 0)
                 }
                 return result.json
             } catch {
