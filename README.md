@@ -1,10 +1,18 @@
-# Vibex
+<p align="center">
+  <img src="docs/icon.png" width="128" height="128" alt="Vibex icon">
+</p>
 
-A native macOS workspace for building while watching: **Terminal | iOS Simulator | Netflix** in one window.
+<h1 align="center">Vibex</h1>
 
-- **Terminal** — real PTY terminals with tabs (SwiftTerm, Metal renderer). Run Claude Code here.
-- **Simulator** — the real Simulator.app device window, docked into the middle column.
-- **Browser** — a Netflix-first WebKit browser with a slim URL bar. Login persists between launches.
+<p align="center">
+  A native macOS workstation for building while watching:<br>
+  <b>terminal · embedded iOS Simulator · side browser</b> in one window, driven by Claude Code over MCP.
+</p>
+
+- **Terminal**: real PTY terminals with tabs (SwiftTerm, Metal renderer), fish by default. Run Claude Code here.
+- **Simulator**: the iOS Simulator rendered inside Vibex from CoreSimulator's framebuffer, with touch, keyboard and buttons. No Simulator.app window.
+- **Browser**: a tabbed WebKit browser. Netflix plays here; your localhost previews open in their own tabs.
+- **MCP**: a built-in server so Claude Code can see and drive the simulator and the browser.
 
 ## Requirements
 
