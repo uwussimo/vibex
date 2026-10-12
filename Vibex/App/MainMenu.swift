@@ -9,6 +9,7 @@ enum MainMenu {
         menu.addItem(fileMenu())
         menu.addItem(editMenu())
         menu.addItem(viewMenu())
+        menu.addItem(runMenu())
         menu.addItem(browserMenu())
         menu.addItem(simulatorMenu())
         menu.addItem(windowMenu())
@@ -84,6 +85,16 @@ enum MainMenu {
         menu.addItem(.separator())
         let fullScreen = menu.addItem(withTitle: "Enter Full Screen", action: #selector(NSWindow.toggleFullScreen(_:)), keyEquivalent: "f")
         fullScreen.keyEquivalentModifierMask = [.command, .control]
+        return item(menu)
+    }
+
+    private static func runMenu() -> NSMenuItem {
+        let menu = NSMenu(title: "Run")
+        let run = menu.addItem(withTitle: "Run", action: #selector(MainWindowController.runProject(_:)), keyEquivalent: "r")
+        run.keyEquivalentModifierMask = [.command, .shift]
+        menu.addItem(withTitle: "Stop", action: #selector(MainWindowController.stopProject(_:)), keyEquivalent: ".")
+        menu.addItem(.separator())
+        menu.addItem(withTitle: "Edit Run Configuration", action: #selector(MainWindowController.editRunConfiguration(_:)), keyEquivalent: "")
         return item(menu)
     }
 

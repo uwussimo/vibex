@@ -80,6 +80,38 @@ enum WorkspaceTools {
                 return .text("Opened \(window.project.name).")
             },
             Tool(
+                name: "vibex_run",
+                description: "Run the project the way the user's Run button does: iOS apps build for this window's simulator then install and launch; web projects start the dev server and open it in a browser tab; others run their command. Uses .vibex.json or detects from the folder. Returns once started; check vibex_run_status.",
+                inputSchema: Schema.object()
+            ) { _ in
+                let runner = try window().runner
+                runner.run()
+                return .text("Started: \(runner.config?.summary ?? "nothing to run"). Phase: \(runner.phase.label).")
+            },
+            Tool(
+                name: "vibex_stop",
+                description: "Stop the running build, app command or dev server.",
+                inputSchema: Schema.object()
+            ) { _ in
+                try window().runner.stop()
+                return .text("Stopped.")
+            },
+            Tool(
+                name: "vibex_run_status",
+                description: "Where the current run is (building, launching, serving, failed…), its exit code and the last lines of its output. Poll this after vibex_run.",
+                inputSchema: Schema.object(["lines": Schema.integer("How many output lines (default 60)")])
+            ) { args in
+                let runner = try window().runner
+                var lines = [
+                    "config: \(runner.config?.summary ?? runner.resolveConfig()?.summary ?? "none")",
+                    "phase: \(runner.phase.label)\(runner.phase.isActive ? " (active)" : "")",
+                ]
+                if let code = runner.lastExitCode { lines.append("exit code: \(code)") }
+                let tail = runner.outputTail(lines: min(args.int("lines") ?? 60, 400))
+                if !tail.isEmpty { lines.append("--- output ---\n" + tail) }
+                return .text(lines.joined(separator: "\n"))
+            },
+            Tool(
                 name: "terminal_tabs",
                 description: "List the terminal tabs: id, title and working directory.",
                 inputSchema: Schema.object()

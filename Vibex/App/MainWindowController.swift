@@ -9,6 +9,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
     /// Per-window automation state (element refs survive between tool calls).
     private(set) lazy var simulatorAutomation = SimulatorAutomation(pane: workspace.simulatorPane)
     private(set) lazy var browserAutomation = BrowserAutomation(pane: workspace.browserPane)
+    private(set) lazy var runner = Runner(window: self)
 
     var project: Project { session.project }
     var onClose: (MainWindowController) -> Void = { _ in }
@@ -41,6 +42,27 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
         }
         window.setFrameAutosaveName(autosave)
         installToastOverlay()
+        installTitlebarAccessory(RunButton(runner: runner), width: 220)
+    }
+
+    // MARK: - Run (responder chain)
+
+    @objc func runProject(_ sender: Any?) { runner.run() }
+    @objc func stopProject(_ sender: Any?) { runner.stop() }
+
+    /// Opens `.vibex.json`, creating it from what was detected (or a template) first.
+    @objc func editRunConfiguration(_ sender: Any?) {
+        let file = project.url.appendingPathComponent(RunConfig.fileName)
+        if !FileManager.default.fileExists(atPath: file.path) {
+            let config = RunDetector.detect(in: project.url) ?? RunConfig(kind: .command, command: "echo 'set run.command in .vibex.json'")
+            do {
+                try config.write(to: project.url)
+            } catch {
+                toast.show(title: "Could not write \(RunConfig.fileName)", message: error.localizedDescription)
+                return
+            }
+        }
+        NSWorkspace.shared.open(file)
     }
 
     required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
