@@ -11,6 +11,9 @@ final class TerminalPaneViewController: NSViewController {
         var title: String
         var directory: String?
         var hasExited = false
+        /// Set for tabs that run one command (Run): they stay open on exit and report the code.
+        var onExit: ((Int32?) -> Void)?
+        var fixedTitle: String?
 
         init(terminal: LocalProcessTerminalView, title: String, directory: String?) {
             self.terminal = terminal
@@ -110,15 +113,7 @@ final class TerminalPaneViewController: NSViewController {
             directory: directory ?? selectedTab?.directory ?? self.session.project.path,
             environment: self.session.terminalEnvironment
         )
-        let terminal = LocalProcessTerminalView(frame: container.bounds)
-        terminal.autoresizingMask = [.width, .height]
-        TerminalTheme.apply(to: terminal)
-        terminal.processDelegate = self
-        do {
-            try terminal.setUseMetal(true)
-        } catch {
-            Log.terminal.notice("Metal renderer unavailable, using CoreText: \(error.localizedDescription, privacy: .public)")
-        }
+        let terminal = makeTerminalView()
 
         let tab = Tab(terminal: terminal, title: Self.title(forDirectory: session.directory), directory: session.directory)
         tabs.append(tab)
@@ -134,6 +129,19 @@ final class TerminalPaneViewController: NSViewController {
         )
         Log.terminal.info("opened tab in \(session.directory, privacy: .public)")
         return tab
+    }
+
+    private func makeTerminalView() -> LocalProcessTerminalView {
+        let terminal = LocalProcessTerminalView(frame: container.bounds)
+        terminal.autoresizingMask = [.width, .height]
+        TerminalTheme.apply(to: terminal)
+        terminal.processDelegate = self
+        do {
+            try terminal.setUseMetal(true)
+        } catch {
+            Log.terminal.notice("Metal renderer unavailable, using CoreText: \(error.localizedDescription, privacy: .public)")
+        }
+        return terminal
     }
 
     private func select(_ id: UUID) {
@@ -194,6 +202,54 @@ final class TerminalPaneViewController: NSViewController {
     /// Shell process ids of every tab, for finding which window an MCP caller runs in.
     var shellPIDs: [pid_t] { tabs.compactMap { $0.terminal.process?.shellPid } }
 
+    // MARK: - Process tabs
+
+    /// Opens a tab that runs one command (not a shell) and stays open when it ends, so its output can be read.
+    /// The command runs in the user's login shell for its PATH, under `script` so a transcript lands in `logURL`.
+    @discardableResult
+    func runProcessTab(
+        title: String,
+        command: String,
+        directory: String,
+        logURL: URL,
+        replacing previous: UUID?,
+        onExit: @escaping (Int32?) -> Void
+    ) -> UUID {
+        if let previous { terminate(previous, close: true) }
+        try? FileManager.default.createDirectory(at: logURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+        let login = TerminalSession.login(directory: directory, environment: session.terminalEnvironment)
+        let terminal = makeTerminalView()
+        let tab = Tab(terminal: terminal, title: title, directory: directory)
+        tab.fixedTitle = title
+        tab.onExit = onExit
+        tabs.append(tab)
+        select(tab.id)
+        terminal.feed(text: "\u{1b}[2m$ \(command)\u{1b}[0m\r\n")
+        terminal.startProcess(
+            executable: "/usr/bin/script",
+            args: ["-q", "-F", logURL.path, login.shell, "-l", "-c", command],
+            environment: login.environment,
+            execName: nil,
+            currentDirectory: directory
+        )
+        Log.terminal.info("run tab: \(command, privacy: .public)")
+        return tab.id
+    }
+
+    /// Stops a tab's process; optionally closes the tab too.
+    func terminate(_ id: UUID, close shouldClose: Bool = false) {
+        guard let tab = tabs.first(where: { $0.id == id }) else { return }
+        if !tab.hasExited {
+            tab.onExit = shouldClose ? nil : tab.onExit
+            tab.terminal.terminate()
+        }
+        if shouldClose { close(id) }
+    }
+
+    func isRunning(_ id: UUID) -> Bool {
+        tabs.first { $0.id == id }.map { !$0.hasExited } ?? false
+    }
+
     struct TabSummary {
         let id: UUID
         let title: String
@@ -210,7 +266,7 @@ final class TerminalPaneViewController: NSViewController {
     }
 
     func persistTabs() {
-        let directories = tabs.compactMap(\.directory)
+        let directories = tabs.filter { $0.fixedTitle == nil }.compactMap(\.directory)
         session.update { $0.terminalDirectories = directories }
     }
 
@@ -243,7 +299,7 @@ extension TerminalPaneViewController: LocalProcessTerminalViewDelegate {
     func sizeChanged(source: LocalProcessTerminalView, newCols: Int, newRows: Int) {}
 
     func setTerminalTitle(source: LocalProcessTerminalView, title: String) {
-        guard let tab = tabs.first(where: { $0.terminal === source }) else { return }
+        guard let tab = tabs.first(where: { $0.terminal === source }), tab.fixedTitle == nil else { return }
         tab.title = title.isEmpty ? Self.title(forDirectory: tab.directory) : title
         syncTabBar()
     }
@@ -264,7 +320,18 @@ extension TerminalPaneViewController: LocalProcessTerminalViewDelegate {
     func processTerminated(source: TerminalView, exitCode: Int32?) {
         guard let tab = tabs.first(where: { $0.terminal === source }) else { return }
         tab.hasExited = true
-        Log.terminal.info("shell exited with \(exitCode ?? -1)")
+        Log.terminal.info("process exited with \(exitCode ?? -1)")
+        if let onExit = tab.onExit {
+            tab.onExit = nil
+            let code = exitCode ?? -1
+            let color = code == 0 ? "32" : "31"
+            tab.terminal.feed(text: "\r\n\u{1b}[\(color)m● exited with code \(code)\u{1b}[0m — ⌘W closes this tab\r\n")
+            tab.title = "\(tab.fixedTitle ?? "Run") \(code == 0 ? "✓" : "✗")"
+            syncTabBar()
+            onExit(exitCode)
+            return
+        }
+        guard tab.fixedTitle == nil else { return }
         close(tab.id)
     }
 }
