@@ -13,10 +13,11 @@ struct MCPStatusView: View {
             Circle()
                 .fill(color)
                 .frame(width: 7, height: 7)
-            Text(service.isRunning ? "mcp :\(service.port)" : "mcp off")
+            Text(service.isRunning ? "mcp :" + String(service.port) : "mcp off")
                 .font(.system(size: 11, weight: .medium, design: .monospaced))
                 .foregroundStyle(.secondary)
         }
+        .fixedSize()
         .padding(.trailing, 10)
         .help(service.registration)
         .onReceive(timer) { now = $0 }

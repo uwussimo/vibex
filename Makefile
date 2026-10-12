@@ -10,16 +10,16 @@ gen:
 	xcodegen generate
 
 build: gen
-	$(XCB) -configuration Debug build 2>&1 | grep -E "error:|warning: .*Vibex/|BUILD" || true
+	$(XCB) -configuration Debug build 2>&1 | grep -E "^/.*(error|warning):|^\*\* BUILD" | grep -v SourcePackages || true
 
 run: build
 	pkill -x Vibex 2>/dev/null; true
 	open $(APP)
 
 test: gen
-	$(XCB) -configuration Debug test 2>&1 | grep -E "error:|Test Case|Executed|passed|failed|BUILD|TEST" || true
+	$(XCB) -configuration Debug test 2>&1 | grep -E "^/.*error:|✘|✔ Suite|^\*\* TEST" | grep -v SourcePackages || true
 	# The test action leaves the host app unsigned for launchd; rebuild it.
-	$(XCB) -configuration Debug build 2>&1 | grep -E "error:|BUILD" || true
+	$(XCB) -configuration Debug build 2>&1 | grep -E "^/.*error:|^\*\* BUILD" || true
 
 clean:
 	rm -rf $(DERIVED)

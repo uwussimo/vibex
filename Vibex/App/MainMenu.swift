@@ -33,6 +33,14 @@ enum MainMenu {
 
     private static func fileMenu() -> NSMenuItem {
         let menu = NSMenu(title: "File")
+        menu.addItem(withTitle: "Open Folder…", action: #selector(AppDelegate.openFolder(_:)), keyEquivalent: "o")
+        let recent = menu.addItem(withTitle: "Open Recent", action: nil, keyEquivalent: "")
+        let recentMenu = NSMenu(title: "Open Recent")
+        recentMenu.delegate = NSApp.delegate as? NSMenuDelegate
+        recent.submenu = recentMenu
+        menu.addItem(withTitle: "New Window in Home Folder", action: #selector(AppDelegate.newHomeWindow(_:)), keyEquivalent: "n")
+        menu.addItem(withTitle: "Welcome", action: #selector(AppDelegate.showWelcome(_:)), keyEquivalent: "")
+        menu.addItem(.separator())
         menu.addItem(withTitle: "New Tab", action: #selector(TerminalPaneViewController.newTab(_:)), keyEquivalent: "t")
         menu.addItem(withTitle: "Close Tab", action: #selector(TerminalPaneViewController.closeTab(_:)), keyEquivalent: "w")
         menu.addItem(.separator())
@@ -42,6 +50,9 @@ enum MainMenu {
         previous.keyEquivalentModifierMask = [.command, .shift]
         menu.addItem(.separator())
         menu.addItem(withTitle: "Clear Terminal", action: #selector(TerminalPaneViewController.clearTerminal(_:)), keyEquivalent: "k")
+        menu.addItem(.separator())
+        let closeWindow = menu.addItem(withTitle: "Close Window", action: #selector(NSWindow.performClose(_:)), keyEquivalent: "w")
+        closeWindow.keyEquivalentModifierMask = [.command, .shift]
         return item(menu)
     }
 
@@ -63,7 +74,7 @@ enum MainMenu {
         let build = menu.addItem(withTitle: "Build Mode", action: #selector(WorkspaceSplitViewController.toggleBuildMode(_:)), keyEquivalent: "b")
         build.keyEquivalentModifierMask = [.command, .shift]
         let watch = menu.addItem(withTitle: "Watch Mode", action: #selector(WorkspaceSplitViewController.toggleWatchMode(_:)), keyEquivalent: "w")
-        watch.keyEquivalentModifierMask = [.command, .shift]
+        watch.keyEquivalentModifierMask = [.command, .option]
         let balanced = menu.addItem(withTitle: "Balanced Layout", action: #selector(WorkspaceSplitViewController.balancedMode(_:)), keyEquivalent: "0")
         balanced.keyEquivalentModifierMask = [.command, .shift]
         menu.addItem(.separator())

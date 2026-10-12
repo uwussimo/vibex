@@ -25,6 +25,7 @@ final class SimulatorDisplayView: NSView {
         screenLayer.backgroundColor = NSColor.black.cgColor
         screenLayer.masksToBounds = true
         screenLayer.actions = ["contents": NSNull(), "bounds": NSNull(), "position": NSNull(), "cornerRadius": NSNull()]
+        screenLayer.isHidden = true
         layer?.addSublayer(screenLayer)
     }
 
@@ -39,6 +40,8 @@ final class SimulatorDisplayView: NSView {
     func setSurface(_ newSurface: IOSurface?) {
         surface = newSurface
         screenLayer.contents = newSurface
+        // No device: hide the black screen so the empty state stands alone.
+        screenLayer.isHidden = newSurface == nil
         if let newSurface {
             screenSize = CGSize(width: IOSurfaceGetWidth(newSurface), height: IOSurfaceGetHeight(newSurface))
         }

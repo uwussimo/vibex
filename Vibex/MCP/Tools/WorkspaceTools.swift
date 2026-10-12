@@ -4,8 +4,9 @@ import UserNotifications
 
 /// Tools that change what the user sees: layout, focus, toasts, and terminal tabs.
 enum WorkspaceTools {
-    static func make(workspace: WorkspaceSplitViewController, toast: ToastModel) -> [Tool] {
-        [
+    static func make() -> [Tool] {
+        func window() throws -> MainWindowController { try WindowManager.shared.toolTarget() }
+        return [
             Tool(
                 name: "vibex_notify",
                 description: "Show a toast in the Vibex window (and a system notification if Vibex is in the background). Use it when a long task finishes or needs the user's attention.",
@@ -13,7 +14,7 @@ enum WorkspaceTools {
             ) { args in
                 let title = try args.requireString("title")
                 let message = args.string("message")
-                toast.show(title: title, message: message)
+                try window().toast.show(title: title, message: message)
                 if !NSApp.isActive { await Self.postSystemNotification(title: title, message: message) }
                 return .text("Shown.")
             },
@@ -24,7 +25,7 @@ enum WorkspaceTools {
             ) { args in
                 let raw = try args.requireString("mode")
                 guard let mode = LayoutMode(rawValue: raw) else { throw ToolError("unknown mode \(raw)") }
-                workspace.apply(mode: mode, animated: true)
+                try window().workspace.apply(mode: mode, animated: true)
                 return .text("Layout: \(raw).")
             },
             Tool(
@@ -33,9 +34,9 @@ enum WorkspaceTools {
                 inputSchema: Schema.object(["pane": Schema.string("Pane", enum: ["terminal", "simulator", "browser"])], required: ["pane"])
             ) { args in
                 switch try args.requireString("pane") {
-                case "terminal": workspace.focusTerminal(nil)
-                case "simulator": workspace.focusSimulator(nil)
-                case "browser": workspace.focusBrowser(nil)
+                case "terminal": try window().workspace.focusTerminal(nil)
+                case "simulator": try window().workspace.focusSimulator(nil)
+                case "browser": try window().workspace.focusBrowser(nil)
                 default: throw ToolError("pane must be terminal, simulator or browser")
                 }
                 return .text("Focused.")
@@ -46,7 +47,7 @@ enum WorkspaceTools {
                 inputSchema: Schema.object(["command": Schema.string("Shell command to run"), "cwd": Schema.string("Directory to start in (optional)")], required: ["command"])
             ) { args in
                 let command = try args.requireString("command")
-                let id = workspace.terminalPane.runCommandInNewTab(command, directory: args.string("cwd"))
+                let id = try window().workspace.terminalPane.runCommandInNewTab(command, directory: args.string("cwd"))
                 return .text("Running in terminal tab \(id.uuidString).")
             },
             Tool(
@@ -54,7 +55,7 @@ enum WorkspaceTools {
                 description: "List the terminal tabs: id, title and working directory.",
                 inputSchema: Schema.object()
             ) { _ in
-                let lines = workspace.terminalPane.tabSummaries().map { "\($0.id.uuidString)  \($0.title)  \($0.directory ?? "")" }
+                let lines = try window().workspace.terminalPane.tabSummaries().map { "\($0.id.uuidString)  \($0.title)  \($0.directory ?? "")" }
                 return .text(lines.isEmpty ? "No terminal tabs." : lines.joined(separator: "\n"))
             },
         ]
