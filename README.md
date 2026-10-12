@@ -22,12 +22,20 @@
 
 ## Install
 
-Download **Vibex-1.0.0.dmg** from [Releases](https://github.com/uwussimo/vibex/releases/latest), open it and drag
-Vibex to Applications. It bundles [simslim](https://github.com/MobAI-App/simslim) and
-[XcodeGen](https://github.com/yonaskolb/XcodeGen); copies you install yourself take precedence.
+```sh
+curl -fsSL https://uwussimo.github.io/vibex/install.sh | sh
+```
 
-Vibex is not notarized yet, so the first launch is blocked. Open it once, then go to **System Settings → Privacy &
-Security** and click **Open Anyway** (or run `xattr -dr com.apple.quarantine /Applications/Vibex.app`).
+The script downloads the latest release, checks its SHA-256, installs Vibex to `/Applications` (quitting a running
+copy first) and opens it. Downloads made with `curl` are not quarantined, so macOS lets the un-notarized app open.
+Set `VIBEX_VERSION=1.0.0` to pin a version or `VIBEX_INSTALL_DIR` to install elsewhere.
+
+Or download **Vibex-1.0.0.dmg** from [Releases](https://github.com/uwussimo/vibex/releases/latest) and drag Vibex to
+Applications. Vibex is not notarized yet, so macOS blocks a DMG downloaded in a browser: click **Done**, then
+**System Settings → Privacy & Security → Open Anyway** (or `xattr -d com.apple.quarantine ~/Downloads/Vibex-*.dmg`).
+
+Vibex bundles [simslim](https://github.com/MobAI-App/simslim) and [XcodeGen](https://github.com/yonaskolb/XcodeGen);
+copies you install yourself take precedence.
 
 You also need, and Vibex cannot bundle:
 

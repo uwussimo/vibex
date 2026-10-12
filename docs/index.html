@@ -315,8 +315,11 @@ Done. Onboarding is complete.</div>
     <div class="reveal">
       <div class="eyebrow">Get started</div>
       <h2>Install in a minute.</h2>
-      <p class="section-lede">Download the DMG from <a href="https://github.com/uwussimo/vibex/releases/latest">Releases</a> and drag Vibex to Applications. It ships with simslim and XcodeGen. You bring Xcode 26 and Claude Code.</p>
-      <p class="req">Vibex isn't notarized yet: after the first launch is blocked, open <b>System Settings → Privacy &amp; Security</b> and click <b>Open Anyway</b>.</p>
+      <p class="section-lede">Paste this into Terminal. It downloads the latest release, verifies it, installs Vibex to Applications and opens it. Vibex ships with simslim and XcodeGen; you bring Xcode 26 and Claude Code.</p>
+    </div>
+<pre class="install reveal" style="margin-top:22px">curl -fsSL https://uwussimo.github.io/vibex/install.sh | sh</pre>
+    <div class="reveal">
+      <p class="req">Prefer the DMG? Get it from <a href="https://github.com/uwussimo/vibex/releases/latest">Releases</a>. Vibex isn't notarized yet, so after macOS blocks it, open <b>System Settings → Privacy &amp; Security</b> and click <b>Open Anyway</b>.</p>
       <p class="section-lede" style="margin-top:28px">Or build it from source:</p>
     </div>
 <pre class="install reveal" style="margin-top:14px"><span class="c"># needs Xcode 26 with an iOS simulator runtime</span>
