@@ -1,0 +1,28 @@
+PROJECT   := Vibex.xcodeproj
+SCHEME    := Vibex
+DERIVED   := build/DerivedData
+XCB       := xcodebuild -project $(PROJECT) -scheme $(SCHEME) -derivedDataPath $(DERIVED) -skipPackagePluginValidation
+APP       := $(DERIVED)/Build/Products/Debug/Vibex.app
+
+.PHONY: gen build run test clean open
+
+gen:
+	xcodegen generate
+
+build: gen
+	$(XCB) -configuration Debug build 2>&1 | grep -E "error:|warning: .*Vibex/|BUILD" || true
+
+run: build
+	pkill -x Vibex 2>/dev/null; true
+	open $(APP)
+
+test: gen
+	$(XCB) -configuration Debug test 2>&1 | grep -E "error:|Test Case|Executed|passed|failed|BUILD|TEST" || true
+	# The test action leaves the host app unsigned for launchd; rebuild it.
+	$(XCB) -configuration Debug build 2>&1 | grep -E "error:|BUILD" || true
+
+clean:
+	rm -rf $(DERIVED)
+
+open: gen
+	open $(PROJECT)

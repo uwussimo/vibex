@@ -1,0 +1,84 @@
+name: Vibex
+options:
+  bundleIdPrefix: com.yusuf
+  deploymentTarget:
+    macOS: "26.0"
+  createIntermediateGroups: true
+  generateEmptyDirectories: true
+packages:
+  SwiftTerm:
+    url: https://github.com/migueldeicaza/SwiftTerm
+    exactVersion: 1.99.0
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_APPROACHABLE_CONCURRENCY: YES
+    SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
+    SWIFT_STRICT_CONCURRENCY: complete
+    SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY: YES
+    # A real certificate keeps the app's code requirement stable across rebuilds, so the
+    # Accessibility grant in System Settings survives. Ad-hoc signing invalidates it on every build.
+    CODE_SIGN_IDENTITY: "A19B5D72A59AB3C9109D5904DFFC2A16FC839690"
+    CODE_SIGN_STYLE: Manual
+    DEVELOPMENT_TEAM: ""
+    SWIFT_TREAT_WARNINGS_AS_ERRORS: NO
+    DEAD_CODE_STRIPPING: YES
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+targets:
+  Vibex:
+    type: application
+    platform: macOS
+    sources:
+      - path: Vibex
+        excludes: ["Resources/Info.plist"]
+    dependencies:
+      - package: SwiftTerm
+    info:
+      path: Vibex/Resources/Info.plist
+      properties:
+        CFBundleDisplayName: Vibex
+        CFBundleShortVersionString: "0.1.0"
+        CFBundleVersion: "1"
+        LSApplicationCategoryType: public.app-category.developer-tools
+        NSPrincipalClass: NSApplication
+        NSHumanReadableCopyright: "© 2026 Yusuf Abdurakhimov"
+        NSSupportsAutomaticTermination: false
+        NSSupportsSuddenTermination: false
+        NSHighResolutionCapable: true
+        LSMinimumSystemVersion: "26.0"
+    entitlements:
+      path: Vibex/Resources/Vibex.entitlements
+      properties:
+        com.apple.security.cs.allow-jit: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.yusuf.vibex
+        PRODUCT_NAME: Vibex
+        ENABLE_HARDENED_RUNTIME: YES
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        COMBINE_HIDPI_IMAGES: YES
+        SWIFT_EMIT_LOC_STRINGS: NO
+  VibexTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources: [VibexTests]
+    dependencies:
+      - target: Vibex
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.yusuf.vibex.tests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/Vibex.app/Contents/MacOS/Vibex"
+        BUNDLE_LOADER: "$(TEST_HOST)"
+schemes:
+  Vibex:
+    build:
+      targets:
+        Vibex: all
+        VibexTests: [test]
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets: [VibexTests]
