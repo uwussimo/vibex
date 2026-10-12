@@ -4,7 +4,7 @@ DERIVED   := build/DerivedData
 XCB       := xcodebuild -project $(PROJECT) -scheme $(SCHEME) -derivedDataPath $(DERIVED) -skipPackagePluginValidation
 APP       := $(DERIVED)/Build/Products/Debug/Vibex.app
 
-.PHONY: gen build run test clean open
+.PHONY: gen build run test clean open icon
 
 gen:
 	xcodegen generate
@@ -26,3 +26,6 @@ clean:
 
 open: gen
 	open $(PROJECT)
+
+icon:
+	./scripts/make-iconset.sh
