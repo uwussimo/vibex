@@ -47,7 +47,7 @@ enum CoreSimulatorError: Error, LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case let .frameworkMissing(name): "Could not load \(name). Is Xcode installed at /Applications/Xcode.app?"
+        case let .frameworkMissing(name): "Could not load \(name). Vibex needs Xcode with an iOS simulator runtime (found: \(Toolchain.developerDir))."
         case let .classMissing(name): "CoreSimulator class \(name) not found"
         case let .symbolMissing(name): "SimulatorKit symbol \(name) not found"
         case .serviceContextUnavailable: "CoreSimulator service unavailable"
@@ -67,7 +67,7 @@ final class CoreSimulatorBridge {
     typealias ButtonMessageFn = @convention(c) (Int32, Int32, Int32) -> UnsafeMutableRawPointer
     typealias KeyboardArbitraryFn = @convention(c) (Int32, Int32) -> UnsafeMutableRawPointer
 
-    static let developerDir = "/Applications/Xcode.app/Contents/Developer"
+    static var developerDir: String { Toolchain.developerDir }
 
     nonisolated(unsafe) private static var cached: Result<CoreSimulatorBridge, Error>?
 

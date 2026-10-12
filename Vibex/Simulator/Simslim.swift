@@ -42,6 +42,7 @@ nonisolated struct Simslim: Sendable {
     static var executable: String? {
         let home = FileManager.default.homeDirectoryForCurrentUser.path
         return Shell.find(["/opt/homebrew/bin/simslim", "/usr/local/bin/simslim", "\(home)/go/bin/simslim"])
+            ?? Toolchain.bundled("simslim")
     }
 
     static var isInstalled: Bool { executable != nil }

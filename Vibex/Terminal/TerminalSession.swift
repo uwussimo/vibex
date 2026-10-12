@@ -18,6 +18,7 @@ struct TerminalSession {
         env["TERM_PROGRAM"] = "Vibex"
         env["TERM_PROGRAM_VERSION"] = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0"
         if env["LANG"] == nil { env["LANG"] = "en_US.UTF-8" }
+        env["PATH"] = Toolchain.path(appending: env["PATH"])
         for (key, value) in extraEnvironment { env[key] = value }
         for (key, value) in windowEnvironment { env[key] = value }
         env.removeValue(forKey: "TERM_SESSION_ID")
