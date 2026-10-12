@@ -6,6 +6,8 @@ nonisolated struct HTTPRequest: Sendable {
     let path: String
     let headers: [String: String]   // lower-cased keys
     let body: Data
+    /// The client's TCP source port, filled in by the server; used to find which window called.
+    var clientPort: UInt16?
 
     var contentLength: Int { Int(headers["content-length"] ?? "") ?? 0 }
     var bearerToken: String? {

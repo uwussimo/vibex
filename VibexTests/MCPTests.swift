@@ -137,3 +137,28 @@ import Testing
         #expect(AXNode.shortRole("AXSecureTextField") == "textfield")
     }
 }
+
+@MainActor
+@Suite struct CallerResolverTests {
+    // shell 100 → claude 200 → node 300 (port 6000) ; shell 400 → claude 500 (port 7000)
+    private let table = ProcessTable(
+        children: { pid in [100: [200], 200: [300], 400: [500]][pid] ?? [] },
+        localTCPPorts: { pid in [300: [6000, 6001], 500: [7000]][pid] ?? [] }
+    )
+
+    @Test func `finds the window whose shell owns the calling process`() {
+        let resolver = CallerResolver(processes: table)
+        let candidates = [
+            CallerResolver.Candidate(windowID: "A", shellPIDs: [100]),
+            CallerResolver.Candidate(windowID: "B", shellPIDs: [400]),
+        ]
+        #expect(resolver.windowID(forClientPort: 6001, among: candidates) == "A")
+        #expect(resolver.windowID(forClientPort: 7000, among: candidates) == "B")
+        #expect(resolver.windowID(forClientPort: 9999, among: candidates) == nil)
+    }
+
+    @Test func `descendants walk the whole tree`() {
+        #expect(Set(table.descendants(100)) == [200, 300])
+        #expect(table.descendants(300).isEmpty)
+    }
+}

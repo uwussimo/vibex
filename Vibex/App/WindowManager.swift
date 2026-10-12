@@ -33,6 +33,8 @@ final class WindowManager {
         if let existing = windows.first(where: { $0.project == project }) {
             existing.showWindow(nil)
             existing.window?.makeKeyAndOrderFront(nil)
+            // Key-window notifications do not fire while Vibex is in the background.
+            noteFocus(existing)
             return existing
         }
         let controller = MainWindowController(session: ProjectSession(project: project))

@@ -11,13 +11,15 @@ final class MCPServer {
     private(set) var lastClientActivity: Date?
     private(set) var clientName: String?
     var onActivity: () -> Void = {}
+    /// Maps a request's client port to the project window that sent it (nil: unknown caller).
+    var resolveCaller: (UInt16) -> String? = { _ in nil }
 
     init(registry: ToolRegistry) {
         self.registry = registry
     }
 
     /// Returns the HTTP status and JSON body for one POSTed JSON-RPC message.
-    func handle(body: Data) async -> (status: Int, reason: String, body: Data) {
+    func handle(body: Data, clientPort: UInt16? = nil) async -> (status: Int, reason: String, body: Data) {
         let request: JSONRPC.Request
         do {
             request = try JSONRPC.parse(body)
@@ -33,7 +35,8 @@ final class MCPServer {
             return (202, "Accepted", Data())
         }
         do {
-            let result = try await dispatch(request)
+            let caller = clientPort.flatMap(resolveCaller)
+            let result = try await ToolCall.$callerWindowID.withValue(caller) { try await dispatch(request) }
             return (200, "OK", JSONRPC.response(id: request.id, result: result))
         } catch let failure as JSONRPC.Failure {
             return (200, "OK", JSONRPC.errorResponse(id: request.id, failure))
@@ -65,7 +68,11 @@ final class MCPServer {
             let arguments = request.params["arguments"] as? JSONObject ?? [:]
             Log.mcp.info("tool \(name, privacy: .public)")
             do {
-                let result = try await withTimeout(seconds: 60) { try await tool.handler(arguments) }
+                var result = try await withTimeout(seconds: 60) { try await tool.handler(arguments) }
+                // With several projects open, say which window acted so the model can tell.
+                if WindowManager.shared.windows.count > 1, let window = try? WindowManager.shared.toolTarget() {
+                    result.content.insert(.text("[project: \(window.project.name)]"), at: 0)
+                }
                 return result.json
             } catch {
                 // Tool failures are results, not protocol errors, so the model can read them.
@@ -110,5 +117,7 @@ enum MCPInstructions {
     Browser tools act on the side browser's tabs. Call browser_snapshot to get a compact tree of the page with element refs like e12, then browser_click / browser_type with that ref. Use browser_screenshot only when layout matters. browser_console and browser_requests show what the page logged. Netflix may be playing on another tab; open your own tab with browser_new_tab instead of navigating the user's.
 
     Workspace tools change what the user sees: vibex_layout, vibex_focus, vibex_notify (toast) and terminal_run (opens a terminal tab and types a command the user can watch and stop).
+
+    Vibex opens one window per project folder. Calls from Claude Code running in a project's terminal act on that project's window automatically; other callers act on the most recently focused window. With several projects open, results start with [project: name]. vibex_projects lists them.
     """
 }

@@ -34,10 +34,17 @@ final class MCPService {
         if port == 0 { choosePort() }
         let server = MCPServer(registry: registry)
         server.onActivity = { [weak self] in self?.lastActivity = Date() }
+        let resolver = CallerResolver()
+        server.resolveCaller = { port in
+            let candidates = WindowManager.shared.windows.map {
+                CallerResolver.Candidate(windowID: $0.session.windowID, shellPIDs: $0.workspace.terminalPane.shellPIDs)
+            }
+            return resolver.windowID(forClientPort: port, among: candidates)
+        }
         self.server = server
         do {
             let http = try MCPHTTPServer(port: port, token: token) { request in
-                await server.handle(body: request.body)
+                await server.handle(body: request.body, clientPort: request.clientPort)
             }
             http.start()
             self.http = http

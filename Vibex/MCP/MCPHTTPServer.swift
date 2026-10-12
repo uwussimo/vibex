@@ -109,6 +109,8 @@ nonisolated final class MCPHTTPServer: Sendable {
         } else {
             switch request.method {
             case "POST":
+                var request = request
+                if case let .hostPort(_, port) = connection.endpoint { request.clientPort = port.rawValue }
                 let result = await handler(request)
                 response = HTTPResponse.make(status: result.status, reason: result.reason, body: result.body, keepAlive: keepAlive)
             case "DELETE":

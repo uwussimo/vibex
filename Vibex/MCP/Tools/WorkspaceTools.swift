@@ -43,12 +43,41 @@ enum WorkspaceTools {
             },
             Tool(
                 name: "terminal_run",
-                description: "Open a new terminal tab and type a command into it, where the user can watch it and stop it. Good for dev servers and long-running processes. Returns the tab id. Does not capture output.",
+                description: "Open a new terminal tab in this project's window and type a command into it, where the user can watch it and stop it. Starts in the project folder unless cwd is given. Good for dev servers and long-running processes. Returns the tab id. Does not capture output.",
                 inputSchema: Schema.object(["command": Schema.string("Shell command to run"), "cwd": Schema.string("Directory to start in (optional)")], required: ["command"])
             ) { args in
                 let command = try args.requireString("command")
-                let id = try window().workspace.terminalPane.runCommandInNewTab(command, directory: args.string("cwd"))
+                let target = try window()
+                let id = target.workspace.terminalPane.runCommandInNewTab(command, directory: args.string("cwd") ?? target.project.path)
                 return .text("Running in terminal tab \(id.uuidString).")
+            },
+            Tool(
+                name: "vibex_projects",
+                description: "Projects open in Vibex windows (* marks the window this call acts on) and recent projects.",
+                inputSchema: Schema.object()
+            ) { _ in
+                let manager = WindowManager.shared
+                let current = try? manager.toolTarget()
+                var lines = ["open:"]
+                for window in manager.windows {
+                    lines.append("\(window === current ? "*" : " ") \(window.project.name)  \(window.project.path)")
+                }
+                let openPaths = Set(manager.windows.map(\.project.path))
+                let recents = ProjectStore.shared.recents.filter { !openPaths.contains($0.path) }
+                if !recents.isEmpty {
+                    lines.append("recent:")
+                    lines += recents.prefix(10).map { "  \($0.name)  \($0.path)" }
+                }
+                return .text(lines.joined(separator: "\n"))
+            },
+            Tool(
+                name: "vibex_open_project",
+                description: "Open a folder as a project in its own Vibex window, or bring its window to the front if it is already open.",
+                inputSchema: Schema.object(["path": Schema.string("Absolute path to the project folder")], required: ["path"])
+            ) { args in
+                let path = (try args.requireString("path") as NSString).expandingTildeInPath
+                guard let window = WindowManager.shared.open(URL(fileURLWithPath: path)) else { throw ToolError("not a folder: \(path)") }
+                return .text("Opened \(window.project.name).")
             },
             Tool(
                 name: "terminal_tabs",
