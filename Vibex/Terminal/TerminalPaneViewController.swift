@@ -199,6 +199,8 @@ final class TerminalPaneViewController: NSViewController {
         return tab.id
     }
 
+    func selectTab(_ id: UUID) { select(id) }
+
     /// Shell process ids of every tab, for finding which window an MCP caller runs in.
     var shellPIDs: [pid_t] { tabs.compactMap { $0.terminal.process?.shellPid } }
 

@@ -72,6 +72,9 @@ enum MainMenu {
 
     private static func viewMenu() -> NSMenuItem {
         let menu = NSMenu(title: "View")
+        let palette = menu.addItem(withTitle: "Command Palette…", action: #selector(MainWindowController.showCommandPalette(_:)), keyEquivalent: "p")
+        palette.keyEquivalentModifierMask = [.command, .shift]
+        menu.addItem(.separator())
         let build = menu.addItem(withTitle: "Build Mode", action: #selector(WorkspaceSplitViewController.toggleBuildMode(_:)), keyEquivalent: "b")
         build.keyEquivalentModifierMask = [.command, .shift]
         let watch = menu.addItem(withTitle: "Watch Mode", action: #selector(WorkspaceSplitViewController.toggleWatchMode(_:)), keyEquivalent: "w")
