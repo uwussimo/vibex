@@ -20,6 +20,23 @@
   <img src="docs/screenshot.png" alt="Vibex window: terminal tabs on the left, an iPhone 17 Pro Max simulator running a habits app in the middle, and a browser tab on the right">
 </p>
 
+## Install
+
+Download **Vibex-1.0.0.dmg** from [Releases](https://github.com/uwussimo/vibex/releases/latest), open it and drag
+Vibex to Applications. It bundles [simslim](https://github.com/MobAI-App/simslim) and
+[XcodeGen](https://github.com/yonaskolb/XcodeGen); copies you install yourself take precedence.
+
+Vibex is not notarized yet, so the first launch is blocked. Open it once, then go to **System Settings → Privacy &
+Security** and click **Open Anyway** (or run `xattr -dr com.apple.quarantine /Applications/Vibex.app`).
+
+You also need, and Vibex cannot bundle:
+
+- **Xcode 26** with an iOS simulator runtime (Vibex uses its simulator frameworks).
+- **Claude Code** (`npm install -g @anthropic-ai/claude-code`) to drive Vibex over MCP.
+- **fish** is optional (`brew install fish`); without it terminals use your login shell.
+
+Apple Silicon and macOS 26 only.
+
 ## Requirements
 
 - macOS 26, Xcode 26 with at least one iOS simulator runtime
@@ -32,6 +49,7 @@ make run        # generates Vibex.xcodeproj, builds Debug, launches the app
 make test       # unit tests (Swift Testing)
 make open       # open the project in Xcode
 make icon       # re-render the app icon from docs/icon.svg
+make release    # Release build with bundled tools, signed, packed as build/release/Vibex-<version>.dmg
 ```
 
 The first time Xcode opens the project it asks to trust SwiftTerm's build plugin. Command-line builds pass

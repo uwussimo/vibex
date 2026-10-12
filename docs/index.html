@@ -203,10 +203,10 @@
     <h1>Build, watch, ship.<br><span class="accent">One window.</span></h1>
     <p class="lede">Vibex is a native macOS workstation: a terminal for Claude Code, the iOS Simulator embedded right in the window, and a browser on the side. Claude can see and drive all of it.</p>
     <div class="cta">
-      <a class="btn btn-primary" href="#install">Get started</a>
+      <a class="btn btn-primary" href="https://github.com/uwussimo/vibex/releases/latest">Download for Mac</a>
       <a class="btn btn-ghost" href="https://github.com/uwussimo/vibex">View on GitHub</a>
     </div>
-    <p class="meta">Free and open source · macOS 26 · Swift</p>
+    <p class="meta">v1.0.0 · Free and open source · Apple Silicon · macOS 26 · Requires Xcode</p>
     <div class="shot">
       <img src="screenshot.png" width="2000" height="1144" alt="The Vibex window: terminal tabs on the left, an iPhone simulator running a habits app in the middle, and a browser tab on the right">
     </div>
@@ -314,17 +314,19 @@ Done. Onboarding is complete.</div>
   <div class="wrap">
     <div class="reveal">
       <div class="eyebrow">Get started</div>
-      <h2>Build it in a minute.</h2>
-      <p class="section-lede">Vibex is built from source with Xcode. Clone it, then <code>make run</code>.</p>
+      <h2>Install in a minute.</h2>
+      <p class="section-lede">Download the DMG from <a href="https://github.com/uwussimo/vibex/releases/latest">Releases</a> and drag Vibex to Applications. It ships with simslim and XcodeGen. You bring Xcode 26 and Claude Code.</p>
+      <p class="req">Vibex isn't notarized yet: after the first launch is blocked, open <b>System Settings → Privacy &amp; Security</b> and click <b>Open Anyway</b>.</p>
+      <p class="section-lede" style="margin-top:28px">Or build it from source:</p>
     </div>
-<pre class="install reveal"><span class="c"># needs Xcode 26 with an iOS simulator runtime</span>
+<pre class="install reveal" style="margin-top:14px"><span class="c"># needs Xcode 26 with an iOS simulator runtime</span>
 brew install xcodegen
 brew install mobai-app/tap/simslim   <span class="c"># optional: lighter simulators</span>
 
 git clone https://github.com/uwussimo/vibex.git
 cd vibex
 make run</pre>
-    <p class="req reveal">Requires macOS 26 and Xcode 26. To build it yourself, set your own signing identity in <code>project.yml</code>. The simulator embedding relies on private CoreSimulator API verified on Xcode 26.6.</p>
+    <p class="req reveal">Requires macOS 26 on Apple Silicon and Xcode 26. To build it yourself, set your own signing identity in <code>project.yml</code>. The simulator embedding relies on private CoreSimulator API verified on Xcode 26.6.</p>
   </div>
 </section>
 
