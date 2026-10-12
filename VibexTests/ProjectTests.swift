@@ -118,3 +118,29 @@ import Testing
         #expect(Runner.quote("it's") == "'it'\\''s'")
     }
 }
+
+@Suite struct FuzzyMatchTests {
+    @Test func `requires every character in order`() {
+        #expect(FuzzyMatch.match("rn", in: "Run") != nil)
+        #expect(FuzzyMatch.match("nr", in: "Run") == nil)
+        #expect(FuzzyMatch.match("", in: "Anything")?.score == 0)
+    }
+
+    @Test func `word starts beat buried letters`() {
+        let ranked = FuzzyMatch.rank(["Toggle Device Bezels", "Open Browser Tab", "Boot Device"], query: "obt") { $0 }
+        #expect(ranked.first?.item == "Open Browser Tab")
+    }
+
+    @Test func `prefix and consecutive runs rank higher`() {
+        let ranked = FuzzyMatch.rank(["Stop", "Show Settings", "Simulator: Take Screenshot"], query: "sto") { $0 }
+        #expect(ranked.first?.item == "Stop")
+        let tabs = FuzzyMatch.rank(["New Tab", "Next Tab", "Clear Terminal"], query: "next") { $0 }
+        #expect(tabs.first?.item == "Next Tab")
+    }
+
+    @Test func `positions point at matched characters`() {
+        let result = FuzzyMatch.match("ws", in: "Watch Mode")
+        #expect(result == nil)
+        #expect(FuzzyMatch.match("wm", in: "Watch Mode")?.positions == [0, 6])
+    }
+}
