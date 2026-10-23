@@ -67,7 +67,7 @@ macOS 26 on Apple silicon or Intel (the app and its bundled tools are universal)
 make run        # generates Vibex.xcodeproj, builds Debug, launches the app
 make test       # unit tests (Swift Testing)
 make open       # open the project in Xcode
-make icon       # re-render the app icon from docs/icon.svg
+make icon       # re-render the app icon from docs/icon-art.png
 make release    # Release build with bundled tools, signed, packed as build/release/Vibex-<version>.dmg
 ```
 

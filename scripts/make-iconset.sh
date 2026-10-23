@@ -1,9 +1,9 @@
 #!/bin/sh
-# Builds the AppIcon asset catalog and README icon from docs/icon.svg.
+# Builds the AppIcon asset catalog and README icon from docs/icon-art.png.
 set -eu
 cd "$(dirname "$0")/.."
 SET=Vibex/Resources/Assets.xcassets/AppIcon.appiconset
-swift scripts/render-icon.swift docs/icon.svg docs/icon-1024.png
+swift scripts/render-icon.swift docs/icon-art.png docs/icon-1024.png
 mkdir -p "$SET"
 rm -f "$SET"/*.png
 for size in 16 32 128 256 512; do
