@@ -3,17 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Vibex — the free, open-source vibe coding workstation for Mac</title>
-<meta name="description" content="Vibex puts Claude Code's terminal, the iOS Simulator, a browser, Git diffs, AI usage and skills in one native macOS window. Free and open source under the MIT license.">
+<title>Vibex — the agentic workstation where your coding agent sees what it builds</title>
+<meta name="description" content="Vibex closes the loop for coding agents: Claude Code writes the code, runs it, taps through the live iOS Simulator and browser, and checks its own work, all in one native Mac window. Free and open source under the MIT license.">
 <meta name="theme-color" content="#0c0c0f">
 <link rel="icon" type="image/png" href="icon.png">
 <link rel="apple-touch-icon" href="icon.png">
-<meta property="og:title" content="Vibex">
-<meta property="og:description" content="Claude Code's terminal, the iOS Simulator, a browser and every diff in one native Mac window. Free and open source.">
+<meta property="og:title" content="Vibex: your coding agent can finally see what it builds">
+<meta property="og:description" content="Claude Code writes, runs, taps through and checks its own work in one native Mac window: terminal, live iOS Simulator, browser and every diff. Free and open source.">
 <meta property="og:image" content="https://vibex.cc/og.png">
 <meta property="og:image:width" content="2400">
 <meta property="og:image:height" content="1260">
-<meta property="og:image:alt" content="The old way vs. the Vibex way: one window that Claude can see and drive. $0, 50 MCP tools, MIT.">
+<meta property="og:image:alt" content="The old way vs. the Vibex way: one window that Claude can see and drive. $0, 50+ MCP tools, MIT.">
 <meta name="twitter:image" content="https://vibex.cc/og.png">
 <meta property="og:url" content="https://vibex.cc/">
 <meta name="twitter:card" content="summary_large_image">
@@ -391,8 +391,19 @@
   /* Logos */
   .works { text-align: center; padding: 44px 0 0; }
   .works p { color: var(--muted); font-size: 15px; }
-  .logos { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px 30px; margin-top: 16px; font-size: 17px; font-weight: 500; color: var(--muted); }
-  .logos span { display: flex; align-items: center; gap: 8px; }
+  .logos { margin-top: 18px; font-size: 17px; font-weight: 500; color: var(--muted); overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent); mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent); }
+  .logos-track { display: flex; width: max-content; animation: marquee 60s linear infinite; }
+  .logos-set { display: flex; gap: 34px; padding-right: 34px; }
+  .logos span { display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+  .logos .more { color: var(--text); }
+  @media (hover: hover) and (pointer: fine) { .logos:hover .logos-track { animation-play-state: paused; } }
+  @keyframes marquee { to { transform: translateX(-50%); } }
+  @media (prefers-reduced-motion: reduce) {
+    .logos { -webkit-mask-image: none; mask-image: none; }
+    .logos-track { animation: none; width: auto; justify-content: center; }
+    .logos-set { flex-wrap: wrap; justify-content: center; gap: 12px 30px; padding: 0; }
+    .logos-set + .logos-set { display: none; }
+  }
   .logos svg, .logos img { width: 20px; height: 20px; }
   /* Black marks drawn light on the dark page. */
   img.mono { filter: invert(1) brightness(0.95); }
@@ -622,8 +633,8 @@
 <section class="hero" style="padding-top:64px">
   <div class="wrap">
     <div class="hero-grid">
-      <h1>Your whole <span class="pill">vibe coding</span> setup in one window.</h1>
-      <p class="hero-lede">Claude Code's terminal, the iOS Simulator, a browser, every Git diff and your AI usage, side by side in a native Mac app. Free and open source, for good.</p>
+      <h1>Your coding agent finally has <span class="pill">eyes</span>.</h1>
+      <p class="hero-lede">Vibex puts a live iOS Simulator, a browser, every diff and 50+ tools within Claude Code's reach, in one native Mac window. It writes the code, runs it, taps through it and checks its own work. You review instead of babysitting. Free and open source.</p>
     </div>
     <div class="hero-cta">
       <a class="btn btn-dark" href="#install"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.4 12.6c0-2.6 2.1-3.8 2.2-3.9-1.2-1.8-3.1-2-3.7-2-1.6-.2-3.1.9-3.9.9-.8 0-2-.9-3.4-.9-1.7 0-3.3 1-4.2 2.6-1.8 3.1-.5 7.7 1.3 10.2.8 1.2 1.8 2.6 3.1 2.6 1.3-.1 1.7-.8 3.3-.8 1.5 0 1.9.8 3.3.8 1.4 0 2.2-1.3 3-2.5 1-1.4 1.3-2.7 1.4-2.8-.1 0-2.4-.9-2.4-4.2zM13.9 5c.7-.9 1.2-2 1-3.2-1 0-2.3.7-3 1.6-.7.8-1.2 2-1.1 3.1 1.2.1 2.3-.6 3.1-1.5z"/></svg>Download for Mac</a>
@@ -832,24 +843,16 @@
 </section>
 
 <div class="works wrap">
-  <p>Works with the tools you already use.</p>
-  <div class="logos">
-    <span><img src="logos/claude.svg" alt="">Claude Code</span>
-    <span><img class="mono" src="logos/openai.svg" alt="">Codex</span>
-    <span><img src="logos/xcode.svg" alt="">Xcode</span>
-    <span><img class="mono" src="logos/apple.svg" alt="">iOS Simulator</span>
-    <span><img src="logos/swift.svg" alt="">Swift</span>
-    <span><img src="logos/git.svg" alt="">Git</span>
-    <span><img class="mono" src="logos/github.svg" alt="">GitHub</span>
-    <span><img src="logos/nodejs.svg" alt="">Node</span>
-    <span><img src="logos/vitejs.svg" alt="">Vite &amp; Next.js</span>
+  <p>Works with the stack you already have, and anything that runs in a terminal or speaks MCP.</p>
+  <div class="logos" aria-label="Works with Claude Code, Codex, Xcode, the iOS Simulator, Swift, Git, GitHub, Node, Vite, Next.js, React, Python, Docker, Postgres, Supabase, Figma, Playwright, Chrome DevTools, Linear, Sentry and anything with a command line">
+    <div class="logos-track" aria-hidden="true"><div class="logos-set"><span><img src="logos/claude.svg" alt="">Claude Code</span><span><img class="mono" src="logos/openai.svg" alt="">Codex</span><span><img src="logos/xcode.svg" alt="">Xcode</span><span><img class="mono" src="logos/apple.svg" alt="">iOS Simulator</span><span><img src="logos/swift.svg" alt="">Swift</span><span><img src="logos/git.svg" alt="">Git</span><span><img class="mono" src="logos/github.svg" alt="">GitHub</span><span><img src="logos/nodejs.svg" alt="">Node</span><span><img src="logos/vitejs.svg" alt="">Vite</span><span><img class="mono" src="logos/nextjs.svg" alt="">Next.js</span><span><img src="logos/react.svg" alt="">React</span><span><img src="logos/python.svg" alt="">Python</span><span><img src="logos/docker.svg" alt="">Docker</span><span><img src="logos/postgresql.svg" alt="">Postgres</span><span><img src="logos/supabase.svg" alt="">Supabase</span><span><img src="logos/figma.svg" alt="">Figma</span><span><img src="logos/playwright.svg" alt="">Playwright</span><span><img src="logos/chrome.svg" alt="">Chrome DevTools</span><span><img class="mono" src="logos/linear.svg" alt="">Linear</span><span><img class="mono" src="logos/sentry.svg" alt="">Sentry</span><span class="more">+ anything with a CLI</span></div><div class="logos-set"><span><img src="logos/claude.svg" alt="">Claude Code</span><span><img class="mono" src="logos/openai.svg" alt="">Codex</span><span><img src="logos/xcode.svg" alt="">Xcode</span><span><img class="mono" src="logos/apple.svg" alt="">iOS Simulator</span><span><img src="logos/swift.svg" alt="">Swift</span><span><img src="logos/git.svg" alt="">Git</span><span><img class="mono" src="logos/github.svg" alt="">GitHub</span><span><img src="logos/nodejs.svg" alt="">Node</span><span><img src="logos/vitejs.svg" alt="">Vite</span><span><img class="mono" src="logos/nextjs.svg" alt="">Next.js</span><span><img src="logos/react.svg" alt="">React</span><span><img src="logos/python.svg" alt="">Python</span><span><img src="logos/docker.svg" alt="">Docker</span><span><img src="logos/postgresql.svg" alt="">Postgres</span><span><img src="logos/supabase.svg" alt="">Supabase</span><span><img src="logos/figma.svg" alt="">Figma</span><span><img src="logos/playwright.svg" alt="">Playwright</span><span><img src="logos/chrome.svg" alt="">Chrome DevTools</span><span><img class="mono" src="logos/linear.svg" alt="">Linear</span><span><img class="mono" src="logos/sentry.svg" alt="">Sentry</span><span class="more">+ anything with a CLI</span></div></div>
   </div>
 </div>
 
 <div class="statement" data-statement>
   <div class="statement-pin">
     <div class="glow" aria-hidden="true"></div>
-    <p>Meet <span class="brand-pill"><img src="icon.png" alt="">Vibex</span>, the window where Claude Code builds your app, runs it, taps through it and shows you every line it changed. No more juggling Terminal, Simulator and Safari. And it's free.</p>
+    <p>Meet <span class="brand-pill"><img src="icon.png" alt="">Vibex</span>, a window built for your coding agent. Agents used to work blind and wait for you to run, look and explain. Here Claude runs it, sees it and fixes it. You just review.</p>
   </div>
 </div>
 
@@ -857,7 +860,7 @@
   <div class="grid-lines">
     <div class="wrap" style="padding:0">
       <div class="how-head"><span>How it works</span><a class="btn btn-light btn-sm" href="#install">Install Vibex</a></div>
-      <div class="how-title reveal"><h2>Up and running in a minute</h2><p>Three steps, and Claude has a window to work in.</p></div>
+      <div class="how-title reveal"><h2>From install to your first agent loop in a minute</h2><p>Three steps, and Claude can see, run and test your app.</p></div>
       <div class="steps">
         <div class="step reveal">
           <div class="step-vis">
@@ -897,8 +900,8 @@
     <div class="sec-head reveal"><h2>The old way vs. <span class="pill" style="background:var(--accent-soft);border-color:transparent;box-shadow:none">the Vibex way</span></h2></div>
     <div class="versus reveal">
       <div>
-        <h3>The old way.</h3>
-        <p class="sub">Five apps and a lot of ⌘-Tab.</p>
+        <h3>The old way: you are the agent's eyes.</h3>
+        <p class="sub">It writes blind. You run, look, screenshot and explain.</p>
         <div class="old-list">
           <div><i><svg class="ui"><use href="#i-x"/></svg></i><span>Simulator covering your terminal<small>while Claude waits for you to look</small></span></div>
           <div><i><svg class="ui"><use href="#i-x"/></svg></i><span>Guessing what the agent changed<small>until git diff scrolls past</small></span></div>
@@ -907,8 +910,8 @@
         </div>
       </div>
       <div>
-        <h3>The Vibex way.</h3>
-        <p class="sub">One window that Claude can see and drive.</p>
+        <h3>The Vibex way: it sees for itself.</h3>
+        <p class="sub">It runs, sees and fixes its own work. You review.</p>
         <div class="greet"><img src="icon.png" alt=""><span>What should we build today?</span></div>
         <div class="chips">
           <span class="c-green"><svg class="ui"><use href="#i-play"/></svg>Runs your app</span><span class="c-blue"><svg class="ui"><use href="#i-tap"/></svg>Taps the simulator</span>
@@ -920,7 +923,7 @@
     </div>
     <div class="stats-row">
       <div class="stat reveal"><span class="stat-ico"><svg class="ui"><use href="#i-arrow-down-left"/></svg></span><b>$0</b><span>Forever. No plans, no trial.</span></div>
-      <div class="stat reveal" style="--d:80ms"><span class="stat-ico"><svg class="ui"><use href="#i-arrow-down-left"/></svg></span><b>50</b><span>MCP tools for Claude Code</span></div>
+      <div class="stat reveal" style="--d:80ms"><span class="stat-ico"><svg class="ui"><use href="#i-arrow-down-left"/></svg></span><b>50+</b><span>MCP tools that let Claude see and act</span></div>
       <div class="stat reveal" style="--d:160ms"><span class="stat-ico"><svg class="ui"><use href="#i-arrow-down-left"/></svg></span><b>MIT</b><span>Fork it, ship it, change it</span></div>
     </div>
   </div>
@@ -1063,7 +1066,7 @@
   <div class="wrap">
     <div class="sec-head reveal">
       <span class="tag" style="background:var(--accent)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z"/></svg>New in 2.0</span>
-      <h2 class="boxed" style="border-color:color-mix(in srgb,var(--accent) 40%,transparent);background:var(--accent-soft)">Run more agents, miss nothing<span class="corner" style="border-color:color-mix(in srgb,var(--accent) 40%,transparent);color:var(--accent)">2.0</span></h2>
+      <h2 class="boxed" style="border-color:color-mix(in srgb,var(--accent) 40%,transparent);background:var(--accent-soft)">From one agent to a team<span class="corner" style="border-color:color-mix(in srgb,var(--accent) 40%,transparent);color:var(--accent)">2.0</span></h2>
     </div>
     <div class="bento">
       <div class="cell c6 reveal">
@@ -1133,7 +1136,8 @@
     <div class="faq reveal">
       <details open><summary>Is Vibex really free?</summary><div class="a">Yes. It's open source under the MIT license, with no paid tier, no trial and no account. You only pay for the AI tools you already use, like Claude Code.</div></details>
       <details><summary>What do I need?</summary><div class="a">A Mac on macOS 26 (Apple silicon or Intel), Xcode 26 with an iOS simulator runtime for the simulator pane, and Claude Code. Setup checks each one and installs what it can.</div></details>
-      <details><summary>Does it work with Codex or other agents?</summary><div class="a">The terminal runs anything. The built-in MCP server works with any MCP client, and AI Usage reads Codex's usage limits too.</div></details>
+      <details><summary>Does it work with Codex or other agents?</summary><div class="a">Yes. The terminal runs any agent CLI, like Codex, Gemini CLI or Aider. Vibex's tools are a standard MCP server on your Mac, so any MCP client can use them, and AI Usage reads Codex's limits too. Claude Code is set up for you.</div></details>
+      <details><summary>What kinds of projects can it run?</summary><div class="a">iOS and macOS apps from Xcode or XcodeGen, web apps with a dev server (npm, pnpm, yarn or bun, so Vite, Next.js, React and the rest), and Swift, Rust and Go command-line projects. Anything else runs in the terminal like it always has.</div></details>
       <details><summary>Is my code or usage sent anywhere?</summary><div class="a">No. Usage numbers come from Claude Code's and Codex's local logs. Vibex only talks to GitHub to check for updates and to skills.sh when you browse skills.</div></details>
       <details><summary>Why does macOS warn me when I first open it?</summary><div class="a">Vibex isn't notarized yet. The install script handles it; with the DMG, open <b>System Settings → Privacy &amp; Security</b> and click <b>Open Anyway</b>.</div></details>
       <details><summary>How do updates work?</summary><div class="a">Vibex checks GitHub releases in the background and installs the new version when you quit, or right away with <b>Restart to Update</b>.</div></details>
@@ -1144,8 +1148,8 @@
 <section id="install">
   <div class="wrap">
     <div class="cta-box reveal">
-      <h2>Ready to vibe?</h2>
-      <p class="muted" style="margin-top:12px;font-size:17px">Paste this into Terminal. It takes about a minute.</p>
+      <h2>Give your agent eyes.</h2>
+      <p class="muted" style="margin-top:12px;font-size:17px">Paste this into Terminal. About a minute, free, no account.</p>
       <div class="copy-row">
         <div class="cmd"><span class="p">❯</span> <span data-cmd>curl -fsSL https://vibex.cc/install.sh | sh</span></div>
         <button class="btn btn-dark btn-sm" data-copy>Copy</button>
@@ -1171,7 +1175,7 @@
     <div class="foot">
       <div>
         <a class="brand" href="#"><img src="icon.png" alt="">vibex</a>
-        <p>The free, open-source vibe coding workstation for Mac. MIT licensed. Made by <a href="https://github.com/uwussimo" style="color:#d6d6dd">Yusuf Abdurakhimov</a>.</p>
+        <p>The agentic workstation for Mac, where your coding agent sees what it builds. Free and MIT licensed. Made by <a href="https://github.com/uwussimo" style="color:#d6d6dd">Yusuf Abdurakhimov</a>.</p>
       </div>
       <div><h4>Product</h4><ul><li><a href="#features">Features</a></li><li><a href="#how">How it works</a></li><li><a href="#install">Install</a></li><li><a href="https://github.com/uwussimo/vibex/releases">Releases</a></li></ul></div>
       <div><h4>Open source</h4><ul><li><a href="https://github.com/uwussimo/vibex">GitHub</a></li><li><a href="https://github.com/uwussimo/vibex/blob/main/LICENSE">MIT License</a></li><li><a href="https://github.com/uwussimo/vibex/issues">Issues</a></li><li><a href="https://github.com/uwussimo/vibex/pulls">Pull requests</a></li></ul></div>
