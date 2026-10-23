@@ -89,19 +89,24 @@ final class BrowserAutomation {
     }
 
     /// Runs arbitrary JS, returning a JSON-ish string. Promises are awaited.
+    /// Uses callAsyncJavaScript: evaluateJavaScript would hand back the Promise object itself,
+    /// which WebKit rejects as "a result of an unsupported type".
     func run(javaScript: String, in tab: BrowserTab) async throws -> String {
-        let wrapped = """
-        (async () => {
-            try {
-                const value = await (async () => { return eval(\(Self.literal(javaScript))); })();
-                if (value === undefined) return "undefined";
-                try { return JSON.stringify(value, null, 1); } catch (e) { return String(value); }
-            } catch (error) {
-                return "Error: " + (error && (error.stack || error.message) || String(error));
-            }
-        })()
+        let body = """
+        try {
+            const value = await (async () => { return eval(\(Self.literal(javaScript))); })();
+            if (value === undefined) return "undefined";
+            try { return JSON.stringify(value, null, 1); } catch (e) { return String(value); }
+        } catch (error) {
+            return "Error: " + (error && (error.stack || error.message) || String(error));
+        }
         """
-        let result = try await evaluate(wrapped, in: tab)
+        let result: Any?
+        do {
+            result = try await tab.webView.callAsyncJavaScript(body, arguments: [:], in: nil, contentWorld: .page)
+        } catch {
+            throw ToolError("JavaScript failed: \(error.localizedDescription)")
+        }
         let text = result as? String ?? String(describing: result ?? "null")
         return String(text.prefix(60_000))
     }
