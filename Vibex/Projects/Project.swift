@@ -41,6 +41,9 @@ nonisolated struct ProjectState: Codable, Equatable, Sendable {
     var layoutMode: String = LayoutMode.balanced.rawValue
     var manualWidths: [Double]?
     var lastOpened = Date()
+    /// Optional so state saved by older versions still decodes.
+    var sourceControlVisible: Bool?
+    var sourceControlWidth: Double?
 
     var layout: LayoutMode {
         get { LayoutMode(rawValue: layoutMode) ?? .balanced }

@@ -76,6 +76,8 @@ enum MainMenu {
         let menu = NSMenu(title: "View")
         let palette = menu.addItem(withTitle: "Command Palette…", action: #selector(MainWindowController.showCommandPalette(_:)), keyEquivalent: "p")
         palette.keyEquivalentModifierMask = [.command, .shift]
+        let sourceControl = menu.addItem(withTitle: "Source Control", action: #selector(MainWindowController.toggleSourceControl(_:)), keyEquivalent: "g")
+        sourceControl.keyEquivalentModifierMask = [.control, .shift]
         menu.addItem(.separator())
         let build = menu.addItem(withTitle: "Build Mode", action: #selector(WorkspaceSplitViewController.toggleBuildMode(_:)), keyEquivalent: "b")
         build.keyEquivalentModifierMask = [.command, .shift]
