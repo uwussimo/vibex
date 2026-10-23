@@ -3,42 +3,90 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Vibex — terminal, iOS Simulator and browser in one window</title>
-<meta name="description" content="A native macOS workstation for vibe coding: a terminal for Claude Code, the iOS Simulator embedded in the window, and a side browser, all driven by Claude over MCP.">
-<meta name="theme-color" content="#0d0f0c">
+<title>Vibex — the free, open-source vibe coding workstation for Mac</title>
+<meta name="description" content="Vibex puts Claude Code's terminal, the iOS Simulator, a browser, Git diffs, AI usage and skills in one native macOS window. Free and open source under the MIT license.">
+<meta name="theme-color" content="#ffffff">
 <link rel="icon" type="image/png" href="icon.png">
 <link rel="apple-touch-icon" href="icon.png">
 <meta property="og:title" content="Vibex">
-<meta property="og:description" content="Terminal, embedded iOS Simulator and side browser in one native macOS window, driven by Claude Code.">
+<meta property="og:description" content="Claude Code's terminal, the iOS Simulator, a browser and every diff in one native Mac window. Free and open source.">
 <meta property="og:image" content="https://uwussimo.github.io/vibex/screenshot.png">
 <meta property="og:url" content="https://uwussimo.github.io/vibex/">
 <meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400..700&family=Google+Sans+Code:wght@400..600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0d0f0c;
-    --bg-raised: #151813;
-    --line: rgba(255, 255, 255, 0.08);
-    --text: #f2f4ee;
-    --muted: #9aa294;
-    --accent: #b4f04c;
-    --accent-ink: #1d2a06;
-    --green: #2fbf71;
-    --radius: 18px;
-    --shadow: 0 40px 120px -30px rgba(0, 0, 0, 0.7), 0 0 0 1px var(--line);
-    color-scheme: dark;
+    --bg: #ffffff;
+    --surface: #f6f6f8;
+    --surface-2: #eeeef2;
+    --card: #ffffff;
+    --line: rgba(20, 20, 40, 0.09);
+    --line-strong: rgba(20, 20, 40, 0.16);
+    --text: #18181d;
+    --muted: #6a6a76;
+    --faint: #a3a3ad;
+    --accent: #4d63ff;
+    --accent-soft: rgba(77, 99, 255, 0.1);
+    --green: #1f9d55;
+    --green-soft: rgba(31, 157, 85, 0.1);
+    --red: #e5484d;
+    --red-soft: rgba(229, 72, 77, 0.1);
+    --orange: #d9752b;
+    --orange-soft: rgba(217, 117, 43, 0.12);
+    --violet: #8b5cf6;
+    --violet-soft: rgba(139, 92, 246, 0.1);
+    --pink: #db4fa8;
+    --pink-soft: rgba(219, 79, 168, 0.1);
+    --term: #121317;
+    --term-text: #e6e6ea;
+    --term-dim: #8b8c96;
+    --btn: #18181d;
+    --btn-text: #ffffff;
+    --glow-a: #7ea2ff;
+    --glow-b: #a98bff;
+    --glow-c: #ffa1dc;
+    --shadow: 0 1px 2px rgba(20, 20, 40, 0.05), 0 8px 24px -12px rgba(20, 20, 40, 0.12);
+    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+    --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+    color-scheme: light;
   }
-  @media (prefers-color-scheme: light) {
-    :root:not([data-theme="dark"]) {
-      --bg: #f6f7f2;
-      --bg-raised: #ffffff;
-      --line: rgba(20, 30, 10, 0.1);
-      --text: #12160e;
-      --muted: #5c6556;
-      --accent: #4d7c0f;
-      --accent-ink: #ffffff;
-      --shadow: 0 40px 100px -40px rgba(30, 50, 10, 0.35), 0 0 0 1px var(--line);
-      color-scheme: light;
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0c0c0f;
+      --surface: #151519;
+      --surface-2: #1d1d22;
+      --card: #17171b;
+      --line: rgba(255, 255, 255, 0.08);
+      --line-strong: rgba(255, 255, 255, 0.15);
+      --text: #f1f1f4;
+      --muted: #9b9ba7;
+      --faint: #62626c;
+      --accent: #8194ff;
+      --accent-soft: rgba(129, 148, 255, 0.14);
+      --green: #3dd68c;
+      --green-soft: rgba(61, 214, 140, 0.12);
+      --red: #ff6369;
+      --red-soft: rgba(255, 99, 105, 0.12);
+      --orange: #f0a05a;
+      --orange-soft: rgba(240, 160, 90, 0.13);
+      --violet: #a78bfa;
+      --violet-soft: rgba(167, 139, 250, 0.13);
+      --pink: #f17cc5;
+      --pink-soft: rgba(241, 124, 197, 0.12);
+      --term: #0a0a0d;
+      --btn: #f1f1f4;
+      --btn-text: #0c0c0f;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 10px 30px -12px rgba(0, 0, 0, 0.6);
+      color-scheme: dark;
     }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0c0c0f; --surface: #151519; --surface-2: #1d1d22; --card: #17171b;
+    --line: rgba(255, 255, 255, 0.08); --line-strong: rgba(255, 255, 255, 0.15);
+    --text: #f1f1f4; --muted: #9b9ba7; --faint: #62626c; --accent: #8194ff; --accent-soft: rgba(129, 148, 255, 0.14);
+    --term: #0a0a0d; --btn: #f1f1f4; --btn-text: #0c0c0f; color-scheme: dark;
   }
 
   * { box-sizing: border-box; }
@@ -47,314 +95,1024 @@
     margin: 0;
     background: var(--bg);
     color: var(--text);
-    font: 16px/1.6 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Inter, sans-serif;
+    font: 16px/1.55 "Google Sans", system-ui, -apple-system, sans-serif;
+    font-optical-sizing: auto;
     -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
   }
-  a { color: inherit; }
-  code, pre, kbd { font-family: ui-monospace, "SF Mono", Menlo, monospace; }
-  .wrap { width: min(1120px, 100% - 32px); margin-inline: auto; }
-
-  /* Nav */
-  nav {
-    position: sticky; top: 0; z-index: 10;
-    backdrop-filter: saturate(180%) blur(16px);
-    -webkit-backdrop-filter: saturate(180%) blur(16px);
-    background: color-mix(in srgb, var(--bg) 72%, transparent);
-    border-bottom: 1px solid var(--line);
-  }
-  nav .wrap { display: flex; align-items: center; justify-content: space-between; height: 56px; }
-  .brand { display: flex; align-items: center; gap: 10px; font-weight: 650; text-decoration: none; letter-spacing: -0.01em; }
-  .brand img { width: 28px; height: 28px; }
-  nav .links { display: flex; gap: 22px; align-items: center; font-size: 14px; }
-  nav .links a { text-decoration: none; color: var(--muted); transition: color 150ms ease; }
-  nav .links a:hover { color: var(--text); }
-  @media (max-width: 640px) { nav .links a:not(.btn) { display: none; } }
+  a { color: inherit; text-decoration: none; }
+  code, pre, kbd, .code { font-family: "Google Sans Code", ui-monospace, monospace; }
+  img, svg { display: block; }
+  button { font: inherit; color: inherit; }
+  .wrap { width: min(1000px, 100% - 32px); margin-inline: auto; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 
   /* Buttons */
   .btn {
     display: inline-flex; align-items: center; gap: 8px;
-    height: 44px; padding: 0 20px; border-radius: 12px;
-    font-weight: 600; font-size: 15px; text-decoration: none;
-    transition: transform 120ms ease, background-color 150ms ease, border-color 150ms ease;
+    height: 40px; padding: 0 16px; border-radius: 10px;
+    font-size: 14.5px; font-weight: 500; letter-spacing: -0.01em;
+    border: 1px solid transparent; cursor: pointer; white-space: nowrap;
+    transition: transform 140ms var(--ease-out), background-color 160ms ease, border-color 160ms ease;
   }
   .btn:active { transform: scale(0.97); }
-  .btn-primary { background: var(--accent); color: var(--accent-ink); }
-  .btn-primary:hover { background: color-mix(in srgb, var(--accent) 88%, white); }
-  .btn-ghost { border: 1px solid var(--line); color: var(--text); background: var(--bg-raised); }
-  .btn-ghost:hover { border-color: color-mix(in srgb, var(--text) 25%, transparent); }
-  nav .btn { height: 34px; padding: 0 14px; font-size: 13.5px; border-radius: 9px; }
+  .btn-dark { background: var(--btn); color: var(--btn-text); box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 1px 2px rgba(0,0,0,.2); }
+  .btn-light { background: var(--card); border-color: var(--line-strong); box-shadow: var(--shadow); }
+  .btn-sm { height: 32px; padding: 0 12px; font-size: 13.5px; border-radius: 8px; }
+  @media (hover: hover) and (pointer: fine) {
+    .btn-light:hover { background: var(--surface); }
+    .btn-dark:hover { opacity: .9; }
+  }
+
+  /* Nav */
+  .nav { position: sticky; top: 0; z-index: 20; background: color-mix(in srgb, var(--bg) 82%, transparent); backdrop-filter: saturate(1.4) blur(14px); -webkit-backdrop-filter: saturate(1.4) blur(14px); }
+  .nav .wrap { display: flex; align-items: center; gap: 24px; height: 60px; }
+  .brand { display: flex; align-items: center; gap: 9px; font-weight: 600; font-size: 17px; letter-spacing: -0.02em; }
+  .brand img { width: 26px; height: 26px; }
+  .nav-links { display: flex; gap: 22px; margin-inline: auto; font-size: 14.5px; color: var(--muted); }
+  .nav-links a { transition: color 150ms ease; }
+  .nav-links a:hover { color: var(--text); }
+  .nav-cta { display: flex; gap: 8px; }
+  .star-count { font-variant-numeric: tabular-nums; color: var(--muted); padding-left: 6px; border-left: 1px solid var(--line-strong); }
+  @media (max-width: 760px) { .nav-links { display: none; } .nav-cta { margin-left: auto; } .nav-cta .btn-light { display: none; } }
+
+  /* Type */
+  h1, h2, h3 { margin: 0; font-weight: 500; letter-spacing: -0.035em; }
+  h1 { font-size: clamp(40px, 6.2vw, 64px); line-height: 1.04; }
+  h2 { font-size: clamp(32px, 4.6vw, 48px); line-height: 1.08; }
+  h3 { font-size: 21px; letter-spacing: -0.02em; line-height: 1.25; }
+  p { margin: 0; }
+  .muted { color: var(--muted); }
+  .pill {
+    display: inline-block; padding: 0 .16em .04em; margin: 0 -.02em;
+    border: 1px solid var(--line-strong); border-radius: .2em;
+    background: var(--card); box-shadow: 0 1px 2px rgba(20,20,40,.06), inset 0 -2px 0 var(--surface);
+  }
+  .tag {
+    display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px;
+    border-radius: 7px; font-size: 13px; font-weight: 500; color: #fff;
+  }
+  .tag svg { width: 14px; height: 14px; }
+  .mini-tag {
+    display: inline-flex; align-items: center; gap: 7px; height: 28px; padding: 0 10px;
+    border: 1px solid var(--line); border-radius: 8px; background: var(--card); font-size: 13px; font-weight: 500;
+  }
+  .mini-tag i { width: 16px; height: 16px; border-radius: 4px; display: grid; place-items: center; font-style: normal; font-size: 10px; }
 
   /* Hero */
-  .hero { position: relative; text-align: center; padding: 88px 0 56px; }
-  .hero::before {
-    content: ""; position: absolute; inset: -120px 0 auto; height: 620px; z-index: -1;
-    background:
-      radial-gradient(600px 300px at 50% 20%, color-mix(in srgb, var(--green) 28%, transparent), transparent 70%),
-      radial-gradient(400px 220px at 62% 35%, color-mix(in srgb, #5b9bff 18%, transparent), transparent 70%);
-    filter: blur(10px);
-  }
-  .hero-icon { width: 120px; height: 120px; filter: drop-shadow(0 18px 30px rgba(0,0,0,0.35)); }
-  h1 {
-    margin: 22px 0 14px;
-    font-size: clamp(40px, 7vw, 76px); line-height: 1.02; letter-spacing: -0.035em; font-weight: 750;
-  }
-  h1 .accent {
-    background: linear-gradient(180deg, #d9fb7a, var(--green));
-    -webkit-background-clip: text; background-clip: text; color: transparent;
-  }
-  .lede { max-width: 640px; margin: 0 auto; color: var(--muted); font-size: clamp(17px, 2.2vw, 20px); }
-  .cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 32px; }
-  .meta { margin-top: 18px; font-size: 13px; color: var(--muted); }
+  .hero { padding: 64px 0 0; }
+  .hero-grid { display: grid; grid-template-columns: 1.25fr 1fr; gap: 48px; align-items: end; }
+  .hero-lede { font-size: 17px; color: var(--muted); max-width: 400px; padding-bottom: 8px; }
+  .hero-cta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 30px; }
+  .hero-meta { margin-top: 16px; font-size: 13.5px; color: var(--faint); display: flex; flex-wrap: wrap; gap: 6px 14px; }
+  .hero-meta span::before { content: ""; display: inline-block; width: 5px; height: 5px; border-radius: 50%; background: var(--green); margin-right: 7px; vertical-align: 2px; }
+  @media (max-width: 860px) { .hero-grid { grid-template-columns: 1fr; gap: 18px; } }
 
-  .shot { margin: 56px auto 0; max-width: 1120px; }
-  /* The screenshot carries its own macOS window shadow. */
-  .shot img { display: block; width: 100%; height: auto; }
+  /* App mockup */
+  .stage { margin-top: 48px; position: relative; }
+  .stage-frame { border-radius: 16px; background: var(--surface); padding: 8px; border: 1px solid var(--line); }
+  .stage-scale { position: relative; overflow: hidden; border-radius: 10px; }
+  .app {
+    --w: 1080px; --h: 620px;
+    width: var(--w); height: var(--h);
+    transform-origin: top left;
+    background: var(--card); color: var(--text);
+    display: grid; grid-template-rows: 38px 1fr; font-size: 12.5px;
+    border-radius: 10px; border: 1px solid var(--line);
+    user-select: none;
+  }
+  .chrome { display: flex; align-items: center; gap: 8px; padding: 0 12px; border-bottom: 1px solid var(--line); background: var(--surface); border-radius: 10px 10px 0 0; }
+  .lights { display: flex; gap: 7px; }
+  .lights i { width: 11px; height: 11px; border-radius: 50%; background: #ff5f57; }
+  .lights i:nth-child(2) { background: #febc2e; } .lights i:nth-child(3) { background: #28c840; }
+  .chrome-title { margin-inline: auto; font-weight: 500; color: var(--muted); }
+  .run-pill { display: flex; align-items: center; gap: 6px; height: 24px; padding: 0 10px; border-radius: 7px; background: var(--card); border: 1px solid var(--line); font-weight: 500; }
+  .run-pill b { width: 7px; height: 7px; border-radius: 50%; background: var(--green); }
+  .body { display: grid; grid-template-columns: 44px auto 1fr 1.08fr; min-height: 0; }
+  .act { display: flex; flex-direction: column; align-items: center; gap: 4px; padding-top: 8px; border-right: 1px solid var(--line); background: var(--surface); border-bottom-left-radius: 10px; }
+  .act span { width: 32px; height: 32px; border-radius: 8px; display: grid; place-items: center; color: var(--muted); position: relative; transition: background-color 300ms ease, color 300ms ease; }
+  .act span.on { background: var(--surface-2); color: var(--text); }
+  .act span.on::before { content: ""; position: absolute; left: -6px; top: 8px; bottom: 8px; width: 3px; border-radius: 2px; background: var(--accent); }
+  .act svg { width: 17px; height: 17px; }
+  .act .badge { position: absolute; top: 2px; right: 1px; min-width: 14px; height: 14px; border-radius: 7px; background: var(--accent); color: #fff; font-size: 8.5px; font-weight: 700; display: grid; place-items: center; padding: 0 3px; }
+  .act .grow { flex: 1; }
+
+  .scm { width: 0; overflow: hidden; border-right: 1px solid transparent; background: var(--surface); transition: width 600ms var(--ease-in-out), border-color 600ms ease; }
+  .app[data-scene="review"] .scm { width: 210px; border-color: var(--line); }
+  .scm-in { width: 210px; padding: 10px; }
+  .scm-h { font-weight: 600; color: var(--muted); font-size: 11.5px; margin-bottom: 8px; }
+  .scm-msg { height: 28px; border-radius: 6px; background: var(--card); border: 1px solid var(--line); padding: 0 8px; display: flex; align-items: center; color: var(--faint); }
+  .scm-commit { margin-top: 6px; height: 26px; border-radius: 6px; background: var(--accent); color: #fff; display: grid; place-items: center; font-weight: 500; }
+  .scm-group { margin-top: 12px; color: var(--muted); font-weight: 600; font-size: 11px; display: flex; justify-content: space-between; }
+  .scm-row { display: flex; align-items: center; gap: 6px; height: 24px; padding: 0 6px; border-radius: 5px; margin-top: 2px; }
+  .scm-row.sel { background: var(--accent-soft); }
+  .scm-row em { margin-left: auto; font-style: normal; font-weight: 700; font-family: "Google Sans Code", monospace; font-size: 11px; }
+  .scm-row small { color: var(--faint); font-size: 10.5px; }
+  .file-ico { width: 12px; height: 14px; border-radius: 2px; background: var(--surface-2); border: 1px solid var(--line-strong); flex: none; }
+
+  .term { background: var(--term); color: var(--term-text); display: grid; grid-template-rows: 30px 1fr; min-width: 0; }
+  .term-tabs { display: flex; align-items: center; gap: 4px; padding: 0 8px; background: #1a1b20; }
+  .term-tabs span { height: 22px; padding: 0 10px; border-radius: 6px; display: flex; align-items: center; color: var(--term-dim); font-size: 11.5px; }
+  .term-tabs span.on { background: rgba(255,255,255,.09); color: var(--term-text); }
+  .term-body { position: relative; font-family: "Google Sans Code", monospace; font-size: 11.8px; line-height: 1.65; }
+  .tscene { position: absolute; inset: 0; padding: 12px 14px; opacity: 0; transition: opacity 400ms ease; }
+  .tscene.on { opacity: 1; }
+  .ln { opacity: 0; transform: translateY(4px); transition: opacity 360ms var(--ease-out), transform 360ms var(--ease-out); transition-delay: calc(var(--i, 0) * 260ms); white-space: pre; overflow: hidden; text-overflow: ellipsis; }
+  .tscene.on .ln { opacity: 1; transform: none; }
+  .ln .p { color: #7ea2ff; } .ln .you { color: #fff; } .ln .dim { color: var(--term-dim); }
+  .ln .dot { color: #3dd68c; } .ln .tool { color: #fff; font-weight: 600; } .ln .add { color: #3dd68c; } .ln .del { color: #ff6369; }
+  .caret { display: inline-block; width: 7px; height: 14px; background: var(--term-text); vertical-align: -2px; animation: blink 1.1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  .editor { display: grid; grid-template-rows: 34px 1fr; min-width: 0; border-left: 1px solid var(--line); }
+  .etabs { display: flex; align-items: center; gap: 2px; padding: 0 6px; background: var(--surface); border-bottom: 1px solid var(--line); overflow: hidden; }
+  .etab {
+    position: relative; display: flex; align-items: center; gap: 6px; height: 24px; padding: 0 10px; border-radius: 6px; border: 0; background: none; white-space: nowrap; flex: none;
+    font-size: 11.8px; color: var(--muted); cursor: pointer; transition: background-color 200ms ease, color 200ms ease;
+  }
+  .etab svg { width: 12px; height: 12px; }
+  .etab.on { background: var(--surface-2); color: var(--text); font-weight: 500; }
+  .etab.italic { font-style: italic; }
+  .etab .bar { position: absolute; left: 8px; right: 8px; bottom: 1px; height: 2px; border-radius: 1px; background: var(--accent); transform: scaleX(0); transform-origin: left; opacity: 0; }
+  .etab.on .bar { opacity: .7; }
+  .panes { position: relative; min-height: 0; overflow: hidden; }
+  .pane { position: absolute; inset: 0; opacity: 0; transform: scale(0.985); transition: opacity 450ms var(--ease-out), transform 450ms var(--ease-out); pointer-events: none; }
+  .pane.on { opacity: 1; transform: none; }
+
+  /* Phone */
+  .pane-sim { display: grid; grid-template-rows: 30px 1fr; background: var(--surface); }
+  .sim-h { display: flex; align-items: center; gap: 6px; padding: 0 10px; border-bottom: 1px solid var(--line); font-weight: 500; }
+  .sim-h b { width: 7px; height: 7px; border-radius: 50%; background: var(--green); }
+  .sim-h small { color: var(--muted); font-weight: 400; }
+  .phone { margin: 14px auto; width: 230px; height: 470px; border-radius: 38px; background: #0b0b0d; padding: 7px; box-shadow: 0 18px 40px -18px rgba(0,0,0,.5); }
+  .screen { height: 100%; border-radius: 32px; background: #f5f5f7; color: #111; padding: 14px 14px; overflow: hidden; font-size: 11.5px; position: relative; }
+  .island { width: 74px; height: 20px; border-radius: 10px; background: #0b0b0d; margin: -6px auto 12px; }
+  .screen h4 { margin: 0 0 2px; font-size: 22px; font-weight: 600; letter-spacing: -.02em; }
+  .screen .sub { color: #8a8a90; margin-bottom: 12px; }
+  .streak { display: inline-flex; align-items: center; gap: 5px; padding: 4px 9px; border-radius: 999px; background: #fff1e6; color: #c2570b; font-weight: 600; font-size: 11px; margin-bottom: 12px; transform: scale(.9); opacity: 0; transition: transform 500ms var(--ease-out) 1.6s, opacity 400ms ease 1.6s; }
+  .pane.on .streak { transform: none; opacity: 1; }
+  .habit { display: flex; align-items: center; gap: 9px; background: #fff; border-radius: 12px; padding: 10px; margin-bottom: 7px; box-shadow: 0 1px 2px rgba(0,0,0,.05); }
+  .habit i { width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid #c7c7cc; flex: none; display: grid; place-items: center; }
+  .habit.done i { background: #34c759; border-color: #34c759; }
+  .habit.done i::after { content: ""; width: 6px; height: 3px; border: 2px solid #fff; border-top: 0; border-right: 0; transform: rotate(-45deg) translate(1px, -1px); }
+  .habit small { margin-left: auto; color: #8a8a90; }
+  .tap { position: absolute; width: 34px; height: 34px; border-radius: 50%; background: rgba(77,99,255,.25); border: 2px solid rgba(77,99,255,.6); left: 16px; top: 214px; opacity: 0; transform: scale(.6); }
+  .pane.on .tap { animation: tap 1.2s var(--ease-out) 1.1s both; }
+  @keyframes tap { 0% { opacity: 0; transform: scale(.6); } 25% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(1.5); } }
+
+  /* Diff */
+  .pane-diff { background: var(--card); display: grid; grid-template-rows: 46px 1fr; }
+  .diff-h { display: flex; align-items: center; gap: 8px; padding: 0 12px; border-bottom: 1px solid var(--line); }
+  .diff-h strong { font-weight: 600; font-size: 13px; }
+  .chip { height: 18px; padding: 0 7px; border-radius: 9px; font-size: 10.5px; font-weight: 600; display: inline-flex; align-items: center; }
+  .chip.m { color: var(--orange); background: var(--orange-soft); }
+  .diff-h .stats { margin-left: auto; font-family: "Google Sans Code", monospace; font-weight: 600; }
+  .stage-btn { height: 26px; padding: 0 12px; border-radius: 7px; background: var(--accent); color: #fff; font-weight: 500; display: grid; place-items: center; }
+  .code { font-size: 11.2px; line-height: 1.75; overflow: hidden; }
+  .hunk { padding: 3px 12px; background: var(--accent-soft); color: var(--muted); }
+  .row { display: grid; grid-template-columns: 26px 1fr; white-space: pre; }
+  .row .n { color: var(--faint); text-align: right; padding-right: 8px; background: var(--surface); }
+  .row.add { background: var(--green-soft); } .row.add .n { background: transparent; }
+  .row.del { background: var(--red-soft); } .row.del .n { background: transparent; }
+  .row .t { padding-left: 10px; }
+  .kw { color: #c1337c; } .ty { color: #2a7f8f; } .st { color: #c23b2a; } .nu { color: #3a4fd8; } .cm { color: var(--faint); }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .kw { color: #ff7ab2; } :root:not([data-theme="light"]) .ty { color: #6bdfff; } :root:not([data-theme="light"]) .st { color: #ff8170; } :root:not([data-theme="light"]) .nu { color: #d9c97c; } }
+  .row.add mark { background: rgba(31,157,85,.28); color: inherit; border-radius: 2px; }
+
+  /* Browser */
+  .pane-web { display: grid; grid-template-rows: 34px 1fr 76px; background: var(--card); }
+  .url { display: flex; align-items: center; gap: 8px; padding: 0 10px; border-bottom: 1px solid var(--line); color: var(--faint); }
+  .url span { flex: 1; height: 22px; border-radius: 6px; background: var(--surface); display: flex; align-items: center; padding: 0 9px; color: var(--muted); }
+  .site { padding: 16px 18px; }
+  .site h5 { margin: 0; font-size: 16px; font-weight: 600; letter-spacing: -.02em; }
+  .site .kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 12px 0; }
+  .site .kpis div { border: 1px solid var(--line); border-radius: 9px; padding: 8px 10px; }
+  .site .kpis b { display: block; font-size: 17px; font-weight: 600; letter-spacing: -.02em; }
+  .site .kpis small { color: var(--muted); }
+  .chart path { stroke-dasharray: 600; stroke-dashoffset: 600; transition: stroke-dashoffset 1.4s var(--ease-out) .5s; }
+  .pane.on .chart path { stroke-dashoffset: 0; }
+  .console { border-top: 1px solid var(--line); background: var(--surface); padding: 8px 12px; font-family: "Google Sans Code", monospace; font-size: 10.8px; color: var(--muted); line-height: 1.6; }
+  .console b { color: var(--green); font-weight: 500; }
+
+  /* Agents dashboard (mock and real sections share these) */
+  .pane-agents { background: var(--surface); padding: 10px; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: auto auto auto 1fr; gap: 8px; align-content: start; }
+  .acard { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 11px 12px; min-width: 0; }
+  .acard h6 { margin: 0 0 8px; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+  .acard h6 .plan { margin-left: auto; color: var(--orange); background: var(--orange-soft); border-radius: 5px; padding: 1px 6px; font-size: 10.5px; }
+  .meter { height: 7px; border-radius: 4px; background: var(--surface-2); overflow: hidden; margin-top: 6px; }
+  .meter b { display: block; height: 100%; width: var(--v); border-radius: 4px; background: var(--orange); transform-origin: left; transform: scaleX(0); transition: transform 1.1s var(--ease-out) .3s; }
+  .pane.on .meter b, .in .meter b { transform: none; }
+  .big { font-size: 22px; font-weight: 600; letter-spacing: -.03em; }
+  .row2 { display: flex; justify-content: space-between; align-items: baseline; }
+  .bars { display: flex; align-items: flex-end; gap: 3px; height: 92px; }
+  .bars i { flex: 1; border-radius: 3px 3px 1px 1px; background: color-mix(in srgb, var(--orange) 55%, var(--surface-2)); height: var(--v); transform-origin: bottom; transform: scaleY(0); transition: transform 700ms var(--ease-out); transition-delay: calc(var(--i) * 25ms + 200ms); }
+  .bars i.today { background: var(--orange); }
+  .pane.on .bars i, .in .bars i { transform: none; }
+  .span2 { grid-column: span 2; }
+  .share { display: grid; grid-template-columns: 1fr 70px 48px; align-items: center; gap: 8px; height: 22px; font-weight: 500; }
+  .share i { height: 5px; border-radius: 3px; background: var(--c, var(--orange)); opacity: .75; width: var(--v); transform-origin: left; transform: scaleX(0); transition: transform 800ms var(--ease-out) .4s; }
+  .pane.on .share i { transform: none; }
+  .share b { text-align: right; color: var(--muted); font-weight: 500; }
+
+  /* Stage progress under the active tab */
+  .app.cycling .etab.on .bar { animation: progress var(--scene-ms, 6000ms) linear forwards; }
+  @keyframes progress { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+  /* Logos */
+  .works { text-align: center; padding: 44px 0 0; }
+  .works p { color: var(--muted); font-size: 15px; }
+  .logos { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px 30px; margin-top: 16px; font-size: 17px; font-weight: 500; color: var(--muted); }
+  .logos span { display: flex; align-items: center; gap: 8px; }
+  .logos svg { width: 18px; height: 18px; }
+
+  /* Pinned statement */
+  .statement { height: 230vh; position: relative; }
+  .statement-pin { position: sticky; top: 0; height: 100vh; display: grid; place-items: center; overflow: hidden; }
+  .glow { position: absolute; left: 50%; top: 56%; width: min(820px, 92vw); height: 220px; transform: translate(-50%, -50%); filter: blur(60px); opacity: .55; border-radius: 50%;
+    background: radial-gradient(closest-side at 30% 50%, var(--glow-a), transparent), radial-gradient(closest-side at 55% 50%, var(--glow-b), transparent), radial-gradient(closest-side at 78% 50%, var(--glow-c), transparent); }
+  .statement p { position: relative; max-width: 960px; padding: 0 16px; text-align: center; font-size: clamp(28px, 4.2vw, 44px); line-height: 1.22; letter-spacing: -0.03em; font-weight: 500; }
+  .w { display: inline-block; white-space: pre; }
+  .js .statement .w { opacity: .14; filter: blur(8px); }
+  .brand-pill { display: inline-flex; align-items: center; gap: .2em; padding: 0 .2em; border: 1px solid var(--line-strong); border-radius: .22em; background: var(--card); vertical-align: baseline; }
+  .brand-pill img { width: .82em; height: .82em; display: inline-block; }
 
   /* Sections */
-  section { padding: 96px 0; }
-  .eyebrow { color: var(--accent); font-weight: 650; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; }
-  h2 { font-size: clamp(30px, 4.4vw, 46px); line-height: 1.08; letter-spacing: -0.025em; margin: 10px 0 14px; font-weight: 720; }
-  .section-lede { color: var(--muted); max-width: 640px; font-size: 18px; margin: 0; }
+  section { padding: 110px 0 0; }
+  .sec-head { text-align: center; display: grid; justify-items: center; gap: 14px; margin-bottom: 40px; }
+  .sec-head p { color: var(--muted); font-size: 17px; max-width: 560px; }
+  .boxed { position: relative; display: inline-block; padding: 10px 26px 14px; border-radius: 18px; border: 1px solid; }
+  .boxed .corner { position: absolute; right: 12px; bottom: -11px; height: 21px; padding: 0 8px; border-radius: 11px; border: 1px solid; font-size: 11.5px; font-weight: 500; background: var(--bg); display: flex; align-items: center; }
 
-  .grid { display: grid; gap: 16px; margin-top: 44px; }
-  .grid-3 { grid-template-columns: repeat(3, 1fr); }
-  .grid-2 { grid-template-columns: repeat(2, 1fr); }
-  @media (max-width: 860px) { .grid-3, .grid-2 { grid-template-columns: 1fr; } }
+  /* How it works grid with hairlines and corner dots */
+  .grid-lines { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); position: relative; }
+  .grid-lines .wrap { border-left: 1px solid var(--line); border-right: 1px solid var(--line); }
+  .how-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-bottom: 1px solid var(--line); font-size: 15px; }
+  .how-title { padding: 56px 40px 52px; border-bottom: 1px solid var(--line); }
+  .how-title p { color: var(--muted); margin-top: 12px; font-size: 17px; }
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); }
+  .step { padding: 26px; border-right: 1px solid var(--line); position: relative; }
+  .step:last-child { border-right: 0; }
+  .dot-corner { position: absolute; width: 5px; height: 5px; background: var(--text); border-radius: 50%; }
+  .step-vis { height: 230px; border-radius: 14px; background: var(--surface); padding: 14px; display: flex; flex-direction: column; justify-content: center; gap: 8px; }
+  .step small { display: block; margin-top: 24px; color: var(--faint); font-size: 12px; }
+  .step h3 { margin-top: 6px; }
+  .step p { color: var(--muted); margin-top: 8px; font-size: 15px; }
+  .cmd { background: var(--term); color: var(--term-text); border-radius: 10px; padding: 12px; font-family: "Google Sans Code", monospace; font-size: 12px; line-height: 1.6; overflow: hidden; }
+  .cmd .dim { color: var(--term-dim); } .cmd .ok { color: #3dd68c; } .cmd .p { color: #7ea2ff; }
+  .copy-row { display: flex; gap: 8px; align-items: center; }
+  .copy-row .cmd { flex: 1; min-width: 0; white-space: nowrap; text-overflow: ellipsis; }
+  @media (max-width: 860px) { .steps { grid-template-columns: 1fr; } .step { border-right: 0; border-bottom: 1px solid var(--line); } .how-title { padding: 36px 20px; } }
 
-  .card {
-    background: var(--bg-raised); border: 1px solid var(--line); border-radius: var(--radius);
-    padding: 26px;
-  }
-  .card h3 { margin: 14px 0 8px; font-size: 19px; letter-spacing: -0.01em; }
-  .card p { margin: 0; color: var(--muted); font-size: 15.5px; }
-  .glyph {
-    width: 40px; height: 40px; border-radius: 11px; display: grid; place-items: center;
-    font-size: 20px;
-  }
-  .g-term { background: #1f2420; color: var(--accent); font-family: ui-monospace, monospace; font-weight: 700; font-size: 16px; }
-  .g-sim { background: linear-gradient(180deg, #5b9bff, #2459e0); color: #fff; }
-  .g-web { background: linear-gradient(180deg, #fff, #e9e9ee); color: #111; }
+  /* Old way vs Vibex way */
+  .versus { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--line); border-radius: 20px; position: relative; background: var(--card); }
+  .versus > div { padding: 34px 30px 40px; text-align: center; }
+  .versus > div + div { border-left: 1px solid var(--line); }
+  .versus h3 { font-size: 21px; }
+  .versus .sub { color: var(--muted); margin-top: 2px; }
+  .old-list { margin: 26px auto 0; max-width: 300px; text-align: left; background: var(--surface); border-radius: 12px; padding: 16px 18px; transform: rotate(-2deg); box-shadow: var(--shadow); display: grid; gap: 12px; }
+  .old-list div { display: grid; grid-template-columns: 18px 1fr; gap: 8px; font-size: 15px; line-height: 1.3; }
+  .old-list i { width: 16px; height: 16px; border-radius: 50%; background: var(--red-soft); color: var(--red); display: grid; place-items: center; font-style: normal; font-size: 10px; font-weight: 700; margin-top: 2px; }
+  .old-list small { display: block; color: var(--faint); font-size: 12.5px; }
+  .vs-arrow { position: absolute; left: 50%; top: 50%; width: 38px; height: 38px; transform: translate(-50%, -50%); border-radius: 50%; border: 1px solid var(--line-strong); background: var(--card); display: grid; place-items: center; color: var(--muted); }
+  .greet { display: inline-flex; align-items: center; gap: 10px; margin-top: 26px; }
+  .greet img { width: 34px; height: 34px; border-radius: 9px; }
+  .greet span { background: var(--surface); padding: 8px 12px; border-radius: 12px; font-weight: 500; }
+  .chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 18px; }
+  .chips span { height: 32px; padding: 0 12px; border-radius: 16px; display: inline-flex; align-items: center; gap: 7px; font-size: 14px; font-weight: 500; }
+  .c-blue { color: var(--accent); background: var(--accent-soft); } .c-green { color: var(--green); background: var(--green-soft); }
+  .c-orange { color: var(--orange); background: var(--orange-soft); } .c-violet { color: var(--violet); background: var(--violet-soft); }
+  .c-pink { color: var(--pink); background: var(--pink-soft); } .c-red { color: var(--red); background: var(--red-soft); }
+  @media (max-width: 760px) { .versus { grid-template-columns: 1fr; } .versus > div + div { border-left: 0; border-top: 1px solid var(--line); } .vs-arrow { display: none; } }
 
-  /* MCP */
-  .split { display: grid; grid-template-columns: 1fr 1.1fr; gap: 48px; align-items: center; }
-  @media (max-width: 960px) { .split { grid-template-columns: 1fr; } }
-  .chat {
-    background: #0a0c09; border: 1px solid var(--line); border-radius: var(--radius);
-    padding: 22px; font: 14px/1.65 ui-monospace, "SF Mono", Menlo, monospace; color: #d7dcd2;
-    box-shadow: var(--shadow); overflow-x: auto; white-space: pre;
-  }
-  .chat .you { color: var(--accent); }
-  .chat .dim { color: #6f7869; }
-  .chat .tool { color: #7fb4ff; }
-  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 26px; }
-  .chip {
-    font: 12.5px/1 ui-monospace, "SF Mono", Menlo, monospace; padding: 8px 10px; border-radius: 8px;
-    background: var(--bg-raised); border: 1px solid var(--line); color: var(--muted);
-  }
+  /* Stats */
+  .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 14px; }
+  .stat { border-radius: 18px; padding: 20px 22px; background: var(--surface); min-height: 168px; display: flex; flex-direction: column; justify-content: space-between; }
+  .stat b { font-size: clamp(44px, 6vw, 64px); font-weight: 500; letter-spacing: -.05em; line-height: 1; text-align: right; }
+  .stat:first-child { background: var(--accent-soft); }
+  .stat span { color: var(--muted); font-size: 15px; }
+  @media (max-width: 760px) { .stats-row { grid-template-columns: 1fr; } }
 
-  /* Shortcuts */
-  .keys { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 40px; }
-  @media (max-width: 860px) { .keys { grid-template-columns: 1fr 1fr; } }
-  @media (max-width: 520px) { .keys { grid-template-columns: 1fr; } }
-  .key { display: flex; justify-content: space-between; align-items: center; gap: 12px;
-    padding: 14px 16px; border-radius: 12px; background: var(--bg-raised); border: 1px solid var(--line); font-size: 14.5px; }
-  kbd { font-size: 13px; padding: 4px 8px; border-radius: 7px; border: 1px solid var(--line);
-    background: color-mix(in srgb, var(--text) 6%, transparent); white-space: nowrap; }
+  /* Bento */
+  .bento { display: grid; grid-template-columns: repeat(12, 1fr); gap: 12px; }
+  .cell { border-radius: 20px; border: 1px solid var(--line); background: var(--card); padding: 22px; display: flex; flex-direction: column; gap: 18px; min-height: 340px; overflow: hidden; }
+  .cell.grey { background: var(--surface); border-color: transparent; }
+  .cell .vis { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+  .cell h3 { font-size: 22px; }
+  .cell .lbl { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
+  .c7 { grid-column: span 7; } .c5 { grid-column: span 5; } .c6 { grid-column: span 6; } .c4 { grid-column: span 4; } .c8 { grid-column: span 8; } .c12 { grid-column: span 12; }
+  @media (max-width: 860px) { .bento > * { grid-column: span 12; } }
+  .feature { padding-top: 120px; }
+  .feature .sec-head { margin-bottom: 34px; }
 
-  /* Install */
-  pre.install {
-    margin: 32px 0 0; padding: 22px 24px; border-radius: var(--radius);
-    background: #0a0c09; color: #d7dcd2; border: 1px solid var(--line); overflow-x: auto;
-    font-size: 14.5px; line-height: 1.8;
-  }
-  pre.install .c { color: #6f7869; }
-  .req { margin-top: 20px; color: var(--muted); font-size: 14.5px; }
+  .list-card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+  .li { display: flex; align-items: center; gap: 10px; padding: 10px 12px; font-size: 14px; }
+  .li + .li { border-top: 1px solid var(--line); }
+  .li .r { margin-left: auto; color: var(--muted); font-size: 13px; }
+  .li .r.ok { color: var(--green); font-weight: 500; }
+  .ico { width: 26px; height: 26px; border-radius: 7px; display: grid; place-items: center; flex: none; }
+  .ico svg { width: 15px; height: 15px; }
+  .btn-xs { height: 26px; padding: 0 10px; border-radius: 7px; font-size: 12.5px; font-weight: 500; display: inline-flex; align-items: center; border: 1px solid var(--line-strong); background: var(--card); }
+  .btn-xs.dark { background: var(--btn); color: var(--btn-text); border-color: transparent; }
 
-  footer { border-top: 1px solid var(--line); padding: 36px 0 48px; color: var(--muted); font-size: 14px; }
-  footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; align-items: center; }
-  footer a { text-decoration: none; }
-  footer a:hover { color: var(--text); }
+  .say { display: flex; gap: 10px; align-items: flex-start; }
+  .say img { width: 22px; height: 22px; border-radius: 6px; }
+  .bubble { background: var(--surface); border-radius: 12px; padding: 9px 12px; font-size: 14px; }
+  .bubble.me { margin-left: auto; background: var(--surface-2); }
+  .steps-log { font-size: 13px; color: var(--muted); display: grid; gap: 5px; margin: 8px 0; }
+  .steps-log div { display: flex; gap: 8px; align-items: center; }
+  .steps-log div::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+  .steps-log span { margin-left: auto; font-family: "Google Sans Code", monospace; font-size: 11px; color: var(--faint); }
+  .approve { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; font-size: 13.5px; }
+  .approve .row2 small { color: var(--muted); }
 
-  /* Reveal on scroll, only when motion is welcome */
-  @media (prefers-reduced-motion: no-preference) {
-    .reveal { opacity: 0; transform: translateY(14px); transition: opacity 600ms cubic-bezier(.2,.7,.2,1), transform 600ms cubic-bezier(.2,.7,.2,1); }
-    .reveal.in { opacity: 1; transform: none; }
+  .heat { display: grid; grid-template-columns: repeat(13, 1fr); grid-auto-flow: column; grid-template-rows: repeat(7, 1fr); gap: 4px; width: min(280px, 100%); flex: none; }
+  .heat i { aspect-ratio: 1; border-radius: 3px; background: var(--surface-2); }
+  .heat i.l1 { background: color-mix(in srgb, var(--text) 22%, var(--surface-2)); }
+  .heat i.l2 { background: color-mix(in srgb, var(--text) 45%, var(--surface-2)); }
+  .heat i.l3 { background: color-mix(in srgb, var(--text) 75%, var(--surface-2)); }
+  .heat i.today { outline: 1.5px solid var(--text); outline-offset: 1px; }
+
+  /* Open source */
+  .oss { border-radius: 24px; background: var(--term); color: #f1f1f4; padding: 56px 44px; position: relative; overflow: hidden; }
+  .oss .glow { top: 0; opacity: .35; }
+  .oss h2 { position: relative; }
+  .oss > p { position: relative; color: #a9a9b4; font-size: 17px; margin-top: 14px; max-width: 520px; }
+  .oss-grid { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 36px; }
+  .oss-grid div { border: 1px solid rgba(255,255,255,.1); border-radius: 16px; padding: 18px; background: rgba(255,255,255,.03); }
+  .oss-grid b { display: block; font-size: 17px; font-weight: 500; letter-spacing: -.01em; }
+  .oss-grid p { color: #a9a9b4; font-size: 14.5px; margin-top: 6px; }
+  .oss .btn-light { background: #f1f1f4; color: #0c0c0f; border-color: transparent; }
+  .oss .btn-ghost { color: #f1f1f4; border-color: rgba(255,255,255,.2); background: transparent; }
+  @media (max-width: 760px) { .oss { padding: 40px 22px; } .oss-grid { grid-template-columns: 1fr; } }
+
+  /* FAQ */
+  .faq { max-width: 620px; margin-inline: auto; display: grid; gap: 8px; }
+  .faq details { background: var(--surface); border-radius: 12px; }
+  .faq summary { list-style: none; cursor: pointer; padding: 14px 16px; font-weight: 500; display: flex; justify-content: space-between; gap: 16px; }
+  .faq summary::-webkit-details-marker { display: none; }
+  .faq summary::after { content: "+"; color: var(--muted); font-size: 18px; line-height: 1; transition: transform 200ms var(--ease-out); }
+  .faq details[open] summary::after { transform: rotate(45deg); }
+  .faq .a { padding: 0 16px 16px; color: var(--muted); font-size: 15px; }
+  .faq details[open] .a { animation: fadeUp 220ms var(--ease-out); }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(-4px); } }
+  .faq code { font-size: 13px; background: var(--surface-2); padding: 1px 5px; border-radius: 5px; }
+
+  /* CTA */
+  .cta-box { border-radius: 24px; background: var(--surface); padding: 64px 24px 0; text-align: center; overflow: hidden; }
+  .cta-box h2 { max-width: 640px; margin-inline: auto; }
+  .cta-box .hero-cta { justify-content: center; }
+  .cta-box .copy-row { max-width: 560px; margin: 22px auto 0; }
+  .cta-peek { margin: 44px auto 0; width: min(760px, 100%); height: 190px; border-radius: 16px 16px 0 0; border: 1px solid var(--line); border-bottom: 0; background: var(--card); overflow: hidden; display: grid; grid-template-columns: 1fr 1fr; text-align: left; }
+  .cta-peek .cmd { border-radius: 0; height: 100%; }
+  .cta-peek .agents { padding: 12px; display: grid; gap: 8px; background: var(--surface); }
+
+  /* Footer */
+  footer { margin-top: 110px; background: #0c0c0f; color: #f1f1f4; padding: 56px 0 28px; }
+  .foot { display: grid; grid-template-columns: 1.4fr repeat(3, 1fr); gap: 28px; }
+  .foot p { color: #8b8b96; font-size: 14px; margin-top: 12px; max-width: 260px; }
+  .foot h4 { margin: 0 0 12px; font-size: 14px; font-weight: 500; }
+  .foot ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 9px; font-size: 14px; color: #a9a9b4; }
+  .foot a:hover { color: #fff; }
+  .foot-bottom { margin-top: 44px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,.08); display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; color: #6f6f7a; font-size: 13px; }
+  @media (max-width: 760px) { .foot { grid-template-columns: 1fr 1fr; } }
+
+  /* Scroll reveal */
+  .js .reveal { opacity: 0; transform: translateY(14px); transition: opacity 700ms var(--ease-out), transform 700ms var(--ease-out); transition-delay: var(--d, 0ms); }
+  .js .reveal.in { opacity: 1; transform: none; }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .js .reveal { transform: none; transition: opacity 300ms ease; }
+    .ln, .pane, .streak { transform: none !important; transition-duration: 200ms; transition-delay: 0ms !important; }
+    .tap, .caret { animation: none; }
+    .bars i, .meter b, .share i { transition: none; transform: none; }
+    .chart path { transition: none; stroke-dashoffset: 0; }
+    .js .statement .w { filter: none; }
+    .app .scm { transition: none; }
   }
 </style>
 </head>
 <body>
+<script>document.documentElement.classList.add('js')</script>
 
-<nav>
+<header class="nav">
   <div class="wrap">
-    <a class="brand" href="#"><img src="icon.png" alt="">Vibex</a>
-    <div class="links">
+    <a class="brand" href="#"><img src="icon.png" alt="">vibex</a>
+    <nav class="nav-links" aria-label="Sections">
       <a href="#features">Features</a>
-      <a href="#mcp">Claude Code</a>
-      <a href="#install">Install</a>
-      <a class="btn btn-ghost" href="https://github.com/uwussimo/vibex">GitHub</a>
-    </div>
-  </div>
-</nav>
-
-<header class="hero">
-  <div class="wrap">
-    <img class="hero-icon" src="icon.png" alt="Vibex icon: a glowing lightning bolt">
-    <h1>Build, watch, ship.<br><span class="accent">One window.</span></h1>
-    <p class="lede">Vibex is a native macOS workstation: a terminal for Claude Code, the iOS Simulator embedded right in the window, and a browser on the side. Claude can see and drive all of it.</p>
-    <div class="cta">
-      <a class="btn btn-primary" href="https://github.com/uwussimo/vibex/releases/latest">Download for Mac</a>
-      <a class="btn btn-ghost" href="https://github.com/uwussimo/vibex">View on GitHub</a>
-    </div>
-    <p class="meta">v1.1.0 · Free and open source · Apple silicon &amp; Intel · macOS 26 · Requires Xcode</p>
-    <div class="shot">
-      <img src="screenshot.png" width="2000" height="1144" alt="The Vibex window: terminal tabs on the left, an iPhone simulator running a habits app in the middle, and a browser tab on the right">
+      <a href="#how">How it works</a>
+      <a href="#open-source">Open source</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+    <div class="nav-cta">
+      <a class="btn btn-light btn-sm" href="https://github.com/uwussimo/vibex">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 .2a8 8 0 0 0-2.53 15.59c.4.07.55-.17.55-.38v-1.33c-2.23.48-2.7-1.07-2.7-1.07-.36-.93-.89-1.17-.89-1.17-.73-.5.05-.49.05-.49.8.06 1.23.83 1.23.83.72 1.22 1.88.87 2.33.66.07-.52.28-.87.5-1.07-1.78-.2-3.65-.89-3.65-3.95 0-.87.31-1.59.83-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.22 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.52.56.83 1.28.83 2.15 0 3.07-1.87 3.75-3.66 3.95.29.25.54.73.54 1.48v2.2c0 .21.15.46.55.38A8 8 0 0 0 8 .2Z"/></svg>
+        Star<span class="star-count" data-stars hidden></span>
+      </a>
+      <a class="btn btn-dark btn-sm" href="#install">Download</a>
     </div>
   </div>
 </header>
 
-<section id="features">
+<main>
+<section class="hero" style="padding-top:64px">
   <div class="wrap">
-    <div class="reveal">
-      <div class="eyebrow">Three panes, zero juggling</div>
-      <h2>Everything you look at while building, side by side.</h2>
-      <p class="section-lede">Made for a big display and a long session. No more ⌘-Tab between Terminal, Simulator and a browser.</p>
+    <div class="hero-grid">
+      <h1>Your whole <span class="pill">vibe coding</span> setup in one window.</h1>
+      <p class="hero-lede">Claude Code's terminal, the iOS Simulator, a browser, every Git diff and your AI usage, side by side in a native Mac app. Free and open source, for good.</p>
     </div>
-    <div class="grid grid-3">
-      <div class="card reveal">
-        <div class="glyph g-term">&gt;_</div>
-        <h3>Terminal</h3>
-        <p>Real PTY tabs on SwiftTerm with a Metal renderer. Fish by default, starts in your project folder. Run Claude Code here.</p>
-      </div>
-      <div class="card reveal">
-        <div class="glyph g-sim"><svg width="16" height="22" viewBox="0 0 16 22" aria-hidden="true"><rect x="1" y="1" width="14" height="20" rx="3.5" fill="none" stroke="currentColor" stroke-width="2"/><rect x="5.5" y="3.2" width="5" height="1.6" rx=".8" fill="currentColor"/></svg></div>
-        <h3>Embedded Simulator</h3>
-        <p>The iOS Simulator drawn straight from CoreSimulator's framebuffer, with touch, keyboard and hardware buttons. No Simulator.app window. Boots slim with simslim.</p>
-      </div>
-      <div class="card reveal">
-        <div class="glyph g-web"><svg width="22" height="18" viewBox="0 0 22 18" aria-hidden="true"><rect x="1" y="1" width="20" height="16" rx="3.5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="5" cy="5" r="1.2" fill="#ff5f57"/><circle cx="8.5" cy="5" r="1.2" fill="#febc2e"/><circle cx="12" cy="5" r="1.2" fill="#28c840"/></svg></div>
-        <h3>Side browser</h3>
-        <p>A tabbed WebKit browser. Your localhost preview opens in one tab while a show keeps playing in another.</p>
+    <div class="hero-cta">
+      <a class="btn btn-dark" href="#install">Download for Mac</a>
+      <a class="btn btn-light" href="https://github.com/uwussimo/vibex">View the source</a>
+    </div>
+    <div class="hero-meta"><span>Free forever</span><span>MIT licensed</span><span>No account</span><span>Apple silicon &amp; Intel</span></div>
+
+    <div class="stage" aria-label="Animated preview of the Vibex window">
+      <div class="stage-frame">
+        <div class="stage-scale" data-stage>
+          <div class="app" data-scene="build">
+            <div class="chrome">
+              <div class="lights"><i></i><i></i><i></i></div>
+              <div class="chrome-title">habits</div>
+              <div class="run-pill"><b></b>Running Habits</div>
+            </div>
+            <div class="body">
+              <div class="act">
+                <span data-act="review"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="8" r="2"/><path d="M6 7v10M18 10c0 4-6 3-11.5 7"/></svg><b class="badge">2</b></span>
+                <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H11v16H5.5A1.5 1.5 0 0 1 4 18.5zM13 4h5.5A1.5 1.5 0 0 1 20 5.5v13a1.5 1.5 0 0 1-1.5 1.5H13z"/></svg></span>
+                <span data-act="preview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c3 3 3 14 0 17M12 3.5c-3 3-3 14 0 17"/></svg></span>
+                <span data-act="build"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="7" y="3" width="10" height="18" rx="2.5"/><path d="M11 17.5h2"/></svg></span>
+                <span><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l10-6.5z"/></svg></span>
+                <span class="grow" style="height:auto"></span>
+                <span data-act="usage"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5 19V11M10 19V6M15 19v-5M20 19V9"/></svg></span>
+                <span style="margin-bottom:8px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M5.6 18.4l1.8-1.8M16.6 7.4l1.8-1.8"/></svg></span>
+              </div>
+              <div class="scm"><div class="scm-in">
+                <div class="scm-h">Source Control</div>
+                <div class="scm-msg">Message (⌘↩ to commit)</div>
+                <div class="scm-commit">✓ Commit All</div>
+                <div class="scm-group"><span>⌄ Changes</span><span>2</span></div>
+                <div class="scm-row sel"><span class="file-ico"></span>HabitsView.swift<em style="color:var(--orange)">M</em></div>
+                <div class="scm-row"><span class="file-ico"></span>StreakBadge.swift<em style="color:var(--green)">U</em></div>
+              </div></div>
+              <div class="term">
+                <div class="term-tabs"><span class="on">claude</span><span>Run</span><span>fish</span></div>
+                <div class="term-body">
+                  <div class="tscene" data-for="build">
+                    <div class="ln" style="--i:0"><span class="p">~/habits ❯</span> claude</div>
+                    <div class="ln" style="--i:1"><span class="you">&gt; add a streak counter to the habits screen</span></div>
+                    <div class="ln" style="--i:2"> </div>
+                    <div class="ln" style="--i:3"><span class="dot">●</span> <span class="tool">Edit</span> <span class="dim">HabitsView.swift</span> <span class="add">+18</span> <span class="del">−2</span></div>
+                    <div class="ln" style="--i:4"><span class="dot">●</span> <span class="tool">vibex_run</span> <span class="dim">iOS · Habits</span></div>
+                    <div class="ln" style="--i:5"><span class="dim">  Built in 6.2s · launched on iPhone 17 Pro</span></div>
+                    <div class="ln" style="--i:6"><span class="dot">●</span> <span class="tool">simulator_tap_element</span> <span class="dim">"Read 10 pages"</span></div>
+                    <div class="ln" style="--i:7"><span class="dot">●</span> <span class="tool">simulator_screenshot</span></div>
+                    <div class="ln" style="--i:8"> </div>
+                    <div class="ln" style="--i:9">The streak shows 4 days after the tap.</div>
+                    <div class="ln" style="--i:10"><span class="you">&gt;</span> <span class="caret"></span></div>
+                  </div>
+                  <div class="tscene" data-for="review">
+                    <div class="ln" style="--i:0"><span class="you">&gt; what did you change?</span></div>
+                    <div class="ln" style="--i:1"> </div>
+                    <div class="ln" style="--i:2"><span class="dot">●</span> <span class="tool">Bash</span> <span class="dim">git diff --stat</span></div>
+                    <div class="ln" style="--i:3"><span class="dim">  HabitsView.swift  | 20 </span><span class="add">++++++++++++++++</span><span class="del">--</span></div>
+                    <div class="ln" style="--i:4"><span class="dim">  StreakBadge.swift | 31 </span><span class="add">++++++++++++++++++++</span></div>
+                    <div class="ln" style="--i:5"> </div>
+                    <div class="ln" style="--i:6">A new StreakBadge view, and HabitsView counts</div>
+                    <div class="ln" style="--i:7">consecutive days from completions.</div>
+                    <div class="ln" style="--i:8"><span class="you">&gt;</span> <span class="caret"></span></div>
+                  </div>
+                  <div class="tscene" data-for="preview">
+                    <div class="ln" style="--i:0"><span class="you">&gt; start the web dashboard and check the console</span></div>
+                    <div class="ln" style="--i:1"> </div>
+                    <div class="ln" style="--i:2"><span class="dot">●</span> <span class="tool">vibex_run</span> <span class="dim">web · npm run dev</span></div>
+                    <div class="ln" style="--i:3"><span class="dim">  ready on localhost:5173</span></div>
+                    <div class="ln" style="--i:4"><span class="dot">●</span> <span class="tool">browser_snapshot</span></div>
+                    <div class="ln" style="--i:5"><span class="dot">●</span> <span class="tool">browser_console</span> <span class="dim">0 errors</span></div>
+                    <div class="ln" style="--i:6"> </div>
+                    <div class="ln" style="--i:7">The chart renders with live data. No errors.</div>
+                    <div class="ln" style="--i:8"><span class="you">&gt;</span> <span class="caret"></span></div>
+                  </div>
+                  <div class="tscene" data-for="usage">
+                    <div class="ln" style="--i:0"><span class="you">&gt; how much of my session is left?</span></div>
+                    <div class="ln" style="--i:1"> </div>
+                    <div class="ln" style="--i:2"><span class="dot">●</span> <span class="tool">vibex_focus</span> <span class="dim">AI Agents</span></div>
+                    <div class="ln" style="--i:3"><span class="dim">  Session $36.43 · resets in 1h 3m</span></div>
+                    <div class="ln" style="--i:4"> </div>
+                    <div class="ln" style="--i:5">Plenty. You're at 61% of your biggest session.</div>
+                    <div class="ln" style="--i:6"><span class="you">&gt;</span> <span class="caret"></span></div>
+                  </div>
+                </div>
+              </div>
+              <div class="editor">
+                <div class="etabs" role="tablist" aria-label="Preview scenes">
+                  <button class="etab" data-scene="preview" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3.5 3.5 3.5 14.5 0 18M12 3c-3.5 3.5-3.5 14.5 0 18"/></svg>localhost:5173<i class="bar"></i></button>
+                  <button class="etab" data-scene="build" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><rect x="7" y="3" width="10" height="18" rx="2.5"/></svg>iPhone 17 Pro<i class="bar"></i></button>
+                  <button class="etab italic" data-scene="review" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="var(--orange)" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v8M8 9h8M8 19h8"/></svg>HabitsView.swift<i class="bar"></i></button>
+                  <button class="etab" data-scene="usage" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 19V11M10 19V6M15 19v-5M20 19V9"/></svg>AI Agents<i class="bar"></i></button>
+                </div>
+                <div class="panes">
+                  <div class="pane pane-sim" data-for="build">
+                    <div class="sim-h"><b></b>iPhone 17 Pro <small>iOS 26.6 · slim</small></div>
+                    <div class="phone"><div class="screen">
+                      <div class="island"></div>
+                      <h4>Today</h4>
+                      <div class="sub">Thursday, October 23</div>
+                      <div class="streak">🔥 4-day streak</div>
+                      <div class="habit done"><i></i>Morning walk<small>7:10</small></div>
+                      <div class="habit done"><i></i>Drink water<small>3 / 8</small></div>
+                      <div class="habit done"><i></i>Read 10 pages<small>now</small></div>
+                      <div class="habit"><i></i>Stretch<small>9 pm</small></div>
+                      <div class="habit"><i></i>No phone after 11<small></small></div>
+                      <div class="tap"></div>
+                    </div></div>
+                  </div>
+                  <div class="pane pane-diff" data-for="review">
+                    <div class="diff-h"><strong>HabitsView.swift</strong><span class="chip m">Modified</span><span class="stats"><span style="color:var(--green)">+18</span> <span style="color:var(--red)">−2</span></span><span class="stage-btn">Stage</span></div>
+                    <div class="code">
+                      <div class="hunk">struct HabitsView: View {</div>
+                      <div class="row"><span class="n">12</span><span class="t">    <span class="kw">@State private var</span> habits: [<span class="ty">Habit</span>] = []</span></div>
+                      <div class="row del"><span class="n">13</span><span class="t">    <span class="kw">var</span> title = <span class="st">"Today"</span></span></div>
+                      <div class="row add"><span class="n">13</span><span class="t">    <span class="kw">var</span> streak: <span class="ty">Int</span> { habits.<mark>currentStreak</mark>() }</span></div>
+                      <div class="row"><span class="n">14</span><span class="t"> </span></div>
+                      <div class="row"><span class="n">15</span><span class="t">    <span class="kw">var</span> body: <span class="kw">some</span> <span class="ty">View</span> {</span></div>
+                      <div class="row"><span class="n">16</span><span class="t">        <span class="ty">List</span> {</span></div>
+                      <div class="row add"><span class="n">17</span><span class="t">            <span class="kw">if</span> streak &gt; <span class="nu">0</span> {</span></div>
+                      <div class="row add"><span class="n">18</span><span class="t">                <span class="ty">StreakBadge</span>(days: streak)</span></div>
+                      <div class="row add"><span class="n">19</span><span class="t">                    .transition(.scale(scale: <span class="nu">0.9</span>))</span></div>
+                      <div class="row add"><span class="n">20</span><span class="t">            }</span></div>
+                      <div class="row"><span class="n">21</span><span class="t">            <span class="ty">ForEach</span>(habits) { <span class="ty">HabitRow</span>(habit: $0) }</span></div>
+                      <div class="row"><span class="n">22</span><span class="t">        }</span></div>
+                      <div class="row del"><span class="n">23</span><span class="t">        .navigationTitle(title)</span></div>
+                      <div class="row add"><span class="n">23</span><span class="t">        .navigationTitle(<span class="st">"Today"</span>)</span></div>
+                      <div class="row add"><span class="n">24</span><span class="t">        .animation(.spring(duration: <span class="nu">0.4</span>), value: streak)</span></div>
+                      <div class="row"><span class="n">25</span><span class="t">    }</span></div>
+                      <div class="row"><span class="n">26</span><span class="t"><span class="cm">// MARK: - Streaks</span></span></div>
+                    </div>
+                  </div>
+                  <div class="pane pane-web" data-for="preview">
+                    <div class="url">‹ › <span>localhost:5173</span></div>
+                    <div class="site">
+                      <h5>Habits · this month</h5>
+                      <div class="kpis"><div><b>86%</b><small>Completion</small></div><div><b>4 days</b><small>Streak</small></div><div><b>212</b><small>Check-ins</small></div></div>
+                      <svg class="chart" viewBox="0 0 400 110" width="100%" height="110" aria-hidden="true">
+                        <defs><linearGradient id="fill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="var(--accent)" stop-opacity=".18"/><stop offset="1" stop-color="var(--accent)" stop-opacity="0"/></linearGradient></defs>
+                        <path d="M0 80 C40 70 60 85 90 72 S150 50 180 58 S240 40 270 34 S330 50 360 24 L400 20" fill="none" stroke="var(--accent)" stroke-width="2.2"/>
+                      </svg>
+                    </div>
+                    <div class="console"><b>✓</b> [vite] connected.<br><b>✓</b> GET /api/habits 200 · 18 ms<br>0 errors · 0 warnings</div>
+                  </div>
+                  <div class="pane pane-agents" data-for="usage">
+                    <div class="acard"><h6>✳︎ Claude <span class="plan">Max 20×</span></h6><div class="row2"><small class="muted">Session · 1h 3m</small><b>$36.43</b></div><div class="meter"><b style="--v:61%"></b></div></div>
+                    <div class="acard"><h6>&lt;/&gt; Codex <span class="plan" style="color:var(--accent);background:var(--accent-soft)">Plus</span></h6><div class="row2"><small class="muted">7d · 4d 2h</small><b>31%</b></div><div class="meter"><b style="--v:31%;background:var(--accent)"></b></div></div>
+                    <div class="acard"><h6>$ Spending <span style="margin-left:auto;color:var(--muted);font-weight:400">30 days</span></h6><div class="big">$2,017 <small class="muted" style="font-size:12px;font-weight:400">API value</small></div><small class="muted">3.5B tokens · 98% from cache</small></div>
+                    <div class="acard"><h6>Now</h6><div class="row2"><b>habits</b><span style="color:var(--orange)">8:54</span></div><small class="muted">Opus 5.5 · 41K written · $2.36</small></div>
+                    <div class="acard span2"><h6>Trend <span style="margin-left:auto;color:var(--muted);font-weight:400">30 days · $2,017</span></h6>
+                      <div class="bars" data-bars="30"></div>
+                    </div>
+                    <div class="acard"><h6>Models</h6>
+                      <div class="share"><span>Fable 5.1</span><i style="--v:100%"></i><b>$1,138</b></div>
+                      <div class="share"><span>Opus 5.5</span><i style="--v:52%"></i><b>$588</b></div>
+                      <div class="share"><span>Sonnet 5.5</span><i style="--v:15%"></i><b>$167</b></div>
+                    </div>
+                    <div class="acard"><h6>Projects</h6>
+                      <div class="share"><span>habits</span><i style="--v:100%;--c:var(--text)"></i><b>$355</b></div>
+                      <div class="share"><span>dashboard</span><i style="--v:96%;--c:var(--text)"></i><b>$352</b></div>
+                      <div class="share"><span>vibex</span><i style="--v:84%;--c:var(--text)"></i><b>$303</b></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </section>
 
-<section id="mcp">
-  <div class="wrap split">
-    <div class="reveal">
-      <div class="eyebrow">Built-in MCP server</div>
-      <h2>Claude Code gets hands.</h2>
-      <p class="section-lede">Vibex registers itself with Claude Code on launch. Claude can screenshot and tap the simulator, read its accessibility tree, install and launch your app, open browser tabs, click by element ref, and read console and network logs.</p>
-      <div class="chips">
-        <span class="chip">simulator_describe</span>
-        <span class="chip">simulator_tap_element</span>
-        <span class="chip">simulator_screenshot</span>
-        <span class="chip">simulator_launch_app</span>
-        <span class="chip">browser_snapshot</span>
-        <span class="chip">browser_click</span>
-        <span class="chip">browser_console</span>
-        <span class="chip">vibex_run</span>
-        <span class="chip">terminal_run</span>
+<div class="works wrap">
+  <p>Works with the tools you already use.</p>
+  <div class="logos">
+    <span>Claude Code</span><span>Codex</span><span>Xcode</span><span>iOS Simulator</span><span>Git</span><span>skills.sh</span><span>Vite &amp; Next.js</span>
+  </div>
+</div>
+
+<div class="statement" data-statement>
+  <div class="statement-pin">
+    <div class="glow" aria-hidden="true"></div>
+    <p>Meet <span class="brand-pill"><img src="icon.png" alt="">Vibex</span>, the window where Claude Code builds your app, runs it, taps through it and shows you every line it changed. No more juggling Terminal, Simulator and Safari. And it's free.</p>
+  </div>
+</div>
+
+<section id="how" style="padding-top:40px">
+  <div class="grid-lines">
+    <div class="wrap" style="padding:0">
+      <div class="how-head"><span>How it works</span><a class="btn btn-light btn-sm" href="#install">Install Vibex</a></div>
+      <div class="how-title reveal"><h2>Up and running in a minute</h2><p>Three steps, and Claude has a window to work in.</p></div>
+      <div class="steps">
+        <div class="step reveal">
+          <div class="step-vis">
+            <div class="cmd"><span class="p">❯</span> curl -fsSL uwussimo.github.io/vibex/install.sh | sh<br><span class="dim">Downloading Vibex…</span><br><span class="ok">✓</span> Installed to /Applications<br><span class="ok">✓</span> Linked the vibex command</div>
+          </div>
+          <small>01</small>
+          <h3>Install with one line</h3>
+          <p>It verifies the release, installs Vibex and links the <code>vibex</code> command. Updates arrive on their own.</p>
+        </div>
+        <div class="step reveal" style="--d:80ms">
+          <div class="step-vis">
+            <div class="list-card">
+              <div class="li"><span class="ico c-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="3"/></svg></span>Full Disk Access<span class="r ok">Ready</span></div>
+              <div class="li"><span class="ico c-violet"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 4l-4 16"/></svg></span>Xcode &amp; iOS runtime<span class="r ok">Ready</span></div>
+              <div class="li"><span class="ico c-orange"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l1.8 5.6L19.5 10l-5.7 1.6L12 17l-1.8-5.4L4.5 10l5.7-1.4z"/></svg></span>Claude Code<span class="r"><span class="btn-xs">Install</span></span></div>
+            </div>
+          </div>
+          <small>02</small>
+          <h3>Grant once</h3>
+          <p>Setup lists every permission and tool with its live status, and one button to fix each.</p>
+        </div>
+        <div class="step reveal" style="--d:160ms">
+          <div class="step-vis">
+            <div class="cmd"><span class="p">~/habits ❯</span> vibex .<br><span class="p">~/habits ❯</span> claude<br>&gt; run the app and check onboarding<br><span class="ok">●</span> vibex_run · <span class="ok">●</span> simulator_describe</div>
+          </div>
+          <small>03</small>
+          <h3>Open a folder and ask</h3>
+          <p>Each project gets its own window. Claude Code finds Vibex's tools on its own and drives that window.</p>
+        </div>
       </div>
     </div>
-    <div class="chat reveal" aria-label="Example Claude Code session"><span class="you">&gt; run the app and tap Continue on the onboarding screen</span>
-
-<span class="tool">● vibex_run</span>
-  <span class="dim">Started: iOS · HelloVibex. Phase: Building…</span>
-<span class="tool">● vibex_run_status</span>
-  <span class="dim">phase: Launched HelloVibex · exit code: 0</span>
-<span class="tool">● simulator_describe</span>
-  <span class="dim">app "HelloVibex" [ref=r1]</span>
-  <span class="dim">  text "Welcome" [ref=r2] (90,446 260x41)</span>
-  <span class="dim">  button "Continue" [ref=r3] (180,503 80x34)</span>
-<span class="tool">● simulator_tap_element</span> <span class="dim">{ ref: "r3" }</span>
-  <span class="dim">Tapped button "Continue" at (220, 520).</span>
-
-Done. Onboarding is complete.</div>
   </div>
 </section>
 
 <section>
   <div class="wrap">
-    <div class="reveal">
-      <div class="eyebrow">For many projects at once</div>
-      <h2>Works the way you already do.</h2>
+    <div class="sec-head reveal"><h2>The old way vs. <span class="pill" style="background:var(--accent-soft);border-color:transparent;box-shadow:none">the Vibex way</span></h2></div>
+    <div class="versus reveal">
+      <div>
+        <h3>The old way.</h3>
+        <p class="sub">Five apps and a lot of ⌘-Tab.</p>
+        <div class="old-list">
+          <div><i>✕</i><span>Simulator covering your terminal<small>while Claude waits for you to look</small></span></div>
+          <div><i>✕</i><span>Guessing what the agent changed<small>until git diff scrolls past</small></span></div>
+          <div><i>✕</i><span>Copying console errors by hand<small>from Safari into the chat</small></span></div>
+          <div><i>✕</i><span>Hitting usage limits by surprise<small>halfway through a big refactor</small></span></div>
+        </div>
+      </div>
+      <div>
+        <h3>The Vibex way.</h3>
+        <p class="sub">One window that Claude can see and drive.</p>
+        <div class="greet"><img src="icon.png" alt=""><span>What should we build today?</span></div>
+        <div class="chips">
+          <span class="c-green">▶ Runs your app</span><span class="c-blue">◎ Taps the simulator</span>
+          <span class="c-violet">± Shows every diff</span><span class="c-orange">◔ Tracks usage</span>
+          <span class="c-pink">✦ Installs skills</span><span class="c-red">◉ Reads the console</span>
+        </div>
+      </div>
+      <div class="vs-arrow" aria-hidden="true">→</div>
     </div>
-    <div class="grid grid-2">
-      <div class="card reveal">
-        <h3>One window per project</h3>
-        <p>Open a folder like in VS Code. Each window remembers its terminal tabs, browser tabs, simulator and layout. Claude in a project's terminal drives that project's window, never another one.</p>
+    <div class="stats-row">
+      <div class="stat reveal"><span>↙</span><b>$0</b><span>Forever. No plans, no trial.</span></div>
+      <div class="stat reveal" style="--d:80ms"><span>↙</span><b>50</b><span>MCP tools for Claude Code</span></div>
+      <div class="stat reveal" style="--d:160ms"><span>↙</span><b>MIT</b><span>Fork it, ship it, change it</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="features" class="feature">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="tag" style="background:var(--green)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="7" y="3" width="10" height="18" rx="2.5"/></svg>Simulator</span>
+      <h2 class="boxed" style="border-color:color-mix(in srgb,var(--green) 40%,transparent);background:var(--green-soft)">The iPhone, inside your window<span class="corner" style="border-color:color-mix(in srgb,var(--green) 40%,transparent);color:var(--green)">Live</span></h2>
+    </div>
+    <div class="bento">
+      <div class="cell c7 reveal">
+        <div class="vis">
+          <div class="say"><img src="icon.png" alt=""><div class="bubble">Booting iPhone 17 Pro slim. 11 of 38 daemons off.</div></div>
+          <div class="steps-log" style="margin-left:32px"><div>simulator_boot<span>2.1s</span></div><div>simulator_install_app<span>0.8s</span></div><div>simulator_launch_app<span>0.4s</span></div><div>simulator_describe<span>0.2s</span></div></div>
+          <div class="approve" style="margin-left:32px"><div class="row2"><b>button "Continue"</b><small>ref r3 · 180,503</small></div></div>
+        </div>
+        <div class="lbl"><span class="mini-tag"><i class="c-green">◎</i>Accessibility tree</span><h3>Claude taps by label, not by guessing pixels</h3></div>
       </div>
-      <div class="card reveal">
-        <h3>Run with ⇧⌘R</h3>
-        <p>iOS apps build for the window's simulator, then install and launch. Web projects start their dev server and open a preview tab. Swift, Cargo and Go projects just run. Tweak it in <code>.vibex.json</code>.</p>
-      </div>
-      <div class="card reveal">
-        <h3>Command palette</h3>
-        <p>⇧⌘P finds every command, project, tab and device. Type a URL to open it, or <code>$ npm test</code> to run it in a new terminal tab.</p>
-      </div>
-      <div class="card reveal">
-        <h3>Build and Watch modes</h3>
-        <p>⇧⌘B gives the terminal room and sizes the editor area to the simulator. ⌥⌘W flips it for a break. Dividers spring between layouts.</p>
+      <div class="cell c5 grey reveal" style="--d:80ms">
+        <div class="vis"><div class="list-card">
+          <div class="li"><span class="ico c-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="7" y="3" width="10" height="18" rx="2.5"/></svg></span>iPhone 17 Pro<span class="r ok">Booted</span></div>
+          <div class="li"><span class="ico c-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="3" width="14" height="18" rx="2.5"/></svg></span>iPad Air<span class="r">Shut down</span></div>
+          <div class="li"><span class="ico c-violet"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 7c-6 0-10 4-10 10 4 0 9-2 10-10Z"/></svg></span>Slim boots<span class="r">simslim</span></div>
+        </div></div>
+        <div class="lbl"><span class="mini-tag"><i class="c-violet">⚡</i>Embedded</span><h3>No Simulator.app window to lose</h3></div>
       </div>
     </div>
-    <div class="keys reveal">
-      <div class="key">Command palette <kbd>⇧⌘P</kbd></div>
-      <div class="key">Open folder <kbd>⌘O</kbd></div>
-      <div class="key">Run / stop <kbd>⇧⌘R · ⌘.</kbd></div>
-      <div class="key">Focus pane <kbd>⌘1 ⌘2 ⌘3</kbd></div>
-      <div class="key">Build mode <kbd>⇧⌘B</kbd></div>
-      <div class="key">Watch mode <kbd>⌥⌘W</kbd></div>
+  </div>
+</section>
+
+<section class="feature">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="tag" style="background:var(--orange)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="8" r="2"/><path d="M6 7v10M18 10c0 4-6 3-11.5 7"/></svg>Source Control</span>
+      <h2 class="boxed" style="border-color:color-mix(in srgb,var(--orange) 40%,transparent);background:var(--orange-soft)">Every change, before you commit<span class="corner" style="border-color:color-mix(in srgb,var(--orange) 40%,transparent);color:var(--orange)">+18 −2</span></h2>
+    </div>
+    <div class="bento">
+      <div class="cell c8 reveal">
+        <div class="vis"><div class="list-card code" style="font-size:12px">
+          <div class="row"><span class="n">15</span><span class="t"><span class="kw">var</span> body: <span class="kw">some</span> <span class="ty">View</span> {</span></div>
+          <div class="row del"><span class="n">16</span><span class="t">    <span class="ty">Text</span>(<span class="st">"Today"</span>)</span></div>
+          <div class="row add"><span class="n">16</span><span class="t">    <span class="ty">StreakBadge</span>(days: <mark>streak</mark>)</span></div>
+          <div class="row add"><span class="n">17</span><span class="t">        .transition(.scale(scale: <span class="nu">0.9</span>))</span></div>
+          <div class="row"><span class="n">18</span><span class="t">}</span></div>
+        </div></div>
+        <div class="lbl"><span class="mini-tag"><i class="c-orange">±</i>Diffs</span><h3>Syntax-highlighted diffs, side by side</h3></div>
+      </div>
+      <div class="cell c4 grey reveal" style="--d:80ms">
+        <div class="vis" style="gap:8px">
+          <div class="approve" style="background:var(--green-soft);border-color:transparent"><div class="row2"><span>✓ Committed <b class="code">a1b2c3d</b></span><span class="btn-xs dark">Push</span></div></div>
+          <div class="approve"><div class="row2"><span>Discarded “Notes.md”</span><span class="btn-xs">Undo</span></div></div>
+        </div>
+        <div class="lbl"><span class="mini-tag"><i class="c-green">↺</i>Forgiving</span><h3>Commit, push, and undo a discard</h3></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="feature">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="tag" style="background:var(--accent)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 19V11M10 19V6M15 19v-5M20 19V9"/></svg>AI Agents</span>
+      <h2 class="boxed" style="border-color:color-mix(in srgb,var(--accent) 40%,transparent);background:var(--accent-soft)">Know what your agents cost<span class="corner" style="border-color:color-mix(in srgb,var(--accent) 40%,transparent);color:var(--accent)">Local only</span></h2>
+    </div>
+    <div class="bento">
+      <div class="cell c6 reveal">
+        <div class="vis" style="gap:10px">
+          <div class="acard" style="padding:14px 16px"><h6>✳︎ Claude <span class="plan">Max 20×</span></h6><div class="row2"><small class="muted">Session · resets in 1h 3m</small><span class="big">$36.43</span></div><div class="meter"><b style="--v:61%"></b></div></div>
+          <div class="acard" style="padding:14px 16px"><h6>Spending <span style="margin-left:auto;color:var(--muted);font-weight:400">30 days</span></h6><div class="row2"><span class="big">$2,017 <small class="muted" style="font-size:13px;font-weight:400">API value</small></span><span class="chip m">10×</span></div></div>
+        </div>
+        <div class="lbl"><span class="mini-tag"><i class="c-orange">◔</i>Limits</span><h3>Session and plan limits at a glance</h3></div>
+      </div>
+      <div class="cell c6 grey reveal" style="--d:80ms">
+        <div class="vis"><div class="acard" style="padding:14px 16px"><h6>Trend <span style="margin-left:auto;color:var(--muted);font-weight:400">Oct 8 · $25.97</span></h6><div class="bars" data-bars="30" style="height:110px"></div></div></div>
+        <div class="lbl"><span class="mini-tag"><i class="c-blue">▮</i>Trend</span><h3>Every day, model and project</h3></div>
+      </div>
+      <div class="cell c12 reveal" style="min-height:0;flex-direction:row;align-items:center;flex-wrap:wrap;gap:28px">
+        <div class="heat" data-heat></div>
+        <div style="flex:1;min-width:220px"><div class="big">$3,133 <small class="muted" style="font-size:14px;font-weight:400">13 weeks</small></div>
+          <p class="muted" style="margin-top:8px">Read straight from Claude Code's and Codex's own logs on your Mac. Nothing leaves your machine. It sits in the menu bar too.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="feature">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="tag" style="background:var(--violet)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l1.8 5.6L19.5 10l-5.7 1.6L12 17l-1.8-5.4L4.5 10l5.7-1.4z"/></svg>Skills</span>
+      <h2 class="boxed" style="border-color:color-mix(in srgb,var(--violet) 40%,transparent);background:var(--violet-soft)">A skills marketplace, built in<span class="corner" style="border-color:color-mix(in srgb,var(--violet) 40%,transparent);color:var(--violet)">skills.sh</span></h2>
+    </div>
+    <div class="bento">
+      <div class="cell c7 reveal">
+        <div class="vis"><div class="list-card">
+          <div class="li"><span class="ico c-violet">✦</span><span><b style="font-weight:500">write-swift</b><br><small class="muted">emilkowalski/skills · 112K installs</small></span><span class="r"><span class="btn-xs dark">Install</span></span></div>
+          <div class="li"><span class="ico c-blue">✦</span><span><b style="font-weight:500">swiftui-pro</b><br><small class="muted">twostraws/swiftui-agent-skill · 34K</small></span><span class="r"><span class="btn-xs">Global ⌄</span></span></div>
+          <div class="li"><span class="ico c-green">✦</span><span><b style="font-weight:500">find-skills</b><br><small class="muted">vercel-labs/skills · 4M installs</small></span><span class="r ok">Installed</span></div>
+        </div></div>
+        <div class="lbl"><span class="mini-tag"><i class="c-violet">⌕</i>Browse</span><h3>Search thousands of skills and install in one click</h3></div>
+      </div>
+      <div class="cell c5 grey reveal" style="--d:80ms">
+        <div class="vis"><div class="list-card">
+          <div class="li" style="color:var(--muted);font-size:12px;font-weight:600">GLOBAL</div>
+          <div class="li">ux-laws<span class="r">~/.claude/skills</span></div>
+          <div class="li" style="color:var(--muted);font-size:12px;font-weight:600">THIS PROJECT</div>
+          <div class="li">apple-design<span class="r">.claude/skills</span></div>
+        </div></div>
+        <div class="lbl"><span class="mini-tag"><i class="c-blue">⌂</i>Scopes</span><h3>Global and per-project, side by side</h3></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="feature">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="tag" style="background:var(--pink)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3.5 3.5 3.5 14.5 0 18M12 3c-3.5 3.5-3.5 14.5 0 18"/></svg>Browser &amp; Run</span>
+      <h2 class="boxed" style="border-color:color-mix(in srgb,var(--pink) 40%,transparent);background:var(--pink-soft)">Your preview, next to your code<span class="corner" style="border-color:color-mix(in srgb,var(--pink) 40%,transparent);color:var(--pink)">⇧⌘R</span></h2>
+    </div>
+    <div class="bento">
+      <div class="cell c6 grey reveal">
+        <div class="vis"><div class="cmd">[vite] ready on <span class="p">localhost:5173</span><br><span class="ok">✓</span> GET /api/habits 200 · 18 ms<br><span class="dim">browser_console → 0 errors</span></div></div>
+        <div class="lbl"><span class="mini-tag"><i class="c-pink">◉</i>Console &amp; network</span><h3>Claude reads the console so you don't paste it</h3></div>
+      </div>
+      <div class="cell c6 reveal" style="--d:80ms">
+        <div class="vis"><div class="list-card">
+          <div class="li"><span class="ico c-green">▶</span>iOS<span class="r">build, install, launch</span></div>
+          <div class="li"><span class="ico c-blue">▶</span>Web<span class="r">dev server + preview tab</span></div>
+          <div class="li"><span class="ico c-orange">▶</span>Swift, Cargo, Go<span class="r">just run</span></div>
+        </div></div>
+        <div class="lbl"><span class="mini-tag"><i class="c-green">▶</i>One shortcut</span><h3>Run any project with ⇧⌘R</h3></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="open-source">
+  <div class="wrap">
+    <div class="oss reveal">
+      <div class="glow" aria-hidden="true"></div>
+      <h2>Free. Open source. Yours.</h2>
+      <p>Vibex is MIT licensed and built in the open. No account, no subscription, no tracking. Read every line, fork it, make it yours.</p>
+      <div class="hero-cta" style="position:relative">
+        <a class="btn btn-light" href="https://github.com/uwussimo/vibex">Star on GitHub</a>
+        <a class="btn btn-ghost" href="https://github.com/uwussimo/vibex/blob/main/LICENSE" style="border:1px solid rgba(255,255,255,.2)">Read the license</a>
+      </div>
+      <div class="oss-grid">
+        <div><b>MIT licensed</b><p>Use it at work, change it, ship your own build. No strings.</p></div>
+        <div><b>Nothing phones home</b><p>Usage stats are read from logs on your Mac. Updates come straight from GitHub releases.</p></div>
+        <div><b>Built with Claude Code</b><p>Native Swift 6 and AppKit. Issues and pull requests welcome.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="wrap">
+    <div class="sec-head reveal"><h2>Questions</h2></div>
+    <div class="faq reveal">
+      <details open><summary>Is Vibex really free?</summary><div class="a">Yes. It's open source under the MIT license, with no paid tier, no trial and no account. You only pay for the AI tools you already use, like Claude Code.</div></details>
+      <details><summary>What do I need?</summary><div class="a">A Mac on macOS 26 (Apple silicon or Intel), Xcode 26 with an iOS simulator runtime for the simulator pane, and Claude Code. Setup checks each one and installs what it can.</div></details>
+      <details><summary>Does it work with Codex or other agents?</summary><div class="a">The terminal runs anything. The built-in MCP server works with any MCP client, and the AI Agents dashboard reads Codex's usage limits too.</div></details>
+      <details><summary>Is my code or usage sent anywhere?</summary><div class="a">No. Usage numbers come from Claude Code's and Codex's local logs. Vibex only talks to GitHub to check for updates and to skills.sh when you browse skills.</div></details>
+      <details><summary>Why does macOS warn me when I first open it?</summary><div class="a">Vibex isn't notarized yet. The install script handles it; with the DMG, open <b>System Settings → Privacy &amp; Security</b> and click <b>Open Anyway</b>.</div></details>
+      <details><summary>How do updates work?</summary><div class="a">Vibex checks GitHub releases in the background and installs the new version when you quit, or right away with <b>Restart to Update</b>.</div></details>
     </div>
   </div>
 </section>
 
 <section id="install">
   <div class="wrap">
-    <div class="reveal">
-      <div class="eyebrow">Get started</div>
-      <h2>Install in a minute.</h2>
-      <p class="section-lede">Paste this into Terminal. It downloads the latest release, verifies it, installs Vibex to Applications and opens it. Vibex ships with simslim and XcodeGen; you bring Xcode 26 and Claude Code.</p>
+    <div class="cta-box reveal">
+      <h2>Ready to vibe?</h2>
+      <p class="muted" style="margin-top:12px;font-size:17px">Paste this into Terminal. It takes about a minute.</p>
+      <div class="copy-row">
+        <div class="cmd"><span class="p">❯</span> <span data-cmd>curl -fsSL https://uwussimo.github.io/vibex/install.sh | sh</span></div>
+        <button class="btn btn-dark btn-sm" data-copy>Copy</button>
+      </div>
+      <div class="hero-cta">
+        <a class="btn btn-light" href="https://github.com/uwussimo/vibex/releases/latest">Download the DMG</a>
+        <a class="btn btn-light" href="https://github.com/uwussimo/vibex#build-and-run">Build from source</a>
+      </div>
+      <div class="cta-peek" aria-hidden="true">
+        <div class="cmd"><span class="p">~/app ❯</span> vibex .<br><span class="p">~/app ❯</span> claude<br>&gt; make it feel great<br><span class="ok">●</span> <span>vibex_run</span><br><span class="dim">  Launched on iPhone 17 Pro</span></div>
+        <div class="agents">
+          <div class="acard"><h6>✳︎ Claude <span class="plan">Max 20×</span></h6><div class="meter"><b style="--v:42%"></b></div></div>
+          <div class="acard"><div class="bars" data-bars="18" style="height:48px"></div></div>
+        </div>
+      </div>
     </div>
-<pre class="install reveal" style="margin-top:22px">curl -fsSL https://uwussimo.github.io/vibex/install.sh | sh</pre>
-    <div class="reveal">
-      <p class="req">Prefer the DMG? Get it from <a href="https://github.com/uwussimo/vibex/releases/latest">Releases</a>. Vibex isn't notarized yet, so after macOS blocks it, open <b>System Settings → Privacy &amp; Security</b> and click <b>Open Anyway</b>.</p>
-      <p class="section-lede" style="margin-top:28px">Or build it from source:</p>
-    </div>
-<pre class="install reveal" style="margin-top:14px"><span class="c"># needs Xcode 26 with an iOS simulator runtime</span>
-brew install xcodegen
-brew install mobai-app/tap/simslim   <span class="c"># optional: lighter simulators</span>
-
-git clone https://github.com/uwussimo/vibex.git
-cd vibex
-make run</pre>
-    <p class="req reveal">Requires macOS 26 (Apple silicon or Intel) and Xcode 26. To build it yourself, set your own signing identity in <code>project.yml</code>. The simulator embedding relies on private CoreSimulator API verified on Xcode 26.6.</p>
   </div>
 </section>
+</main>
 
 <footer>
   <div class="wrap">
-    <span>Vibex · made by <a href="https://github.com/uwussimo">Yusuf Abdurakhimov</a></span>
-    <a href="https://github.com/uwussimo/vibex">github.com/uwussimo/vibex</a>
+    <div class="foot">
+      <div>
+        <a class="brand" href="#"><img src="icon.png" alt="">vibex</a>
+        <p>The free, open-source vibe coding workstation for Mac. MIT licensed. Made by <a href="https://github.com/uwussimo" style="color:#d6d6dd">Yusuf Abdurakhimov</a>.</p>
+      </div>
+      <div><h4>Product</h4><ul><li><a href="#features">Features</a></li><li><a href="#how">How it works</a></li><li><a href="#install">Install</a></li><li><a href="https://github.com/uwussimo/vibex/releases">Releases</a></li></ul></div>
+      <div><h4>Open source</h4><ul><li><a href="https://github.com/uwussimo/vibex">GitHub</a></li><li><a href="https://github.com/uwussimo/vibex/blob/main/LICENSE">MIT License</a></li><li><a href="https://github.com/uwussimo/vibex/issues">Issues</a></li><li><a href="https://github.com/uwussimo/vibex/pulls">Pull requests</a></li></ul></div>
+      <div><h4>Works with</h4><ul><li><a href="https://claude.com/claude-code">Claude Code</a></li><li><a href="https://skills.sh">skills.sh</a></li><li><a href="https://github.com/mobai-app/simslim">simslim</a></li><li><a href="https://github.com/yonaskolb/XcodeGen">XcodeGen</a></li></ul></div>
+    </div>
+    <div class="foot-bottom"><span>© 2026 Vibex contributors · MIT License</span><span>Not affiliated with Apple or Anthropic.</span></div>
   </div>
 </footer>
 
 <script>
-  // Fade sections in as they enter the viewport. Without the observer, everything stays visible.
-  (() => {
-    const items = document.querySelectorAll('.reveal');
-    if (!('IntersectionObserver' in window) || matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      items.forEach((el) => el.classList.add('in'));
-      return;
+(() => {
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Bars and heatmap: deterministic shapes so the page looks the same on every load.
+  const wave = (i) => 0.18 + 0.82 * Math.abs(Math.sin(i * 1.7) * Math.cos(i * 0.37));
+  document.querySelectorAll('[data-bars]').forEach((el) => {
+    const n = +el.dataset.bars;
+    for (let i = 0; i < n; i++) {
+      const bar = document.createElement('i');
+      bar.style.setProperty('--v', `${Math.round(wave(i) * 100)}%`);
+      bar.style.setProperty('--i', i);
+      if (i === n - 1) bar.className = 'today';
+      el.append(bar);
     }
-    const io = new IntersectionObserver((entries) => {
-      for (const entry of entries) {
-        if (entry.isIntersecting) { entry.target.classList.add('in'); io.unobserve(entry.target); }
+  });
+  document.querySelectorAll('[data-heat]').forEach((el) => {
+    for (let i = 0; i < 91; i++) {
+      const cell = document.createElement('i');
+      const v = wave(i * 3.1);
+      cell.className = i > 88 ? '' : v > 0.8 ? 'l3' : v > 0.55 ? 'l2' : v > 0.35 ? 'l1' : '';
+      if (i === 88) cell.classList.add('today');
+      el.append(cell);
+    }
+  });
+
+  // Hero: scale the fixed-size mockup to its column, then cycle through the scenes.
+  const stage = document.querySelector('[data-stage]');
+  const app = stage.querySelector('.app');
+  const fit = () => {
+    const s = Math.min(1, stage.clientWidth / app.offsetWidth);
+    app.style.transform = `scale(${s})`;
+    stage.style.height = `${app.offsetHeight * s}px`;
+  };
+  new ResizeObserver(fit).observe(stage);
+  fit();
+
+  const order = ['build', 'review', 'preview', 'usage'];
+  const sceneMs = 6500;
+  app.style.setProperty('--scene-ms', `${sceneMs}ms`);
+  let index = 0, timer = null, visible = true, hovering = false;
+  const show = (name) => {
+    app.dataset.scene = name;
+    index = order.indexOf(name);
+    app.querySelectorAll('.etab').forEach((t) => {
+      const on = t.dataset.scene === name;
+      t.classList.toggle('on', on);
+      t.setAttribute('aria-selected', on);
+      // Restart the progress bar on the newly selected tab.
+      const bar = t.querySelector('.bar');
+      bar.style.animation = 'none'; void bar.offsetWidth; bar.style.animation = '';
+    });
+    app.querySelectorAll('[data-for]').forEach((p) => p.classList.toggle('on', p.dataset.for === name));
+    app.querySelectorAll('[data-act]').forEach((a) => a.classList.toggle('on', a.dataset.act === name));
+  };
+  const schedule = () => {
+    clearTimeout(timer);
+    const run = !reduce && visible && !hovering && !document.hidden;
+    app.classList.toggle('cycling', run);
+    if (run) timer = setTimeout(() => { show(order[(index + 1) % order.length]); schedule(); }, sceneMs);
+  };
+  app.querySelectorAll('.etab').forEach((t) => t.addEventListener('click', () => { show(t.dataset.scene); schedule(); }));
+  app.addEventListener('pointerenter', () => { hovering = true; schedule(); });
+  app.addEventListener('pointerleave', () => { hovering = false; schedule(); });
+  document.addEventListener('visibilitychange', schedule);
+  new IntersectionObserver(([e]) => { visible = e.isIntersecting; schedule(); }, { threshold: 0.25 }).observe(stage);
+  show('build');
+  schedule();
+
+  // Reveal cards as they scroll in.
+  const reveals = document.querySelectorAll('.reveal');
+  const io = new IntersectionObserver((entries) => {
+    for (const e of entries) if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+  }, { rootMargin: '0px 0px -8% 0px' });
+  reveals.forEach((el) => io.observe(el));
+
+  // The pinned statement sharpens word by word as you scroll through it.
+  const statement = document.querySelector('[data-statement]');
+  const text = statement.querySelector('p');
+  const words = [];
+  const split = (node) => {
+    for (const child of [...node.childNodes]) {
+      if (child.nodeType === Node.TEXT_NODE) {
+        const frag = document.createDocumentFragment();
+        for (const part of child.textContent.split(/(\s+)/)) {
+          if (!part) continue;
+          if (/^\s+$/.test(part)) { frag.append(part); continue; }
+          const w = document.createElement('span');
+          w.className = 'w'; w.textContent = part;
+          frag.append(w); words.push(w);
+        }
+        child.replaceWith(frag);
+      } else if (child.classList?.contains('brand-pill')) {
+        child.classList.add('w'); words.push(child);
       }
-    }, { rootMargin: '0px 0px -8% 0px' });
-    items.forEach((el) => io.observe(el));
-  })();
+    }
+  };
+  split(text);
+  let ticking = false;
+  const update = () => {
+    ticking = false;
+    const rect = statement.getBoundingClientRect();
+    const range = statement.offsetHeight - innerHeight;
+    const p = Math.min(1, Math.max(0, -rect.top / (range * 0.85)));
+    const n = words.length;
+    words.forEach((w, i) => {
+      const a = Math.min(1, Math.max(0, p * (n + 2) - i));
+      w.style.opacity = 0.14 + 0.86 * a;
+      w.style.filter = reduce ? '' : `blur(${(1 - a) * 8}px)`;
+    });
+  };
+  addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
+  update();
+
+  // Copy the install command.
+  document.querySelectorAll('[data-copy]').forEach((button) => button.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(document.querySelector('[data-cmd]').textContent);
+      button.textContent = 'Copied';
+      setTimeout(() => { button.textContent = 'Copy'; }, 1600);
+    } catch { button.textContent = 'Select it'; }
+  }));
+
+  // Star count from GitHub; the button reads fine without it.
+  fetch('https://api.github.com/repos/uwussimo/vibex').then((r) => r.ok ? r.json() : null).then((repo) => {
+    const el = document.querySelector('[data-stars]');
+    if (repo && el) { el.textContent = repo.stargazers_count.toLocaleString(); el.hidden = false; }
+  }).catch(() => {});
+})();
 </script>
 </body>
 </html>
