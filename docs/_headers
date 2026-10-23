@@ -1,0 +1,17 @@
+# Cloudflare Pages response headers.
+
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: DENY
+
+# The installer: always the latest, readable in a browser, piped straight into sh.
+/install.sh
+  Content-Type: text/plain; charset=utf-8
+  Cache-Control: no-cache
+
+/logos/*
+  Cache-Control: public, max-age=604800
+
+/og.png
+  Cache-Control: public, max-age=86400

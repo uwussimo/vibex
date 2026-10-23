@@ -1,0 +1,6 @@
+# Cloudflare Pages: the landing page at vibex.cc. Connect this repo in the Cloudflare dashboard
+# (Workers & Pages → Create → Pages → Import a Git repository) and name the project "vibex";
+# Pages reads this file, so there is no build command and docs/ is published as is.
+name = "vibex"
+pages_build_output_dir = "./docs"
+compatibility_date = "2026-10-01"

@@ -226,6 +226,13 @@ Vibex/
 VibexTests/   Swift Testing suites for layout math, spring, simctl parsing, URL handling, git, usage, skills
 ```
 
+## Website
+
+The landing page at [vibex.cc](https://vibex.cc) is the static site in `docs/`, hosted on Cloudflare Pages.
+`wrangler.toml` holds the settings, so connecting the repo in Cloudflare (Workers & Pages → Create → Pages →
+Import a Git repository, project name `vibex`) deploys every push to `main` with no build step.
+`docs/_headers` sets the response headers, and `docs/install.sh` is the installer behind `curl -fsSL https://vibex.cc/install.sh | sh`.
+
 ## License
 
 Vibex is free and open source under the [MIT license](LICENSE). No account, no subscription, no tracking.

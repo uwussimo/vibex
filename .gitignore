@@ -14,3 +14,6 @@ Vibex/Resources/Icons.xcassets/
 .vibex/
 
 .DS_Store
+
+# Cloudflare
+.wrangler/
