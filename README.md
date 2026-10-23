@@ -9,7 +9,7 @@
   <b>terminal · embedded iOS Simulator · side browser</b> in one window, driven by Claude Code over MCP.
 </p>
 
-<p align="center"><a href="https://uwussimo.github.io/vibex/">uwussimo.github.io/vibex</a> · free and open source under the <a href="LICENSE">MIT license</a></p>
+<p align="center"><a href="https://vibex.cc/">vibex.cc</a> · free and open source under the <a href="LICENSE">MIT license</a></p>
 
 Laid out like VS Code: an activity bar on the far left (Terminal, Simulator and Browser; then Source Control and
 Skills; AI Usage and Setup at the bottom), a sidebar, the terminal as the main column, and one tabbed editor area on
@@ -36,7 +36,7 @@ title bar.
 ## Install
 
 ```sh
-curl -fsSL https://uwussimo.github.io/vibex/install.sh | sh
+curl -fsSL https://vibex.cc/install.sh | sh
 ```
 
 The script downloads the latest release, checks its SHA-256, installs Vibex to `/Applications` (quitting a running

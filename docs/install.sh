@@ -1,6 +1,6 @@
 #!/bin/sh
 # Vibex installer: downloads the latest release, verifies it, and installs Vibex.app.
-#   curl -fsSL https://uwussimo.github.io/vibex/install.sh | sh
+#   curl -fsSL https://vibex.cc/install.sh | sh
 #
 # Files fetched with curl are not quarantined, so macOS does not block the un-notarized app.
 # Options (environment variables):

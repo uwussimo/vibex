@@ -25,7 +25,7 @@ final class Updater {
     private var keyObserver: NSObjectProtocol?
 
     nonisolated static let repository = "uwussimo/vibex"
-    static let installer = "https://uwussimo.github.io/vibex/install.sh"
+    static let installer = "https://vibex.cc/install.sh"
     private static let interval: Duration = .seconds(6 * 60 * 60)
 
     let currentVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0"
