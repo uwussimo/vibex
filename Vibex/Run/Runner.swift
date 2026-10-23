@@ -84,7 +84,7 @@ final class Runner {
     func run() {
         stop(quietly: true)
         guard let config = resolveConfig() else {
-            fail("Nothing to run", detail: "Add a \(RunConfig.fileName) to the project, or use Run → Edit Run Configuration.")
+            fail("Nothing to run", detail: "Vibex couldn't tell how to run this project. Add a \(RunConfig.fileName) to its root, or run it in the terminal.")
             return
         }
         self.config = config

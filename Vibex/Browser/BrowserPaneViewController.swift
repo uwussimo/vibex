@@ -66,7 +66,6 @@ final class BrowserPaneViewController: NSViewController, NSMenuItemValidation {
     override func viewDidLoad() {
         super.viewDidLoad()
         restoreTabs()
-        observeSelectedTab()
     }
 
     // MARK: - Tabs
@@ -78,6 +77,7 @@ final class BrowserPaneViewController: NSViewController, NSMenuItemValidation {
         tab.webView.navigationDelegate = self
         tab.webView.uiDelegate = self
         tabs.append(tab)
+        observe(tab)
         if let url { tab.load(url) } else { tab.loadStartPage() }
         if shouldSelect { select(tab.id) } else { syncStrip() }
         persistTabs()
@@ -156,33 +156,38 @@ final class BrowserPaneViewController: NSViewController, NSMenuItemValidation {
 
     private func syncToolbar() {
         guard let tab = selectedTab else { return }
-        toolbarModel.urlText = tab.url?.absoluteString ?? ""
-        toolbarModel.host = tab.url.map { $0.scheme == "about" || $0.scheme == nil ? "" : tab.hostTitle } ?? ""
+        // The new-tab page leaves the address bar empty, ready to type into.
+        let isBlank = tab.url.map { $0.scheme == "about" || NewTabPage.isNewTab($0) } ?? true
+        toolbarModel.tabID = tab.id
+        toolbarModel.urlText = isBlank ? "" : tab.url?.absoluteString ?? ""
+        toolbarModel.host = isBlank ? "" : tab.hostTitle
         toolbarModel.canGoBack = tab.canGoBack
         toolbarModel.canGoForward = tab.canGoForward
         toolbarModel.isLoading = tab.isLoading
         toolbarModel.isSecure = tab.isSecure
     }
 
-    /// Re-syncs toolbar and strip whenever any tab's observed state changes.
-    private func observeSelectedTab() {
+    /// Re-syncs the tab strip and, for the selected tab, the address bar whenever this tab's title,
+    /// address or loading state changes. One chain per tab, so tabs opened later are tracked too.
+    private func observe(_ tab: BrowserTab) {
         withObservationTracking {
-            for tab in tabs {
-                _ = tab.title
-                _ = tab.url
-                _ = tab.isLoading
-                _ = tab.canGoBack
-                _ = tab.canGoForward
-                _ = tab.isSecure
-            }
-        } onChange: { [weak self] in
-            Task { @MainActor in
-                self?.syncStrip()
-                self?.syncToolbar()
-                self?.persistTabs()
-                self?.observeSelectedTab()
-            }
+            _ = tab.title
+            _ = tab.url
+            _ = tab.isLoading
+            _ = tab.canGoBack
+            _ = tab.canGoForward
+            _ = tab.isSecure
+        } onChange: { [weak self, weak tab] in
+            Task { @MainActor in self?.tabDidChange(tab) }
         }
+    }
+
+    private func tabDidChange(_ tab: BrowserTab?) {
+        guard let tab, tabs.contains(where: { $0 === tab }) else { return }
+        syncStrip()
+        if tab.id == selectedID { syncToolbar() }
+        persistTabs()
+        observe(tab)
     }
 
     // MARK: - Navigation
@@ -254,8 +259,10 @@ final class BrowserPaneViewController: NSViewController, NSMenuItemValidation {
 extension BrowserPaneViewController: WKNavigationDelegate {
     func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction) async -> WKNavigationActionPolicy {
         guard let url = navigationAction.request.url, let scheme = url.scheme else { return .allow }
-        if ["http", "https", "about", "blob", "data"].contains(scheme) { return .allow }
-        NSWorkspace.shared.open(url)
+        // Vibex serves its own new-tab page; only other schemes (mailto:, apps) go to macOS.
+        if ["http", "https", "about", "blob", "data", NewTabPage.scheme].contains(scheme) { return .allow }
+        // Hand app links to macOS only when the user clicked one, so a page can't pop up dialogs on its own.
+        if navigationAction.navigationType == .linkActivated { NSWorkspace.shared.open(url) }
         return .cancel
     }
 

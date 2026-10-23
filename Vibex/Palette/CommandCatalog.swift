@@ -18,7 +18,7 @@ enum CommandCatalog {
         let commands = menuCommands()
         let appMenu = commands.filter { $0.subtitle == "Vibex" }
         let rest = commands.filter { $0.subtitle != "Vibex" }
-        let order = ["Run", "View", "Simulator", "Browser", "File", "Window", "Edit"]
+        let order = ["View", "Simulator", "Browser", "File", "Window", "Edit"]
         let sorted = rest.enumerated().sorted { a, b in
             let ia = order.firstIndex { a.element.subtitle?.hasPrefix($0) == true } ?? order.count
             let ib = order.firstIndex { b.element.subtitle?.hasPrefix($0) == true } ?? order.count
@@ -96,7 +96,6 @@ enum CommandCatalog {
         switch menuPath.split(separator: " ").first.map(String.init) ?? "" {
         case "File": "doc"
         case "View": "rectangle.split.3x1"
-        case "Run": "play"
         case "Browser": "globe"
         case "Simulator": "iphone"
         case "Window": "macwindow"

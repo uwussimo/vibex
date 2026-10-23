@@ -61,12 +61,4 @@ enum BrowserScripts {
       };
     })();
     """#
-
-    /// A dark, empty start page for new tabs.
-    static let startPage = """
-    <!doctype html><html><head><meta charset="utf-8"><title>New Tab</title>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans&display=swap">
-    <style>html,body{margin:0;height:100%;background:#141416;color:#8e8e93;font:14px "Google Sans",system-ui;display:flex;align-items:center;justify-content:center}</style>
-    </head><body>Type a URL or search above</body></html>
-    """
 }

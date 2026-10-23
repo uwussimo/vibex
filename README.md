@@ -16,12 +16,12 @@ Skills; AI Agents and Setup at the bottom), a sidebar, the terminal as the main 
 the right. Closing a column's last tab closes the column; its activity bar button brings it back. Run lives in the
 title bar.
 
-- **Terminal**: real PTY terminals with tabs (SwiftTerm, Metal renderer), fish by default. Run Claude Code here.
+- **Terminal**: real PTY terminals with tabs (SwiftTerm, Metal renderer), running your own login shell. Run Claude Code here.
 - **Simulator**: the iOS Simulator rendered inside Vibex from CoreSimulator's framebuffer, with touch, keyboard and buttons. No Simulator.app window. Its editor tab appears when a device boots (from the header, Run or MCP) or from the activity bar.
 - **Browser**: WebKit tabs in the editor area. Netflix plays here; your localhost previews open in their own tabs.
 - **Source Control**: changed files in the sidebar (⌃⇧G); a file's diff opens as an editor tab, side by side or inline, with syntax highlighting.
 - **Skills**: the Claude Code skills loaded for this project and globally (⌃⇧K). Remove one (Undo puts it back) or browse skills.sh and install for every project or just this one, in the same layout `npx skills` uses.
-- **AI Agents**: Claude Code and Codex usage at a glance (⌃⇧A, or click the bolt in the menu bar): the current 5-hour session, Codex limits, what your tokens are worth at API prices against your plan, what is running now, a 30-day trend, top models and projects, and a 13-week activity grid. Read from the local logs; nothing leaves your Mac.
+- **AI Agents**: Claude Code and Codex usage at a glance (⌃⇧A, or AI Agents in the menu bar's bolt menu): the current 5-hour session, Codex limits, what your tokens are worth at API prices against your plan, what is running now, a 30-day trend, top models and projects, and a 13-week activity grid. Read from the local logs; nothing leaves your Mac.
 - **MCP**: a built-in server so Claude Code can see and drive the simulator and the browser.
 
 <p align="center">
@@ -57,7 +57,6 @@ You also need, and Vibex cannot bundle:
 
 - **Xcode 26** with an iOS simulator runtime (Vibex uses its simulator frameworks).
 - **Claude Code** (`npm install -g @anthropic-ai/claude-code`) to drive Vibex over MCP.
-- **fish** is optional (`brew install fish`); without it terminals use your login shell.
 
 macOS 26 on Apple silicon or Intel (the app and its bundled tools are universal).
 
@@ -88,17 +87,17 @@ and a welcome window lists recent projects when none are open.
 
 ## Run
 
-**Run (⇧⌘R)** or the ▶ in the title bar runs the project, with output in a Run terminal tab:
+Claude Code runs the project through Vibex's `vibex_run` MCP tool (or in a terminal tab with `terminal_run`),
+with output in a Run terminal tab you can watch:
 
-| Project | What Run does |
+| Project | What `vibex_run` does |
 | --- | --- |
 | iOS (Xcode or XcodeGen) | Builds for the window's simulator, boots it if needed, installs and launches the app |
 | macOS (Xcode or XcodeGen) | Builds and opens the app |
 | `package.json` with `dev`/`start` | Starts the dev server and opens it in a Preview browser tab once it answers |
 | Swift package, Cargo, Go, `make run` | Runs the command |
 
-Stop with ⌘. Detection can be overridden with a `.vibex.json` in the project root (Run → Edit Run Configuration
-writes one):
+Stop it with `vibex_stop` or from the menu bar. Detection can be overridden with a `.vibex.json` in the project root:
 
 ```json
 { "run": { "kind": "web", "command": "pnpm dev", "url": "http://localhost:5173" } }
@@ -141,6 +140,9 @@ None. Vibex talks to CoreSimulator directly, so it needs neither Accessibility n
 
 Vibex serves an MCP server on `http://127.0.0.1:5150/mcp` (next free port if 5150 is taken), guarded by a bearer
 token, and registers itself with the Claude Code CLI at user scope on launch (`claude mcp get vibex` shows it).
+It also installs a `vibex` skill in `~/.claude/skills/vibex` and keeps it current with each update, so Claude Code in
+every project knows how to use the simulator, browser and terminal tools. Remove it in the Skills sidebar to opt out;
+Setup & Permissions can put it back.
 Every Claude Code session, including the ones in Vibex's terminal (which also gets `VIBEX_MCP_URL` and
 `VIBEX_MCP_TOKEN`), can then drive the workstation:
 
@@ -167,7 +169,6 @@ The title bar shows `mcp :5150` with a green dot while a client is active. Vibex
 | --- | --- |
 | ⇧⌘P | Command palette |
 | ⌘O / ⌘N / ⇧⌘W | Open folder / home folder window / close window |
-| ⇧⌘R / ⌘. | Run / stop the project |
 | ⌘T / ⌘W | New / close tab in the focused pane |
 | ⌘⇧[ / ⌘⇧] | Previous / next tab |
 | ⌘K | Clear terminal |

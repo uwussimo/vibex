@@ -78,7 +78,7 @@ import Testing
     @Test func `typed input becomes a sensible URL`() {
         #expect(WebViewFactory.url(forInput: "netflix.com")?.absoluteString == "https://netflix.com")
         #expect(WebViewFactory.url(forInput: "http://localhost:3000")?.absoluteString == "http://localhost:3000")
-        #expect(WebViewFactory.url(forInput: "localhost:3000")?.absoluteString == "https://localhost:3000")
+        #expect(WebViewFactory.url(forInput: "localhost:3000")?.absoluteString == "http://localhost:3000")
         #expect(WebViewFactory.url(forInput: "swift concurrency")?.host() == "www.google.com")
         #expect(WebViewFactory.url(forInput: "   ") == nil)
     }

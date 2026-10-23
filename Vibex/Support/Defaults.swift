@@ -19,6 +19,7 @@ enum Defaults {
         static let foldersRequested = "setup.foldersRequested"
         static let notificationsRequested = "setup.notificationsRequested"
         static let agentsPeriodDays = "agents.periodDays"
+        static let vibexSkillRemoved = "skills.vibexRemoved"
     }
 
     /// Boot simulators through simslim when it is installed. On by default.
@@ -61,6 +62,12 @@ enum Defaults {
     }
 
     /// The AI Agents dashboard's spending period: 7, 30 or 90 days.
+    /// The user removed the vibex skill in the Skills sidebar; launch no longer puts it back.
+    static var vibexSkillRemoved: Bool {
+        get { store.bool(forKey: Key.vibexSkillRemoved) }
+        set { store.set(newValue, forKey: Key.vibexSkillRemoved) }
+    }
+
     static var agentsPeriodDays: Int {
         get { [7, 30, 90].contains(store.integer(forKey: Key.agentsPeriodDays)) ? store.integer(forKey: Key.agentsPeriodDays) : 30 }
         set { store.set(newValue, forKey: Key.agentsPeriodDays) }

@@ -106,6 +106,7 @@ final class SkillsModel {
     func remove(_ skill: InstalledSkill) {
         do {
             removed = try SkillsLibrary.remove(skill, project: folder)
+            if skill.scope == .global, skill.name == VibexSkill.name { Defaults.vibexSkillRemoved = true }
             problem = nil
         } catch {
             problem = error.localizedDescription
@@ -117,6 +118,7 @@ final class SkillsModel {
         guard let removed else { return }
         do {
             try SkillsLibrary.restore(removed)
+            if removed.skill.scope == .global, removed.skill.name == VibexSkill.name { Defaults.vibexSkillRemoved = false }
             self.removed = nil
         } catch {
             problem = error.localizedDescription

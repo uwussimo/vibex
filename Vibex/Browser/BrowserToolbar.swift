@@ -10,6 +10,8 @@ final class BrowserToolbarModel {
     var isSecure = true
     /// Bumped by the controller when ⌘L is pressed so the field can grab focus.
     var focusRequest = 0
+    /// The selected tab; switching tabs drops a half-typed address and shows the new tab's.
+    var tabID: UUID?
 }
 
 struct BrowserToolbarActions {
@@ -74,6 +76,10 @@ struct BrowserToolbar: View {
                 }
                 .onChange(of: model.host) { _, host in
                     if !isEditing { draft = host }
+                }
+                .onChange(of: model.tabID) { _, _ in
+                    isEditing = false
+                    draft = model.host
                 }
                 .onAppear { draft = model.host }
         }

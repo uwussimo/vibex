@@ -1,29 +1,15 @@
 import AppKit
 import SwiftUI
 
-/// The Vibex icon in the macOS menu bar. Clicking it opens AI Agents (Claude and Codex usage);
-/// right-clicking, or the popover's ••• button, opens the menu: what is running across every
-/// project plus the app-wide actions (open a folder, setup, the vibex command).
-final class MenuBarController: NSObject, NSMenuDelegate, NSPopoverDelegate {
+/// The Vibex icon in the macOS menu bar. Either click opens the menu: what is open across every
+/// project, AI Agents, and the app-wide actions (open a folder, setup, the vibex command).
+final class MenuBarController: NSObject, NSMenuDelegate {
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
     private let menu = NSMenu()
     private let mcp: MCPService
     private let updater: Updater
     private var windows: WindowManager { .shared }
     private var bootedDevices: [SimDevice] = []
-    private lazy var popover: NSPopover = {
-        let popover = NSPopover()
-        popover.behavior = .transient
-        popover.animates = true
-        popover.delegate = self
-        popover.contentViewController = NSHostingController(rootView: AgentsDashboard(
-            store: .shared,
-            style: .popover,
-            showMenu: { [weak self] in self?.showMenu() }
-        )
-        .frame(width: 540, height: 640))
-        return popover
-    }()
 
     init(mcp: MCPService, updater: Updater) {
         self.mcp = mcp
@@ -31,11 +17,9 @@ final class MenuBarController: NSObject, NSMenuDelegate, NSPopoverDelegate {
         super.init()
         menu.delegate = self
         menu.autoenablesItems = false
+        statusItem.menu = menu
         statusItem.button?.image = Self.icon(active: false)
-        statusItem.button?.toolTip = "Vibex: click for AI Agents, right-click for the menu"
-        statusItem.button?.target = self
-        statusItem.button?.action = #selector(statusItemClicked(_:))
-        statusItem.button?.sendAction(on: [.leftMouseUp, .rightMouseUp])
+        statusItem.button?.toolTip = "Vibex"
         observeRuns()
     }
 
@@ -47,34 +31,6 @@ final class MenuBarController: NSObject, NSMenuDelegate, NSPopoverDelegate {
                 self?.statusItem.button?.image = Self.icon(active: active)
             }
         }
-    }
-
-    @objc private func statusItemClicked(_ sender: NSStatusBarButton) {
-        let event = NSApp.currentEvent
-        if event?.type == .rightMouseUp || event?.modifierFlags.contains(.control) == true {
-            showMenu()
-        } else if popover.isShown {
-            popover.performClose(sender)
-        } else {
-            popover.show(relativeTo: sender.bounds, of: sender, preferredEdge: .minY)
-            popover.contentViewController?.view.window?.makeKey()
-            sender.highlight(true)
-        }
-    }
-
-    /// Shows the menu under the status item (attached only while open, so a plain click still opens the popover).
-    private func showMenu() {
-        if popover.isShown { popover.performClose(nil) }
-        statusItem.menu = menu
-        statusItem.button?.performClick(nil)
-    }
-
-    func menuDidClose(_ menu: NSMenu) {
-        statusItem.menu = nil
-    }
-
-    func popoverDidClose(_ notification: Notification) {
-        statusItem.button?.highlight(false)
     }
 
     /// The lightning bolt from the app icon; filled while a project is running.
@@ -127,6 +83,10 @@ final class MenuBarController: NSObject, NSMenuDelegate, NSPopoverDelegate {
             menu.addItem(item)
         }
         menu.addItem(action("Open Folder…", #selector(openFolder(_:)), symbol: "folder.badge.plus"))
+        let agents = action("AI Agents", #selector(showAgents(_:)), symbol: "gauge.with.dots.needle.67percent")
+        agents.toolTip = "Claude and Codex usage, in the frontmost project window"
+        agents.isEnabled = targetWindow != nil
+        menu.addItem(agents)
 
         if !bootedDevices.isEmpty {
             menu.addItem(.separator())
@@ -186,12 +146,12 @@ final class MenuBarController: NSObject, NSMenuDelegate, NSPopoverDelegate {
         let show = action("Show Window", #selector(showProject(_:)), symbol: "macwindow")
         show.representedObject = window.project.path
         submenu.addItem(show)
-        let run = runner.phase.isActive
-            ? action("Stop", #selector(stopProject(_:)), symbol: "stop.fill")
-            : action("Run", #selector(runProject(_:)), symbol: "play.fill")
-        run.representedObject = window.project.path
-        run.isEnabled = runner.phase.isActive || runner.resolveConfig() != nil
-        submenu.addItem(run)
+        // Claude starts runs over MCP; stopping one from here is the only control left outside the window.
+        if runner.phase.isActive {
+            let stop = action("Stop \(runner.config?.summary ?? "Run")", #selector(stopProject(_:)), symbol: "stop.fill")
+            stop.representedObject = window.project.path
+            submenu.addItem(stop)
+        }
         let reveal = action("Show in Finder", #selector(revealProject(_:)), symbol: "folder")
         reveal.representedObject = window.project.path
         submenu.addItem(reveal)
@@ -208,8 +168,14 @@ final class MenuBarController: NSObject, NSMenuDelegate, NSPopoverDelegate {
         window.window?.makeKeyAndOrderFront(nil)
     }
 
-    @objc private func runProject(_ sender: NSMenuItem) {
-        window(for: sender)?.runner.run()
+    /// The project window used last, else any.
+    private var targetWindow: MainWindowController? { windows.keyWindow ?? windows.windows.first }
+
+    @objc private func showAgents(_ sender: Any?) {
+        guard let window = targetWindow else { return }
+        NSApp.activate()
+        window.showWindow(nil)
+        window.showAgents(nil)
     }
 
     @objc private func stopProject(_ sender: NSMenuItem) {

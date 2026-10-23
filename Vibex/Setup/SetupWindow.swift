@@ -49,7 +49,7 @@ struct SetupView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
                     section("Permissions", [.fullDiskAccess, .folders, .notifications])
-                    section("Tools", [.xcode, .claude, .commandLine])
+                    section("Tools", [.xcode, .claude, .vibexSkill, .commandLine])
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, 28)
@@ -218,7 +218,7 @@ private struct SetupRow: View {
         case .folders: return "Allow"
         case .notifications: return Defaults.notificationsRequested ? "Open Settings" : "Allow"
         case .xcode: return FileManager.default.fileExists(atPath: Toolchain.developerDir) ? "Download iOS" : "Get Xcode"
-        case .claude, .commandLine: return "Install"
+        case .claude, .vibexSkill, .commandLine: return "Install"
         }
     }
 
@@ -232,13 +232,16 @@ private struct SetupRow: View {
              "Without Full Disk Access, macOS asks once for each folder.", false)
         case .notifications:
             ("bell.badge.fill", .red, "Notifications",
-             "Claude Code and Run can tell you when a long task finishes.", true)
+             "Claude Code can tell you when a long task finishes.", true)
         case .xcode:
             ("hammer.fill", .indigo, "Xcode and an iOS simulator",
-             "The simulator pane and Run for iOS projects use Xcode 26 and an iOS runtime.", false)
+             "The simulator pane and iOS builds use Xcode 26 and an iOS runtime.", false)
         case .claude:
             ("sparkles", .orange, "Claude Code",
              "Vibex registers its MCP tools with Claude Code so it can drive the simulator and browser.", false)
+        case .vibexSkill:
+            ("book.closed.fill", .purple, "Vibex skill for Claude Code",
+             "Teaches Claude Code in every project how to use Vibex's simulator, browser and terminal tools.", false)
         case .commandLine:
             ("terminal.fill", .gray, "vibex command",
              "Run “vibex .” in any terminal to open that folder here.", true)

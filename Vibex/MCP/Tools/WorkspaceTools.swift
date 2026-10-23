@@ -84,7 +84,7 @@ enum WorkspaceTools {
             },
             Tool(
                 name: "vibex_run",
-                description: "Run the project the way the user's Run button does: iOS apps build for this window's simulator then install and launch; web projects start the dev server and open it in a browser tab; others run their command. Uses .vibex.json or detects from the folder. Returns once started; check vibex_run_status.",
+                description: "Run the project: iOS apps build for this window's simulator then install and launch; web projects start the dev server and open it in a browser tab; others run their command. Uses .vibex.json or detects from the folder. Returns once started; check vibex_run_status.",
                 inputSchema: Schema.object()
             ) { _ in
                 let runner = try window().runner

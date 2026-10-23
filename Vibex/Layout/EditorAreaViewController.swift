@@ -216,7 +216,7 @@ final class EditorAreaViewController: NSViewController {
 
     func openAgents() {
         if agentsHost == nil {
-            agentsHost = host(AgentsDashboard(store: .shared, style: .tab))
+            agentsHost = host(AgentsDashboard(store: .shared))
             rebuildItems()
         }
         select(.agents)

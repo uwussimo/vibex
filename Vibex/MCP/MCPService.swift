@@ -59,6 +59,9 @@ final class MCPService {
             isRunning = false
         }
         Task { await register(force: false) }
+        // The MCP tools come with a skill that teaches Claude Code how to use them.
+        let removed = Defaults.vibexSkillRemoved
+        Task.detached { VibexSkill.installIfNeeded(removedByUser: removed) }
     }
 
     func register(force: Bool) async {

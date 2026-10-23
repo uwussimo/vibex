@@ -32,13 +32,14 @@ struct TerminalSession {
         )
     }
 
-    /// fish when it is installed, otherwise the user's login shell.
+    /// The user's own login shell (System Settings › Users & Groups, or `chsh`), so tabs have the
+    /// same PATH, node version manager and aliases as their regular terminal.
     static func preferredShell() -> String {
-        let fishCandidates = ["/opt/homebrew/bin/fish", "/usr/local/bin/fish", "/usr/bin/fish"]
-        if let fish = fishCandidates.first(where: { FileManager.default.isExecutableFile(atPath: $0) }) {
-            return fish
-        }
-        return ProcessInfo.processInfo.environment["SHELL"].flatMap { $0.isEmpty ? nil : $0 } ?? "/bin/zsh"
+        let candidates = [
+            getpwuid(getuid()).flatMap { $0.pointee.pw_shell.map { String(cString: $0) } },
+            ProcessInfo.processInfo.environment["SHELL"],
+        ]
+        return candidates.compactMap { $0 }.first { !$0.isEmpty && FileManager.default.isExecutableFile(atPath: $0) } ?? "/bin/zsh"
     }
 
     /// argv[0] with a leading dash, which is how shells learn they are login shells.

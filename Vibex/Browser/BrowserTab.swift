@@ -59,7 +59,8 @@ final class BrowserTab: NSObject {
     }
 
     var hostTitle: String {
-        url?.host()?.replacingOccurrences(of: "www.", with: "") ?? "New Tab"
+        guard let url, !NewTabPage.isNewTab(url) else { return "New Tab" }
+        return url.host()?.replacingOccurrences(of: "www.", with: "") ?? "New Tab"
     }
 
     func load(_ url: URL) {
@@ -67,7 +68,7 @@ final class BrowserTab: NSObject {
     }
 
     func loadStartPage() {
-        webView.loadHTMLString(BrowserScripts.startPage, baseURL: nil)
+        load(NewTabPage.url)
     }
 
     func clearConsole() { console = [] }

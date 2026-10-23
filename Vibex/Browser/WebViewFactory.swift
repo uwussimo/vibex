@@ -14,6 +14,7 @@ enum WebViewFactory {
         configuration.applicationNameForUserAgent = "Version/26.0 Safari/605.1.15"
         configuration.preferences.isElementFullscreenEnabled = true
         configuration.preferences.isFraudulentWebsiteWarningEnabled = true
+        configuration.setURLSchemeHandler(NewTabSchemeHandler.shared, forURLScheme: NewTabPage.scheme)
 
         let webView = WKWebView(frame: .zero, configuration: configuration)
         webView.allowsBackForwardNavigationGestures = true
@@ -25,6 +26,13 @@ enum WebViewFactory {
         return webView
     }
 
+    /// localhost, 127.0.0.1, a LAN address or a `.local` / `.test` name.
+    static func isLocal(_ host: String) -> Bool {
+        let name = host.split(separator: "/").first.map { String($0.split(separator: ":").first ?? "") } ?? host
+        return name == "localhost" || name.hasSuffix(".localhost") || name.hasSuffix(".local") || name.hasSuffix(".test")
+            || name.hasPrefix("127.") || name.hasPrefix("192.168.") || name.hasPrefix("10.") || name == "0.0.0.0"
+    }
+
     /// Turns what the user typed into something loadable: a URL, a bare host, or a web search.
     static func url(forInput input: String) -> URL? {
         let text = input.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -33,7 +41,8 @@ enum WebViewFactory {
             return url
         }
         let looksLikeHost = !text.contains(" ") && (text.contains(".") || text.hasPrefix("localhost"))
-        if looksLikeHost, let url = URL(string: "https://\(text)") {
+        // Dev servers speak plain HTTP; everything else gets HTTPS.
+        if looksLikeHost, let url = URL(string: "\(isLocal(text) ? "http" : "https")://\(text)") {
             return url
         }
         var components = URLComponents(string: "https://www.google.com/search")!

@@ -1,14 +1,9 @@
 import SwiftUI
 
 /// Claude Code and Codex at a glance: plan windows, spending, what is running now, and the trends
-/// behind them. The same view fills the menu bar popover and the AI Agents tab.
+/// behind them. Shown in the AI Agents editor tab.
 struct AgentsDashboard: View {
-    enum Style { case popover, tab }
-
     let store: AgentUsageStore
-    var style: Style = .tab
-    /// The popover's ••• button: Vibex's menu bar menu.
-    var showMenu: (() -> Void)?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -16,9 +11,9 @@ struct AgentsDashboard: View {
             if let summary = store.summary {
                 ScrollView {
                     content(summary)
-                        .padding(.horizontal, style == .popover ? 14 : 20)
+                        .padding(.horizontal, 20)
                         .padding(.bottom, 16)
-                        .frame(maxWidth: style == .tab ? 980 : .infinity)
+                        .frame(maxWidth: 980)
                         .frame(maxWidth: .infinity)
                 }
                 .scrollIndicators(.automatic)
@@ -40,7 +35,7 @@ struct AgentsDashboard: View {
     private var header: some View {
         HStack(spacing: 10) {
             Text("AI Agents")
-                .font(.vibex(size: style == .popover ? 18 : 20, weight: .semibold))
+                .font(.vibex(size: 20, weight: .semibold))
             Spacer()
             Circle()
                 .fill(Color.accentColor)
@@ -48,13 +43,9 @@ struct AgentsDashboard: View {
                 .opacity(store.isRefreshing ? 1 : 0.35)
                 .animation(.easeInOut(duration: 0.3), value: store.isRefreshing)
                 .help(store.lastUpdated.map { "Updated \($0.formatted(.relative(presentation: .named)))" } ?? "Updating…")
-            if let showMenu {
-                ToolbarIconButton(systemImage: "ellipsis", help: "Vibex Menu", action: showMenu)
-            } else {
-                ToolbarIconButton(systemImage: "arrow.clockwise", help: "Refresh", action: store.refresh)
-            }
+            ToolbarIconButton(systemImage: "arrow.clockwise", help: "Refresh", action: store.refresh)
         }
-        .padding(.leading, style == .popover ? 16 : 22)
+        .padding(.leading, 22)
         .padding(.trailing, 10)
         .frame(height: 50)
     }

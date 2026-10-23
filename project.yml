@@ -12,8 +12,8 @@ packages:
 settings:
   base:
     SWIFT_VERSION: "6.0"
-    MARKETING_VERSION: "1.2.1"
-    CURRENT_PROJECT_VERSION: "4"
+    MARKETING_VERSION: "1.2.4"
+    CURRENT_PROJECT_VERSION: "5"
     SWIFT_APPROACHABLE_CONCURRENCY: YES
     SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
     SWIFT_STRICT_CONCURRENCY: complete
@@ -32,9 +32,12 @@ targets:
     platform: macOS
     sources:
       - path: Vibex
-        excludes: ["Resources/Info.plist", "Resources/vibex"]
+        excludes: ["Resources/Info.plist", "Resources/vibex", "Resources/VibexSkill.md"]
       # The `vibex` shell command; extensionless, so XcodeGen needs the phase spelled out.
       - path: Vibex/Resources/vibex
+        buildPhase: resources
+      # The skill Vibex installs in ~/.claude/skills/vibex (Markdown isn't a resource by default).
+      - path: Vibex/Resources/VibexSkill.md
         buildPhase: resources
     dependencies:
       - package: SwiftTerm
