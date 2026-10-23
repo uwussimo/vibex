@@ -22,6 +22,7 @@ enum MainMenu {
         menu.addItem(.separator())
         menu.addItem(withTitle: "Copy MCP Config", action: #selector(AppDelegate.copyMCPConfig(_:)), keyEquivalent: "")
         menu.addItem(withTitle: "Re-register MCP with Claude Code", action: #selector(AppDelegate.reregisterMCP(_:)), keyEquivalent: "")
+        menu.addItem(withTitle: "Install 'vibex' Command", action: #selector(AppDelegate.installCommandLineTool(_:)), keyEquivalent: "")
         menu.addItem(.separator())
         menu.addItem(withTitle: "Hide Vibex", action: #selector(NSApplication.hide(_:)), keyEquivalent: "h")
         let hideOthers = menu.addItem(withTitle: "Hide Others", action: #selector(NSApplication.hideOtherApplications(_:)), keyEquivalent: "h")

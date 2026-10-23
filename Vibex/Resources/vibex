@@ -1,0 +1,32 @@
+#!/bin/sh
+# vibex: open folders in Vibex from a terminal, like `code .`.
+#   vibex            open the current folder
+#   vibex <path>...  open each folder (a file opens its folder)
+#
+# Installed as a symlink to Vibex.app/Contents/Resources/vibex, so it opens the app it lives in.
+set -eu
+
+usage() {
+  echo "usage: vibex [folder ...]" >&2
+  echo "Opens each folder in its own Vibex window (default: the current folder)." >&2
+}
+
+case "${1:-}" in
+  -h|--help) usage; exit 0 ;;
+esac
+
+# Resolve the symlink to find the enclosing Vibex.app; fall back to the bundle id.
+self=$(readlink -f "$0" 2>/dev/null || echo "$0")
+app=$(cd "$(dirname "$self")/../.." 2>/dev/null && pwd)
+case "$app" in
+  *.app) flag=-a target=$app ;;
+  *) flag=-b target=com.yusuf.vibex ;;
+esac
+
+[ $# -gt 0 ] || set -- .
+for path in "$@"; do
+  [ -e "$path" ] || { echo "vibex: no such file or folder: $path" >&2; exit 1; }
+done
+for path in "$@"; do
+  open "$flag" "$target" "$path"
+done

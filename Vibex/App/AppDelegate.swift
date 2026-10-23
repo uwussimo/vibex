@@ -4,6 +4,9 @@ import os
 final class AppDelegate: NSObject, NSApplicationDelegate {
     let mcp = MCPService()
     private var windows: WindowManager { .shared }
+    private var hasLaunched = false
+    /// Folders macOS hands over before launch finishes (`vibex .` on a cold start); opened once MCP is up.
+    private var pendingURLs: [URL] = []
 
     func applicationWillFinishLaunching(_ notification: Notification) {
         NSApp.mainMenu = MainMenu.build()
@@ -22,13 +25,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         mcp.registry.register(BrowserTools.make())
         mcp.registry.register(SimulatorTools.make())
         mcp.start()
-        if windows.windows.isEmpty { windows.restoreOrWelcome() }
+        hasLaunched = true
+        if pendingURLs.isEmpty {
+            windows.restoreOrWelcome()
+        } else {
+            openFolders(pendingURLs)
+            pendingURLs = []
+        }
         NSApp.activate()
         Log.app.info("Vibex launched")
     }
 
-    /// Folders dropped on the Dock icon or passed with `open -a Vibex <folder>`.
+    /// Folders dropped on the Dock icon, passed to `vibex`, or passed with `open -a Vibex <folder>`.
     func application(_ application: NSApplication, open urls: [URL]) {
+        if hasLaunched { openFolders(urls) } else { pendingURLs += urls }
+    }
+
+    private func openFolders(_ urls: [URL]) {
         for url in urls {
             var isDirectory: ObjCBool = false
             if FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory), isDirectory.boolValue {
@@ -59,6 +72,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         pasteboard.clearContents()
         pasteboard.setString(mcp.registrar.addCommand + "\n\n" + mcp.registrar.jsonConfig, forType: .string)
         windows.keyWindow?.toast.show(title: "MCP config copied", message: "The claude mcp add command and the JSON config are on the clipboard.")
+    }
+
+    @objc func installCommandLineTool(_ sender: Any?) {
+        Task {
+            do {
+                let path = try await CommandLineTool.install()
+                windows.keyWindow?.toast.show(title: "Installed vibex", message: "Run vibex . in any folder to open it here (\(path)).")
+            } catch {
+                windows.keyWindow?.toast.show(title: "Could not install vibex", message: error.localizedDescription)
+            }
+        }
     }
 
     @objc func reregisterMCP(_ sender: Any?) {

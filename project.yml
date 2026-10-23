@@ -33,7 +33,10 @@ targets:
     platform: macOS
     sources:
       - path: Vibex
-        excludes: ["Resources/Info.plist"]
+        excludes: ["Resources/Info.plist", "Resources/vibex"]
+      # The `vibex` shell command; extensionless, so XcodeGen needs the phase spelled out.
+      - path: Vibex/Resources/vibex
+        buildPhase: resources
     dependencies:
       - package: SwiftTerm
     info:

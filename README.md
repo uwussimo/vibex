@@ -34,6 +34,9 @@ Or download **Vibex-1.0.0.dmg** from [Releases](https://github.com/uwussimo/vibe
 Applications. Vibex is not notarized yet, so macOS blocks a DMG downloaded in a browser: click **Done**, then
 **System Settings → Privacy & Security → Open Anyway** (or `xattr -d com.apple.quarantine ~/Downloads/Vibex-*.dmg`).
 
+Open a project from a terminal with `vibex .` (or `vibex <folder>…`), like VS Code's `code`. The installer links
+the command into the first writable folder on your PATH; with the DMG, use **Vibex → Install 'vibex' Command**.
+
 Vibex bundles [simslim](https://github.com/MobAI-App/simslim) and [XcodeGen](https://github.com/yonaskolb/XcodeGen);
 copies you install yourself take precedence.
 

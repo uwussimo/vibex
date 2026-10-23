@@ -7,6 +7,7 @@
 #   VIBEX_VERSION=1.0.0      install a specific version instead of the latest
 #   VIBEX_INSTALL_DIR=...    install somewhere other than /Applications
 #   VIBEX_NO_OPEN=1          do not launch Vibex afterwards
+#   VIBEX_NO_CLI=1           do not link the vibex command
 set -eu
 
 REPO="uwussimo/vibex"
@@ -84,6 +85,26 @@ say "Installing to $dest"
 rm -rf "$dest"
 ditto "$mount/$APP_NAME" "$dest"
 xattr -dr com.apple.quarantine "$dest" 2>/dev/null || true
+
+# --- The vibex command ----------------------------------------------------------
+# Links `vibex` (like VS Code's `code`) into the first writable folder on PATH, never replacing another file.
+link_cli() {
+  cli="$dest/Contents/Resources/vibex"
+  [ -x "$cli" ] || return 0
+  for dir in /opt/homebrew/bin /usr/local/bin "$HOME/.local/bin" "$HOME/bin"; do
+    case ":$PATH:" in *":$dir:"*) ;; *) continue ;; esac
+    [ -d "$dir" ] && [ -w "$dir" ] || continue
+    if [ -e "$dir/vibex" ] && [ ! -L "$dir/vibex" ]; then
+      warn "$dir/vibex already exists; not replacing it."
+      return 0
+    fi
+    ln -sf "$cli" "$dir/vibex"
+    say "Linked the vibex command: $dir/vibex (run 'vibex .' in a project folder)"
+    return 0
+  done
+  warn "No writable folder on PATH for the vibex command. Use Vibex → Install 'vibex' Command."
+}
+[ -n "${VIBEX_NO_CLI:-}" ] || link_cli
 
 # --- What else is needed ------------------------------------------------------
 dev_dir=$(xcode-select -p 2>/dev/null || true)
