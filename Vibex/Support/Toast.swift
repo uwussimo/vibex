@@ -39,8 +39,7 @@ struct ToastView: View {
         VStack {
             if let toast = model.current {
                 HStack(alignment: .top, spacing: 10) {
-                    Image(systemName: "sparkles")
-                        .font(.system(size: 14, weight: .semibold))
+                    IconView(.sparkles, size: 16)
                         .foregroundStyle(Color.accentColor)
                         .padding(.top, 1)
                     VStack(alignment: .leading, spacing: 2) {

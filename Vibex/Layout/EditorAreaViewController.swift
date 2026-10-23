@@ -3,7 +3,7 @@ import Observation
 import SwiftUI
 
 /// The tabs shown above the editor area, VS Code style: every browser tab, the simulator once a
-/// device is running, the diff of the file selected in Source Control, and AI Agents and the skills
+/// device is running, the diff of the file selected in Source Control, and AI Usage and the skills
 /// marketplace when opened.
 @Observable
 final class EditorTabsModel {
@@ -28,7 +28,7 @@ final class EditorTabsModel {
     struct Item: Identifiable, Equatable {
         let tab: Tab
         var title: String
-        var symbol: String
+        var icon: Icon
         var isLoading = false
         var tint: Color?
         /// The diff tab is a preview (like VS Code's italic tab): it follows the sidebar's selection.
@@ -42,7 +42,7 @@ final class EditorTabsModel {
     var isEmpty: Bool { items.isEmpty }
 }
 
-/// Hosts the browser, the simulator, the diff, AI Agents and the skills marketplace as tabs of one
+/// Hosts the browser, the simulator, the diff, AI Usage and the skills marketplace as tabs of one
 /// area beside the terminal. Hidden tabs stay alive: the browser keeps playing and the simulator
 /// pauses its display only.
 final class EditorAreaViewController: NSViewController {
@@ -268,25 +268,25 @@ final class EditorAreaViewController: NSViewController {
 
     private func rebuildItems() {
         var items = browserPane.tabs.map { tab in
-            EditorTabsModel.Item(tab: .browser(tab.id), title: tab.title, symbol: "globe", isLoading: tab.isLoading)
+            EditorTabsModel.Item(tab: .browser(tab.id), title: tab.title, icon: .globe, isLoading: tab.isLoading)
         }
         if isSimulatorOpen {
             let model = simulatorPane.model
             items.append(EditorTabsModel.Item(
                 tab: .simulator,
                 title: model.selectedDevice?.name ?? "Simulator",
-                symbol: "iphone",
+                icon: .phone,
                 tint: model.selectedDevice?.isBooted == true ? Color(nsColor: .systemGreen) : nil
             ))
         }
         if agentsHost != nil {
-            items.append(EditorTabsModel.Item(tab: .agents, title: "AI Agents", symbol: "gauge.with.dots.needle.67percent"))
+            items.append(EditorTabsModel.Item(tab: .agents, title: "AI Usage", icon: .agents))
         }
         if skillsHost != nil {
-            items.append(EditorTabsModel.Item(tab: .skills, title: "Skills", symbol: "sparkles"))
+            items.append(EditorTabsModel.Item(tab: .skills, title: "Skills", icon: .sparkles))
         }
         if let change = sourceControl.selection {
-            items.append(EditorTabsModel.Item(tab: .diff, title: change.fileName, symbol: "plus.forwardslash.minus", tint: change.kind.color, isPreview: true))
+            items.append(EditorTabsModel.Item(tab: .diff, title: change.fileName, icon: .fileCode, tint: change.kind.color, isPreview: true))
         }
         let wasEmpty = tabs.isEmpty
         if items != tabs.items { tabs.items = items }
@@ -371,19 +371,18 @@ struct EditorTabStrip: View {
                 }
             }
             Button(action: newTab) {
-                Image(systemName: "plus")
-                    .font(.system(size: 12, weight: .semibold))
+                IconView(.plus, size: 15)
                     .frame(width: 26, height: 26)
-                    .foregroundStyle(Color.primary.opacity(0.7))
+                    .foregroundStyle(Theme.muted)
                     .contentShape(Rectangle())
             }
             .buttonStyle(PressFeedbackButtonStyle())
             .help("New Browser Tab (⌘T)")
             .padding(.trailing, 6)
         }
-        .frame(height: 36)
-        .background(Rectangle().fill(.bar))
-        .overlay(alignment: .bottom) { Divider() }
+        .frame(height: 38)
+        .background(Theme.surface)
+        .overlay(alignment: .bottom) { Rectangle().fill(Theme.line).frame(height: 1) }
         .animation(.spring(response: 0.3, dampingFraction: 1), value: model.items.map(\.tab))
     }
 }
@@ -401,24 +400,22 @@ private struct EditorTabCell: View {
                 if item.isLoading {
                     ProgressView().controlSize(.mini)
                 } else {
-                    Image(systemName: item.symbol)
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(item.tint ?? Color.primary.opacity(isSelected ? 0.75 : 0.5))
+                    IconView(item.icon, size: 13)
+                        .foregroundStyle(item.tint ?? (isSelected ? Theme.text.opacity(0.8) : Theme.faint))
                 }
             }
             .frame(width: 14)
             Text(item.title)
                 .font(.vibex(size: 12, weight: isSelected ? .medium : .regular))
                 .italic(item.isPreview)
-                .foregroundStyle(Color.primary.opacity(isSelected ? 0.95 : 0.6))
+                .foregroundStyle(isSelected ? Theme.text : Theme.muted)
                 .lineLimit(1)
                 .truncationMode(.middle)
             Button(action: close) {
-                Image(systemName: "xmark")
-                    .font(.system(size: 9, weight: .bold))
-                    .foregroundStyle(Color.primary.opacity(0.6))
+                IconView(.close, size: 11)
+                    .foregroundStyle(Theme.muted)
                     .frame(width: 16, height: 16)
-                    .background(Circle().fill(Color.primary.opacity(isHovering ? 0.1 : 0)))
+                    .background(Circle().fill(Color.white.opacity(isHovering ? 0.1 : 0)))
                     // A 24pt hit area around the 16pt circle.
                     .frame(width: 24, height: 24)
                     .contentShape(Rectangle())
@@ -433,7 +430,11 @@ private struct EditorTabCell: View {
         .frame(minWidth: 90, maxWidth: 210)
         .background(
             RoundedRectangle(cornerRadius: 7, style: .continuous)
-                .fill(Color.primary.opacity(isSelected ? 0.1 : (isHovering ? 0.05 : 0)))
+                .fill(Color.white.opacity(isSelected ? 0.08 : (isHovering ? 0.04 : 0)))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 7, style: .continuous)
+                .strokeBorder(isSelected ? Theme.line : .clear)
         )
         .contentShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
         .onTapGesture(perform: select)

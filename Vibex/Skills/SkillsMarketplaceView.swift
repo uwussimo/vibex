@@ -30,7 +30,7 @@ struct SkillsMarketplaceView: View {
             list
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(.background)
+        .background(Theme.background)
         .onAppear {
             model.loadMarketplace()
             model.refresh()
@@ -40,8 +40,7 @@ struct SkillsMarketplaceView: View {
 
     private var searchField: some View {
         HStack(spacing: 8) {
-            Image(systemName: "magnifyingglass")
-                .font(.system(size: 12, weight: .semibold))
+            IconView(.search, size: 14)
                 .foregroundStyle(.secondary)
             TextField("Search skills, e.g. swiftui, react, testing", text: Binding(get: { model.query }, set: { model.query = $0 }))
                 .textFieldStyle(.plain)
@@ -70,7 +69,7 @@ struct SkillsMarketplaceView: View {
     private var list: some View {
         if let problem = model.problem, model.results.isEmpty {
             VStack(spacing: 8) {
-                Image(systemName: "wifi.exclamationmark").font(.system(size: 24, weight: .light)).foregroundStyle(.secondary)
+                IconView(.alert, size: 27.5).foregroundStyle(.secondary)
                 Text(problem).font(.vibex(size: 12.5)).foregroundStyle(.secondary).multilineTextAlignment(.center)
                 Button("Try Again") { model.loadMarketplace() }
             }
@@ -149,8 +148,7 @@ private struct MarketplaceRow: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             Link(destination: skill.page) {
-                Image(systemName: "arrow.up.right.square")
-                    .font(.system(size: 13, weight: .medium))
+                IconView(.external, size: 15)
                     .frame(width: 24, height: 24)
             }
             .help("View on skills.sh")

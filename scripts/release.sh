@@ -35,6 +35,7 @@ rm -rf "$OUT"
 mkdir -p "$OUT"
 
 echo "==> Building Release"
+./scripts/fetch-icons.sh >/dev/null
 xcodegen generate >/dev/null
 xcodebuild -project Vibex.xcodeproj -scheme Vibex -configuration Release \
   -derivedDataPath "$DERIVED" -skipPackagePluginValidation ARCHS="$ARCHS" ONLY_ACTIVE_ARCH=NO build 2>&1 \

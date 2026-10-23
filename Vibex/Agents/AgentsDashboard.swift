@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Claude Code and Codex at a glance: plan windows, spending, what is running now, and the trends
-/// behind them. Shown in the AI Agents editor tab.
+/// behind them. Shown in the AI Usage editor tab.
 struct AgentsDashboard: View {
     let store: AgentUsageStore
 
@@ -27,14 +27,14 @@ struct AgentsDashboard: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
-        .background(.background)
+        .background(Theme.background)
         .onAppear { store.appear() }
         .onDisappear { store.disappear() }
     }
 
     private var header: some View {
         HStack(spacing: 10) {
-            Text("AI Agents")
+            Text("AI Usage")
                 .font(.vibex(size: 20, weight: .semibold))
             Spacer()
             Circle()
@@ -43,7 +43,7 @@ struct AgentsDashboard: View {
                 .opacity(store.isRefreshing ? 1 : 0.35)
                 .animation(.easeInOut(duration: 0.3), value: store.isRefreshing)
                 .help(store.lastUpdated.map { "Updated \($0.formatted(.relative(presentation: .named)))" } ?? "Updating…")
-            ToolbarIconButton(systemImage: "arrow.clockwise", help: "Refresh", action: store.refresh)
+            ToolbarIconButton(icon: .refresh, help: "Refresh", action: store.refresh)
         }
         .padding(.leading, 22)
         .padding(.trailing, 10)
@@ -65,8 +65,8 @@ struct AgentsDashboard: View {
             TrendCard(days: summary.trend, total: summary.periodCost)
             Grid(horizontalSpacing: 12, verticalSpacing: 12) {
                 GridRow {
-                    SharesCard(title: "Models", symbol: "cpu", shares: summary.models, tint: AgentColors.claude)
-                    SharesCard(title: "Projects", symbol: "folder", shares: summary.projects, tint: Color.primary.opacity(0.75))
+                    SharesCard(title: "Models", icon: .cpu, shares: summary.models, tint: AgentColors.claude)
+                    SharesCard(title: "Projects", icon: .folder, shares: summary.projects, tint: Color.primary.opacity(0.75))
                 }
             }
             ActivityCard(summary: summary)
@@ -83,7 +83,7 @@ enum AgentColors {
 
 private struct Card<Content: View, Accessory: View>: View {
     let title: String
-    let symbol: String
+    let icon: Icon
     var tint: Color = .secondary
     @ViewBuilder var accessory: Accessory
     @ViewBuilder var content: Content
@@ -91,8 +91,7 @@ private struct Card<Content: View, Accessory: View>: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 7) {
-                Image(systemName: symbol)
-                    .font(.system(size: 13, weight: .semibold))
+                IconView(icon, size: 15)
                     .foregroundStyle(tint)
                     .frame(width: 18)
                 Text(title)
@@ -104,13 +103,13 @@ private struct Card<Content: View, Accessory: View>: View {
         }
         .padding(14)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(Color.primary.opacity(0.05)))
+        .card(radius: 18)
     }
 }
 
 extension Card where Accessory == EmptyView {
-    init(title: String, symbol: String, tint: Color = .secondary, @ViewBuilder content: () -> Content) {
-        self.init(title: title, symbol: symbol, tint: tint, accessory: { EmptyView() }, content: content)
+    init(title: String, icon: Icon, tint: Color = .secondary, @ViewBuilder content: () -> Content) {
+        self.init(title: title, icon: icon, tint: tint, accessory: { EmptyView() }, content: content)
     }
 }
 
@@ -200,7 +199,7 @@ private struct ClaudeCard: View {
     let plan: ClaudePlan?
 
     var body: some View {
-        Card(title: "Claude", symbol: "sparkle", tint: AgentColors.claude) {
+        Card(title: "Claude", icon: .sparkles, tint: AgentColors.claude) {
             HStack(spacing: 6) {
                 if let plan { Badge(text: plan.name, tint: AgentColors.claude) }
                 if !summary.active.isEmpty {
@@ -234,7 +233,7 @@ private struct CodexCard: View {
     let installed: Bool
 
     var body: some View {
-        Card(title: "Codex", symbol: "chevron.left.forwardslash.chevron.right", tint: AgentColors.codex) {
+        Card(title: "Codex", icon: .codeBrowser, tint: AgentColors.codex) {
             if let plan = limits?.plan { Badge(text: plan, tint: AgentColors.codex) }
         } content: {
             if let limits, let window = limits.primary {
@@ -271,7 +270,7 @@ private struct SpendingCard: View {
     @Binding var periodDays: Int
 
     var body: some View {
-        Card(title: "Spending", symbol: "dollarsign.circle") {
+        Card(title: "Spending", icon: .dollar) {
             Menu {
                 Picker("Period", selection: $periodDays) {
                     Text("7 days").tag(7)
@@ -318,7 +317,7 @@ private struct NowCard: View {
     let sessions: [AgentUsageSummary.Session]
 
     var body: some View {
-        Card(title: "Now", symbol: "waveform.path.ecg", tint: AgentColors.claude) {
+        Card(title: "Now", icon: .activity, tint: AgentColors.claude) {
             if !sessions.isEmpty {
                 Circle().fill(AgentColors.claude).frame(width: 8, height: 8)
             }
@@ -332,7 +331,7 @@ private struct NowCard: View {
                     ForEach(sessions.prefix(3)) { session in
                         VStack(alignment: .leading, spacing: 2) {
                             HStack {
-                                Image(systemName: "sparkle").font(.system(size: 11, weight: .semibold)).foregroundStyle(AgentColors.claude)
+                                IconView(.sparkles, size: 12.5).foregroundStyle(AgentColors.claude)
                                 Text(session.project).font(.vibex(size: 13.5, weight: .semibold)).lineLimit(1)
                                 Spacer()
                                 TimelineView(.periodic(from: .now, by: 1)) { context in
@@ -366,7 +365,7 @@ private struct TrendCard: View {
     @State private var hovered: Date?
 
     var body: some View {
-        Card(title: "Trend", symbol: "chart.bar.fill") {
+        Card(title: "Trend", icon: .barChart) {
             Text(caption)
                 .font(.vibex(size: 12.5, weight: .medium))
                 .foregroundStyle(.secondary)
@@ -419,12 +418,12 @@ private struct TrendCard: View {
 
 private struct SharesCard: View {
     let title: String
-    let symbol: String
+    let icon: Icon
     let shares: [AgentUsageSummary.Share]
     let tint: Color
 
     var body: some View {
-        Card(title: title, symbol: symbol) {
+        Card(title: title, icon: icon) {
             if shares.isEmpty {
                 Text("No usage in this period").font(.vibex(size: 12.5)).foregroundStyle(.secondary)
             } else {
@@ -459,7 +458,7 @@ private struct ActivityCard: View {
     let summary: AgentUsageSummary
 
     var body: some View {
-        Card(title: "Activity", symbol: "square.grid.3x3.fill") {
+        Card(title: "Activity", icon: .grid) {
             if summary.streak > 0 {
                 Label("\(summary.streak)", systemImage: "flame.fill")
                     .font(.vibex(size: 12.5, weight: .semibold))

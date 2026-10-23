@@ -2,7 +2,7 @@ import AppKit
 import SwiftUI
 
 /// The Vibex icon in the macOS menu bar. Either click opens the menu: what is open across every
-/// project, AI Agents, and the app-wide actions (open a folder, setup, the vibex command).
+/// project, AI Usage, and the app-wide actions (open a folder, setup, the vibex command).
 final class MenuBarController: NSObject, NSMenuDelegate {
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
     private let menu = NSMenu()
@@ -33,12 +33,25 @@ final class MenuBarController: NSObject, NSMenuDelegate {
         }
     }
 
-    /// The lightning bolt from the app icon; filled while a project is running.
-    private static func icon(active: Bool) -> NSImage? {
-        let image = NSImage(systemSymbolName: active ? "bolt.fill" : "bolt", accessibilityDescription: "Vibex")
-        image?.isTemplate = true
-        return image?.withSymbolConfiguration(.init(pointSize: 14, weight: .medium))
+    /// The bolt from the app icon, with a dot while a project is running. Without a dot it stays a
+    /// template image so macOS tints it for the menu bar; with one, it draws the bolt in the label color.
+    static func icon(dot: NSColor?) -> NSImage? {
+        guard let bolt = NSImage.icon(.zap, size: 16) else { return nil }
+        guard let dot else { return bolt }
+        let image = NSImage(size: NSSize(width: 20, height: 18), flipped: false) { _ in
+            let glyph = NSRect(x: 1, y: 1, width: 16, height: 16)
+            bolt.draw(in: glyph)
+            NSColor.labelColor.set()
+            glyph.fill(using: .sourceAtop)
+            dot.setFill()
+            NSBezierPath(ovalIn: NSRect(x: 13, y: 11, width: 6.5, height: 6.5)).fill()
+            return true
+        }
+        image.accessibilityDescription = "Vibex"
+        return image
     }
+
+    private static func icon(active: Bool) -> NSImage? { icon(dot: active ? Theme.NS.green : nil) }
 
     // MARK: - NSMenuDelegate
 
@@ -73,7 +86,7 @@ final class MenuBarController: NSObject, NSMenuDelegate {
             let item = NSMenuItem(title: "Open Recent", action: nil, keyEquivalent: "")
             let submenu = NSMenu()
             for project in recents {
-                let recent = action(project.name, #selector(openRecent(_:)), symbol: "folder")
+                let recent = action(project.name, #selector(openRecent(_:)), icon: .folder)
                 recent.representedObject = project.path
                 recent.toolTip = project.displayPath
                 recent.isEnabled = project.exists
@@ -82,8 +95,8 @@ final class MenuBarController: NSObject, NSMenuDelegate {
             item.submenu = submenu
             menu.addItem(item)
         }
-        menu.addItem(action("Open Folder…", #selector(openFolder(_:)), symbol: "folder.badge.plus"))
-        let agents = action("AI Agents", #selector(showAgents(_:)), symbol: "gauge.with.dots.needle.67percent")
+        menu.addItem(action("Open Folder…", #selector(openFolder(_:)), icon: .folderPlus))
+        let agents = action("AI Usage", #selector(showAgents(_:)), icon: .agents)
         agents.toolTip = "Claude and Codex usage, in the frontmost project window"
         agents.isEnabled = targetWindow != nil
         menu.addItem(agents)
@@ -93,10 +106,10 @@ final class MenuBarController: NSObject, NSMenuDelegate {
             menu.addItem(header("Simulators"))
             for device in bootedDevices {
                 let item = NSMenuItem(title: "\(device.name)", action: nil, keyEquivalent: "")
-                item.image = symbol("iphone")
+                item.image = .icon(.phone)
                 item.badge = NSMenuItemBadge(string: device.isBooted ? device.runtime : device.state)
                 let submenu = NSMenu()
-                let shutdown = action("Shut Down", #selector(shutdownSimulator(_:)), symbol: "power")
+                let shutdown = action("Shut Down", #selector(shutdownSimulator(_:)), icon: .power)
                 shutdown.representedObject = device.udid
                 submenu.addItem(shutdown)
                 item.submenu = submenu
@@ -106,17 +119,17 @@ final class MenuBarController: NSObject, NSMenuDelegate {
 
         menu.addItem(.separator())
         if let version = updater.availableVersion {
-            menu.addItem(action("Restart to Update to \(version)", #selector(AppDelegate.restartToUpdate(_:)), symbol: "arrow.down.circle.fill", target: NSApp.delegate))
+            menu.addItem(action("Restart to Update to \(version)", #selector(AppDelegate.restartToUpdate(_:)), icon: .download, target: NSApp.delegate))
         } else {
-            menu.addItem(action("Check for Updates…", #selector(AppDelegate.checkForUpdates(_:)), symbol: "arrow.down.circle", target: NSApp.delegate))
+            menu.addItem(action("Check for Updates…", #selector(AppDelegate.checkForUpdates(_:)), icon: .download, target: NSApp.delegate))
         }
-        menu.addItem(action("Setup & Permissions…", #selector(AppDelegate.showSetup(_:)), symbol: "checklist", target: NSApp.delegate))
+        menu.addItem(action("Setup & Permissions…", #selector(AppDelegate.showSetup(_:)), icon: .checkCircle, target: NSApp.delegate))
         if CommandLineTool.installedPath == nil {
-            menu.addItem(action("Install 'vibex' Command", #selector(AppDelegate.installCommandLineTool(_:)), symbol: "terminal", target: NSApp.delegate))
+            menu.addItem(action("Install 'vibex' Command", #selector(AppDelegate.installCommandLineTool(_:)), icon: .terminal, target: NSApp.delegate))
         }
-        menu.addItem(action("Copy MCP Config", #selector(AppDelegate.copyMCPConfig(_:)), symbol: "doc.on.doc", target: NSApp.delegate))
+        menu.addItem(action("Copy MCP Config", #selector(AppDelegate.copyMCPConfig(_:)), icon: .copy, target: NSApp.delegate))
         menu.addItem(.separator())
-        menu.addItem(action("Quit Vibex", #selector(NSApplication.terminate(_:)), symbol: nil, target: NSApp, key: "q"))
+        menu.addItem(action("Quit Vibex", #selector(NSApplication.terminate(_:)), icon: nil, target: NSApp, key: "q"))
     }
 
     private func statusRow() -> NSMenuItem {
@@ -137,22 +150,22 @@ final class MenuBarController: NSObject, NSMenuDelegate {
 
     private func projectItem(_ window: MainWindowController) -> NSMenuItem {
         let runner = window.runner
-        let item = action(window.project.name, #selector(showProject(_:)), symbol: runner.phase.isActive ? "play.circle.fill" : "folder")
+        let item = action(window.project.name, #selector(showProject(_:)), icon: runner.phase.isActive ? .play : .folder)
         item.representedObject = window.project.path
         item.toolTip = window.project.displayPath
         if runner.phase != .idle { item.badge = NSMenuItemBadge(string: runner.phase.label) }
 
         let submenu = NSMenu()
-        let show = action("Show Window", #selector(showProject(_:)), symbol: "macwindow")
+        let show = action("Show Window", #selector(showProject(_:)), icon: .browser)
         show.representedObject = window.project.path
         submenu.addItem(show)
         // Claude starts runs over MCP; stopping one from here is the only control left outside the window.
         if runner.phase.isActive {
-            let stop = action("Stop \(runner.config?.summary ?? "Run")", #selector(stopProject(_:)), symbol: "stop.fill")
+            let stop = action("Stop \(runner.config?.summary ?? "Run")", #selector(stopProject(_:)), icon: .stop)
             stop.representedObject = window.project.path
             submenu.addItem(stop)
         }
-        let reveal = action("Show in Finder", #selector(revealProject(_:)), symbol: "folder")
+        let reveal = action("Show in Finder", #selector(revealProject(_:)), icon: .folder)
         reveal.representedObject = window.project.path
         submenu.addItem(reveal)
         item.submenu = submenu
@@ -210,15 +223,11 @@ final class MenuBarController: NSObject, NSMenuDelegate {
         return windows.windows.first { $0.project.path == path }
     }
 
-    private func action(_ title: String, _ selector: Selector, symbol name: String?, target: AnyObject? = nil, key: String = "") -> NSMenuItem {
+    private func action(_ title: String, _ selector: Selector, icon: Icon?, target: AnyObject? = nil, key: String = "") -> NSMenuItem {
         let item = NSMenuItem(title: title, action: selector, keyEquivalent: key)
         item.target = target ?? self
-        if let name { item.image = symbol(name) }
+        if let icon { item.image = .icon(icon) }
         return item
-    }
-
-    private func symbol(_ name: String) -> NSImage? {
-        NSImage(systemSymbolName: name, accessibilityDescription: nil)
     }
 
     private func header(_ title: String) -> NSMenuItem {

@@ -79,7 +79,7 @@ nonisolated struct CodexLimits: Equatable, Sendable {
     }
 }
 
-/// Everything the AI Agents dashboard shows, computed from the ledger in one pass.
+/// Everything the AI Usage dashboard shows, computed from the ledger in one pass.
 nonisolated struct AgentUsageSummary: Equatable, Sendable {
     struct Day: Equatable, Sendable, Identifiable {
         var date: Date

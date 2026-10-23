@@ -32,20 +32,20 @@ struct BrowserToolbar: View {
 
     var body: some View {
         HStack(spacing: 4) {
-            ToolbarIconButton(systemImage: "chevron.left", help: "Back", isEnabled: model.canGoBack, action: actions.back)
-            ToolbarIconButton(systemImage: "chevron.right", help: "Forward", isEnabled: model.canGoForward, action: actions.forward)
+            ToolbarIconButton(icon: .chevronLeft, help: "Back", isEnabled: model.canGoBack, action: actions.back)
+            ToolbarIconButton(icon: .chevronRight, help: "Forward", isEnabled: model.canGoForward, action: actions.forward)
             ToolbarIconButton(
-                systemImage: model.isLoading ? "xmark" : "arrow.clockwise",
+                icon: model.isLoading ? .close : .refresh,
                 help: model.isLoading ? "Stop" : "Reload",
                 action: actions.reloadOrStop
             )
             urlField
                 .padding(.horizontal, 4)
-            ToolbarIconButton(systemImage: "play.tv", help: "Netflix", action: actions.home)
+            ToolbarIconButton(icon: .tv, help: "Netflix", action: actions.home)
         }
         .padding(.horizontal, 8)
         .frame(height: 40)
-        .background(.bar)
+        .background(Theme.surface)
         .onChange(of: model.focusRequest) { _, _ in
             draft = model.urlText
             isEditing = true
@@ -54,9 +54,8 @@ struct BrowserToolbar: View {
 
     private var urlField: some View {
         HStack(spacing: 6) {
-            Image(systemName: model.isSecure ? "lock.fill" : "globe")
-                .font(.system(size: 10, weight: .semibold))
-                .foregroundStyle(.secondary)
+            IconView(model.isSecure ? .lock : .globe, size: 12)
+                .foregroundStyle(Theme.muted)
             TextField("Search or enter website", text: $draft)
                 .textFieldStyle(.plain)
                 .font(.vibex(size: 12.5))

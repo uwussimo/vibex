@@ -58,7 +58,7 @@ struct SkillsSidebar: View {
                 .font(.vibex(size: 12, weight: .semibold))
                 .foregroundStyle(.secondary)
             Spacer()
-            ToolbarIconButton(systemImage: "arrow.clockwise", help: "Refresh", action: model.refresh)
+            ToolbarIconButton(icon: .refresh, help: "Refresh", action: model.refresh)
         }
         .padding(.leading, 14)
         .padding(.trailing, 8)
@@ -104,8 +104,7 @@ struct SkillsSidebar: View {
 
     private func removedNotice(_ skill: InstalledSkill) -> some View {
         HStack(spacing: 8) {
-            Image(systemName: "trash.circle.fill")
-                .font(.system(size: 13, weight: .semibold))
+            IconView(.trash, size: 15)
                 .foregroundStyle(.secondary)
             Text("Removed “\(skill.name)”")
                 .font(.vibex(size: 12))
@@ -117,8 +116,7 @@ struct SkillsSidebar: View {
             .buttonStyle(.bordered)
             .controlSize(.small)
             Button(action: model.dismissRemoved) {
-                Image(systemName: "xmark")
-                    .font(.system(size: 9, weight: .bold))
+                IconView(.close, size: 10.5)
                     .foregroundStyle(.secondary)
                     .frame(width: 24, height: 24)
                     .contentShape(Rectangle())
@@ -144,8 +142,7 @@ private struct SkillRow: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: 8) {
-            Image(systemName: "sparkles")
-                .font(.system(size: 12, weight: .medium))
+            IconView(.sparkles, size: 14)
                 .foregroundStyle(AgentColors.claude)
                 .frame(width: 16)
                 .padding(.top, 2)
@@ -169,8 +166,8 @@ private struct SkillRow: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             if isHovering || isExpanded {
                 HStack(spacing: 0) {
-                    RowIconButton(symbol: "doc.text", help: "Open SKILL.md", action: open)
-                    RowIconButton(symbol: "trash", help: "Remove (Undo is available)", action: remove)
+                    RowIconButton(icon: .file, help: "Open SKILL.md", action: open)
+                    RowIconButton(icon: .trash, help: "Remove (Undo is available)", action: remove)
                 }
                 .transition(.opacity)
             }
@@ -202,15 +199,14 @@ private struct SkillRow: View {
 
 /// A 24pt icon button that shows its hover state, for actions inside list rows.
 struct RowIconButton: View {
-    let symbol: String
+    let icon: Icon
     let help: String
     let action: () -> Void
     @State private var isHovering = false
 
     var body: some View {
         Button(action: action) {
-            Image(systemName: symbol)
-                .font(.system(size: 11, weight: .semibold))
+            IconView(icon, size: 12.5)
                 .frame(width: 24, height: 24)
                 .background(
                     RoundedRectangle(cornerRadius: 5, style: .continuous)

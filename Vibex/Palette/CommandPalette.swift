@@ -64,8 +64,7 @@ struct CommandPaletteView: View {
         let rows = model.rows
         return VStack(spacing: 0) {
             HStack(spacing: 10) {
-                Image(systemName: "magnifyingglass")
-                    .font(.system(size: 15, weight: .medium))
+                IconView(.search, size: 17)
                     .foregroundStyle(.secondary)
                 TextField("Search commands, projects, tabs… ($ runs a command)", text: $model.query)
                     .textFieldStyle(.plain)
@@ -111,7 +110,7 @@ struct CommandPaletteView: View {
         }
         .frame(width: 620)
         .fixedSize(horizontal: false, vertical: true)
-        .background(Color(nsColor: .windowBackgroundColor), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .background(Theme.background, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(Color.primary.opacity(0.1)))
         .shadow(color: .black.opacity(0.3), radius: 30, y: 14)
     }

@@ -2,7 +2,7 @@ import AppKit
 import SwiftUI
 
 /// One project window for a single folder, laid out like VS Code: activity bar | sidebar (Source
-/// Control or Skills) | terminal | tabbed editor area (browser tabs, simulator, diff, AI Agents, Skills).
+/// Control or Skills) | terminal | tabbed editor area (browser tabs, simulator, diff, AI Usage, Skills).
 final class MainWindowController: NSWindowController, NSWindowDelegate {
     let session: ProjectSession
     let workspace: WorkspaceSplitViewController
@@ -48,7 +48,8 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
         let root = NSViewController()
         root.view = NSView()
         let workspace = workspace
-        let sidebarItem = NSSplitViewItem(sidebarWithViewController: NSHostingController(rootView: SidebarView(
+        // A plain item rather than a glass sidebar: Vibex's surfaces are solid, like its site.
+        let sidebarItem = NSSplitViewItem(viewController: NSHostingController(rootView: SidebarView(
             sidebar: sidebar,
             sourceControl: sourceControl,
             skills: skills,

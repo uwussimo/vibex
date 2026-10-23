@@ -50,7 +50,7 @@ struct WelcomeView: View {
             recentList
         }
         .frame(width: 520, height: 540)
-        .background(.background)
+        .background(Theme.background)
         .overlay {
             RoundedRectangle(cornerRadius: 14, style: .continuous)
                 .strokeBorder(Color.accentColor, lineWidth: 2)
@@ -89,8 +89,8 @@ struct WelcomeView: View {
 
     private var actions: some View {
         HStack(spacing: 10) {
-            WelcomeAction(title: "Open Folder…", shortcut: "⌘O", systemImage: "folder", action: openPanel)
-            WelcomeAction(title: "Home Folder", shortcut: "⌘N", systemImage: "house") {
+            WelcomeAction(title: "Open Folder…", shortcut: "⌘O", icon: .folder, action: openPanel)
+            WelcomeAction(title: "Home Folder", shortcut: "⌘N", icon: .home) {
                 open(FileManager.default.homeDirectoryForCurrentUser)
             }
         }
@@ -151,15 +151,14 @@ struct WelcomeView: View {
 private struct WelcomeAction: View {
     let title: String
     let shortcut: String
-    let systemImage: String
+    let icon: Icon
     let action: () -> Void
     @State private var isHovering = false
 
     var body: some View {
         Button(action: action) {
             HStack(spacing: 10) {
-                Image(systemName: systemImage)
-                    .font(.system(size: 14, weight: .medium))
+                IconView(icon, size: 16)
                     .frame(width: 20)
                 Text(title)
                     .font(.vibex(size: 13, weight: .medium))
@@ -186,8 +185,8 @@ private struct RecentRow: View {
 
     var body: some View {
         HStack(spacing: 10) {
-            Image(systemName: project.exists ? "folder.fill" : "folder.badge.questionmark")
-                .foregroundStyle(project.exists ? Color.accentColor : .secondary)
+            IconView(.folder, size: 17)
+                .foregroundStyle(project.exists ? Theme.accent : Theme.faint)
                 .frame(width: 18)
             VStack(alignment: .leading, spacing: 1) {
                 Text(project.name)

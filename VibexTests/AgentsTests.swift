@@ -128,7 +128,7 @@ import Testing
         var summary = AgentUsageSummary(periodDays: 30)
         summary.currentBlock = .init(cost: 36.43, resetsAt: now.addingTimeInterval(63 * 60))
         summary.largestBlockCost = 60
-        #expect(WorkspaceTools.sessionSummary(summary, now: now) == "Opened AI Agents. Session $36.43 · resets in 1h 3m · 61% of your largest session.")
+        #expect(WorkspaceTools.sessionSummary(summary, now: now) == "Opened AI Usage. Session $36.43 · resets in 1h 3m · 61% of your largest session.")
         #expect(WorkspaceTools.sessionSummary(AgentUsageSummary(periodDays: 30), now: now).contains("No Claude session"))
     }
 }

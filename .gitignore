@@ -7,6 +7,9 @@ DerivedData/
 .build/
 xcuserdata/
 
+# Untitled UI icons, fetched from npm by scripts/fetch-icons.sh (their license forbids redistributing them)
+Vibex/Resources/Icons.xcassets/
+
 # Per-project caches Vibex writes into opened folders
 .vibex/
 

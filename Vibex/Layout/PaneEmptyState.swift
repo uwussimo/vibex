@@ -22,9 +22,9 @@ struct PaneEmptyState: View {
                     .multilineTextAlignment(.center)
             }
             VStack(spacing: 8) {
-                EmptyStateRow(symbol: "terminal", title: "New Terminal", shortcut: "⌘1", isPrimary: true, action: actions.terminal)
-                EmptyStateRow(symbol: "iphone", title: "Simulator", shortcut: "⌘2", action: actions.simulator)
-                EmptyStateRow(symbol: "globe", title: "Browser", shortcut: "⌘3", action: actions.browser)
+                EmptyStateRow(icon: .terminal, title: "New Terminal", shortcut: "⌘1", isPrimary: true, action: actions.terminal)
+                EmptyStateRow(icon: .phone, title: "Simulator", shortcut: "⌘2", action: actions.simulator)
+                EmptyStateRow(icon: .globe, title: "Browser", shortcut: "⌘3", action: actions.browser)
             }
             .frame(width: 260)
         }
@@ -36,7 +36,7 @@ struct PaneEmptyState: View {
 }
 
 private struct EmptyStateRow: View {
-    let symbol: String
+    let icon: Icon
     let title: String
     let shortcut: String
     var isPrimary = false
@@ -46,8 +46,7 @@ private struct EmptyStateRow: View {
     var body: some View {
         Button(action: action) {
             HStack(spacing: 10) {
-                Image(systemName: symbol)
-                    .font(.system(size: 13, weight: .medium))
+                IconView(icon, size: 15)
                     .frame(width: 18)
                 Text(title)
                     .font(.vibex(size: 13, weight: .medium))

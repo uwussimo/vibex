@@ -2,7 +2,7 @@ import SwiftUI
 
 /// A 28pt icon button for pane headers. Feedback lands on press, not release.
 struct ToolbarIconButton: View {
-    let systemImage: String
+    let icon: Icon
     var help: String
     var isEnabled: Bool = true
     var isActive: Bool = false
@@ -12,13 +12,12 @@ struct ToolbarIconButton: View {
 
     var body: some View {
         Button(action: action) {
-            Image(systemName: systemImage)
-                .font(.system(size: 13, weight: .medium))
+            IconView(icon, size: 15)
                 .frame(width: 28, height: 28)
-                .foregroundStyle(isActive ? Color.accentColor : .primary)
+                .foregroundStyle(isActive ? Theme.accent : (isHovering && isEnabled ? Theme.text : Theme.muted))
                 .background(
                     RoundedRectangle(cornerRadius: 6, style: .continuous)
-                        .fill(isHovering && isEnabled ? Color.primary.opacity(0.08) : Color.clear)
+                        .fill(isHovering && isEnabled ? Color.white.opacity(0.08) : Color.clear)
                 )
                 .contentShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
         }

@@ -24,7 +24,7 @@ struct DiffView: View {
                 content(change)
             }
         }
-        .background(.background)
+        .background(Theme.background)
         .onKeyPress(.escape) {
             close()
             return .handled
@@ -85,9 +85,9 @@ struct DiffView: View {
             .fixedSize()
             .help("Side by side needs at least \(Int(Self.splitMinimumWidth)) points; narrower diffs show inline.")
             }
-            ToolbarIconButton(systemImage: "chevron.up", help: "Previous Change (⌥⌘↑)", isEnabled: neighbor(-1)) { model.selectAdjacent(-1) }
-            ToolbarIconButton(systemImage: "chevron.down", help: "Next Change (⌥⌘↓)", isEnabled: neighbor(1)) { model.selectAdjacent(1) }
-            ToolbarIconButton(systemImage: "doc.text", help: "Open File") {
+            ToolbarIconButton(icon: .chevronUp, help: "Previous Change (⌥⌘↑)", isEnabled: neighbor(-1)) { model.selectAdjacent(-1) }
+            ToolbarIconButton(icon: .chevronDown, help: "Next Change (⌥⌘↓)", isEnabled: neighbor(1)) { model.selectAdjacent(1) }
+            ToolbarIconButton(icon: .file, help: "Open File") {
                 NSWorkspace.shared.open(model.folder.appendingPathComponent(change.path))
             }
             stageButton(change)
@@ -127,9 +127,9 @@ struct DiffView: View {
     private func content(_ change: GitChange) -> some View {
         if let diff = model.diff {
             if diff.isBinary {
-                message("doc.zipper", "Binary file", "Vibex can't show changes inside binary files.")
+                message(.package, "Binary file", "Vibex can't show changes inside binary files.")
             } else if diff.isEmpty {
-                message("equal.circle", "No text changes", change.kind == .renamed ? "The file was renamed without edits." : "Only the file mode or whitespace changed.")
+                message(.info, "No text changes", change.kind == .renamed ? "The file was renamed without edits." : "Only the file mode or whitespace changed.")
             } else {
                 GeometryReader { geometry in
                 let style = geometry.size.width < Self.splitMinimumWidth ? .unified : model.diffStyle
@@ -178,11 +178,10 @@ struct DiffView: View {
         return hunks
     }
 
-    private func message(_ symbol: String, _ title: String, _ detail: String) -> some View {
+    private func message(_ icon: Icon, _ title: String, _ detail: String) -> some View {
         VStack(spacing: 8) {
-            Image(systemName: symbol)
-                .font(.system(size: 26, weight: .light))
-                .foregroundStyle(.secondary)
+            IconView(icon, size: 26)
+                .foregroundStyle(Theme.faint)
             Text(title).font(.vibex(size: 13.5, weight: .medium))
             Text(detail).font(.vibex(size: 12)).foregroundStyle(.secondary)
         }
@@ -219,8 +218,7 @@ private struct HunkHeader: View {
 
     var body: some View {
         HStack(spacing: 8) {
-            Image(systemName: "ellipsis")
-                .font(.system(size: 10, weight: .bold))
+            IconView(.dots, size: 11.5)
                 .foregroundStyle(.tertiary)
             Text(hunk.context.isEmpty ? "Line \(hunk.lines.first?.newNumber ?? hunk.lines.first?.oldNumber ?? 1)" : hunk.context)
                 .font(.vibexCode(size: 11.5))

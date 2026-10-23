@@ -68,7 +68,7 @@ Add accessibility labels and identifiers to views you build; they make the app t
   `terminal_tabs` lists them.
 - `vibex_layout` switches between `build` (terminal wide, editor sized to the simulator), `watch` (browser
   wide) and `balanced`.
-- `vibex_focus` brings a pane forward: `terminal`, `simulator`, `browser`, or `agents` (the AI Agents tab;
+- `vibex_focus` brings a pane forward: `terminal`, `simulator`, `browser`, or `agents` (the AI Usage tab;
   it also returns the current Claude session's API value and when it resets).
 - `vibex_notify` shows a toast in the window, and a system notification when Vibex is in the background.
 - `vibex_open_project` opens another folder in its own window.

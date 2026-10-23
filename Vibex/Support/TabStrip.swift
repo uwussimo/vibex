@@ -38,8 +38,7 @@ struct TabStrip: View {
                 .padding(.leading, 8)
             }
             Button(action: actions.new) {
-                Image(systemName: "plus")
-                    .font(.system(size: 12, weight: .semibold))
+                IconView(.plus, size: 15)
                     .frame(width: 26, height: 26)
                     .foregroundStyle(dark ? Color.white.opacity(0.7) : Color.primary.opacity(0.7))
                     .contentShape(Rectangle())
@@ -53,7 +52,7 @@ struct TabStrip: View {
             if dark {
                 Color(nsColor: TerminalTheme.tabBar)
             } else {
-                Rectangle().fill(.bar)
+                Rectangle().fill(Theme.surface)
             }
         }
     }
@@ -89,8 +88,7 @@ private struct TabStripCell: View {
                 .lineLimit(1)
                 .truncationMode(.middle)
             Button(action: close) {
-                Image(systemName: "xmark")
-                    .font(.system(size: 9, weight: .bold))
+                IconView(.close, size: 11)
                     .foregroundStyle(textColor)
                     .frame(width: 16, height: 16)
                     .background(Circle().fill((dark ? Color.white : Color.primary).opacity(isHovering ? 0.12 : 0)))

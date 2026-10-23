@@ -12,7 +12,7 @@
 <p align="center"><a href="https://uwussimo.github.io/vibex/">uwussimo.github.io/vibex</a> · free and open source under the <a href="LICENSE">MIT license</a></p>
 
 Laid out like VS Code: an activity bar on the far left (Terminal, Simulator and Browser; then Source Control and
-Skills; AI Agents and Setup at the bottom), a sidebar, the terminal as the main column, and one tabbed editor area on
+Skills; AI Usage and Setup at the bottom), a sidebar, the terminal as the main column, and one tabbed editor area on
 the right. Closing a column's last tab closes the column; its activity bar button brings it back. Run lives in the
 title bar.
 
@@ -21,7 +21,7 @@ title bar.
 - **Browser**: WebKit tabs in the editor area. Netflix plays here; your localhost previews open in their own tabs.
 - **Source Control**: changed files in the sidebar (⌃⇧G); a file's diff opens as an editor tab, side by side or inline, with syntax highlighting.
 - **Skills**: the Claude Code skills loaded for this project and globally (⌃⇧K). Remove one (Undo puts it back) or browse skills.sh and install for every project or just this one, in the same layout `npx skills` uses.
-- **AI Agents**: Claude Code and Codex usage at a glance (⌃⇧A, or AI Agents in the menu bar's bolt menu): the current 5-hour session, Codex limits, what your tokens are worth at API prices against your plan, what is running now, a 30-day trend, top models and projects, and a 13-week activity grid. Read from the local logs; nothing leaves your Mac.
+- **AI Usage**: Claude Code and Codex usage at a glance (⌃⇧A, or AI Usage in the menu bar's bolt menu): the current 5-hour session, Codex limits, what your tokens are worth at API prices against your plan, what is running now, a 30-day trend, top models and projects, and a 13-week activity grid. Read from the local logs; nothing leaves your Mac.
 - **MCP**: a built-in server so Claude Code can see and drive the simulator and the browser.
 
 <p align="center">
@@ -64,6 +64,8 @@ macOS 26 on Apple silicon or Intel (the app and its bundled tools are universal)
 
 - macOS 26, Xcode 26 with at least one iOS simulator runtime
 - [XcodeGen](https://github.com/yonaskolb/XcodeGen): `brew install xcodegen`
+- npm, to fetch [Untitled UI's free icons](https://www.untitledui.com/free-icons) at build time. Their license
+  allows using them in apps but not redistributing them, so they aren't in the repo; `make` downloads them
 
 ## Build and run
 
@@ -176,7 +178,7 @@ The title bar shows `mcp :5150` with a green dot while a client is active. Vibex
 | ⌃⇧G | Source Control sidebar |
 | ⌥⌘↓ / ⌥⌘↑ | Next / previous changed file |
 | ⌃⇧K | Skills sidebar |
-| ⌃⇧A | AI Agents |
+| ⌃⇧A | AI Usage |
 | ⌘⇧B | Build mode: wide terminal, editor area sized to the simulator (or a mini player) |
 | ⌥⌘W | Watch mode: wide editor area on the browser |
 | ⌘⇧0 | Back to your own divider position |
@@ -210,7 +212,7 @@ Vibex/
   Layout/     split view controller, editor tabs, activity bar, sidebar, layout modes, spring animator
   SourceControl/ git client, diff parser, syntax highlighter, sidebar, diff view
   Skills/     installed skills, skills.sh marketplace, sidebar, marketplace view
-  Agents/     Claude Code log ledger, pricing, Codex limits, AI Agents dashboard
+  Agents/     Claude Code log ledger, pricing, Codex limits, AI Usage dashboard
   Terminal/   SwiftTerm tabs, theme, session
   Simulator/  simctl + simslim clients, header, pane; Embedded/ holds the CoreSimulator bridge,
               framebuffer, display view and HID input

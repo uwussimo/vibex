@@ -24,7 +24,7 @@ actor AgentUsageEngine {
     }
 }
 
-/// Claude Code and Codex usage for the AI Agents dashboard, shared by the menu bar and every window.
+/// Claude Code and Codex usage for the AI Usage dashboard, shared by the menu bar and every window.
 @Observable
 final class AgentUsageStore {
     static let shared = AgentUsageStore()

@@ -22,11 +22,15 @@ struct SidebarView: View {
     let browseSkills: () -> Void
 
     var body: some View {
-        switch sidebar.panel {
-        case .sourceControl:
-            SourceControlSidebar(model: sourceControl, window: window)
-        case .skills:
-            SkillsSidebar(model: skills, browse: browseSkills)
+        Group {
+            switch sidebar.panel {
+            case .sourceControl:
+                SourceControlSidebar(model: sourceControl, window: window)
+            case .skills:
+                SkillsSidebar(model: skills, browse: browseSkills)
+            }
         }
+        // Solid, like the landing page, instead of the translucent sidebar material.
+        .background(Theme.surface)
     }
 }

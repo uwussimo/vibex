@@ -47,7 +47,7 @@ struct SourceControlSidebar: View {
                 .foregroundStyle(.secondary)
             Spacer()
             if model.state == .ready {
-                ToolbarIconButton(systemImage: "arrow.clockwise", help: "Refresh") { model.refresh() }
+                ToolbarIconButton(icon: .refresh, help: "Refresh") { model.refresh() }
                 Menu {
                     Button("Stage All Changes") { model.stageAll() }
                         .disabled(model.status.unstaged.isEmpty && model.status.conflicted.isEmpty)
@@ -67,8 +67,7 @@ struct SourceControlSidebar: View {
                     Divider()
                     Button("Show in Finder") { NSWorkspace.shared.activateFileViewerSelecting([model.folder]) }
                 } label: {
-                    Image(systemName: "ellipsis.circle")
-                        .font(.system(size: 13, weight: .medium))
+                    IconView(.dots, size: 15)
                         .frame(width: 28, height: 28)
                         .contentShape(Rectangle())
                 }
@@ -114,8 +113,7 @@ struct SourceControlSidebar: View {
                     if model.busy == "Committing…" {
                         ProgressView().controlSize(.mini)
                     } else {
-                        Image(systemName: "checkmark")
-                            .font(.system(size: 11, weight: .bold))
+                        IconView(.check, size: 12.5)
                     }
                     Text(commitTitle)
                         .font(.vibex(size: 12.5, weight: .medium))
@@ -147,8 +145,7 @@ struct SourceControlSidebar: View {
 
     private var branchRow: some View {
         HStack(spacing: 6) {
-            Image(systemName: "arrow.triangle.branch")
-                .font(.system(size: 11, weight: .semibold))
+            IconView(.branch, size: 12.5)
                 .foregroundStyle(.secondary)
             Text(model.branchLabel)
                 .font(.vibex(size: 12.5, weight: .medium))
@@ -156,14 +153,14 @@ struct SourceControlSidebar: View {
                 .truncationMode(.middle)
             Spacer(minLength: 4)
             if model.status.behind > 0 {
-                SyncChip(symbol: "arrow.down", count: model.status.behind, help: "Pull \(model.status.behind) from \(model.status.upstream ?? "upstream")") { model.pull() }
+                SyncChip(icon: .arrowDown, count: model.status.behind, help: "Pull \(model.status.behind) from \(model.status.upstream ?? "upstream")") { model.pull() }
             }
             if model.status.ahead > 0 {
-                SyncChip(symbol: "arrow.up", count: model.status.ahead, help: "Push \(model.status.ahead) to \(model.status.upstream ?? "upstream")") { model.push() }
+                SyncChip(icon: .arrowUp, count: model.status.ahead, help: "Push \(model.status.ahead) to \(model.status.upstream ?? "upstream")") { model.push() }
             }
             // While the commit notice offers Publish, one button for it is enough.
             if model.canPublish, !isCommitNotice {
-                SyncChip(symbol: "icloud.and.arrow.up", label: "Publish", help: "Push \(model.branchLabel) to the remote and track it") { model.publish() }
+                SyncChip(icon: .upload, label: "Publish", help: "Push \(model.branchLabel) to the remote and track it") { model.publish() }
             }
         }
     }
@@ -190,8 +187,7 @@ struct SourceControlSidebar: View {
         if model.status.isClean {
             placeholder {
                 VStack(spacing: 6) {
-                    Image(systemName: "checkmark.circle")
-                        .font(.system(size: 22, weight: .light))
+                    IconView(.checkCircle, size: 25.5)
                         .foregroundStyle(.secondary)
                     Text("No changes")
                         .font(.vibex(size: 12.5, weight: .medium))
@@ -251,14 +247,14 @@ struct SourceControlSidebar: View {
     private func groupActions(_ area: GitChange.Area, _ changes: [GitChange]) -> [RowAction] {
         switch area {
         case .staged:
-            [RowAction(symbol: "minus", help: "Unstage All") { model.unstage(changes) }]
+            [RowAction(icon: .minus, help: "Unstage All") { model.unstage(changes) }]
         case .unstaged:
             [
-                RowAction(symbol: "arrow.uturn.backward", help: "Discard All…") { model.discard(changes, in: window()) },
-                RowAction(symbol: "plus", help: "Stage All") { model.stage(changes) },
+                RowAction(icon: .undo, help: "Discard All…") { model.discard(changes, in: window()) },
+                RowAction(icon: .plus, help: "Stage All") { model.stage(changes) },
             ]
         case .conflicted:
-            [RowAction(symbol: "plus", help: "Mark All Resolved") { model.stage(changes) }]
+            [RowAction(icon: .plus, help: "Mark All Resolved") { model.stage(changes) }]
         }
     }
 
@@ -267,8 +263,7 @@ struct SourceControlSidebar: View {
     private var notRepository: some View {
         placeholder {
             VStack(spacing: 10) {
-                Image(systemName: "arrow.triangle.branch")
-                    .font(.system(size: 24, weight: .light))
+                IconView(.branch, size: 27.5)
                     .foregroundStyle(.secondary)
                 Text("Not a Git repository")
                     .font(.vibex(size: 13, weight: .medium))
@@ -296,10 +291,10 @@ struct SourceControlSidebar: View {
 // MARK: - Rows
 
 struct RowAction: Identifiable {
-    let symbol: String
+    let icon: Icon
     let help: String
     let action: () -> Void
-    var id: String { symbol }
+    var id: String { icon.rawValue }
 }
 
 private struct GroupHeader: View {
@@ -312,8 +307,7 @@ private struct GroupHeader: View {
 
     var body: some View {
         HStack(spacing: 4) {
-            Image(systemName: "chevron.right")
-                .font(.system(size: 9, weight: .bold))
+            IconView(.chevronRight, size: 10.5)
                 .foregroundStyle(.secondary)
                 .rotationEffect(.degrees(isCollapsed ? 0 : 90))
                 .frame(width: 14)
@@ -323,7 +317,7 @@ private struct GroupHeader: View {
             Spacer()
             if isHovering {
                 ForEach(actions) { action in
-                    HoverIconButton(symbol: action.symbol, help: action.help, action: action.action)
+                    HoverIconButton(icon: action.icon, help: action.help, action: action.action)
                 }
                 .transition(.opacity)
             }
@@ -338,7 +332,7 @@ private struct GroupHeader: View {
         .padding(.leading, 8)
         .padding(.trailing, 12)
         .frame(height: 28)
-        .background(.bar)
+        .background(Theme.surface)
         .contentShape(Rectangle())
         .onTapGesture(perform: toggle)
         .onHover { hovering in withAnimation(.easeOut(duration: 0.12)) { isHovering = hovering } }
@@ -379,15 +373,15 @@ private struct ChangeRow: View {
             // The selected row keeps its actions, so they don't depend on where the pointer is.
             if isHovering || isSelected {
                 HStack(spacing: 0) {
-                    HoverIconButton(symbol: "doc.text", help: "Open File", action: open)
+                    HoverIconButton(icon: .file, help: "Open File", action: open)
                     switch change.area {
                     case .unstaged:
-                        HoverIconButton(symbol: "arrow.uturn.backward", help: change.kind == .untracked ? "Delete File…" : "Discard Changes…", action: discard)
-                        HoverIconButton(symbol: "plus", help: "Stage Changes", action: stage)
+                        HoverIconButton(icon: .undo, help: change.kind == .untracked ? "Delete File…" : "Discard Changes…", action: discard)
+                        HoverIconButton(icon: .plus, help: "Stage Changes", action: stage)
                     case .staged:
-                        HoverIconButton(symbol: "minus", help: "Unstage Changes", action: unstage)
+                        HoverIconButton(icon: .minus, help: "Unstage Changes", action: unstage)
                     case .conflicted:
-                        HoverIconButton(symbol: "plus", help: "Mark Resolved", action: stage)
+                        HoverIconButton(icon: .plus, help: "Mark Resolved", action: stage)
                     }
                 }
                 .transition(.opacity)
@@ -438,15 +432,14 @@ private struct ChangeRow: View {
 }
 
 private struct HoverIconButton: View {
-    let symbol: String
+    let icon: Icon
     let help: String
     let action: () -> Void
     @State private var isHovering = false
 
     var body: some View {
         Button(action: action) {
-            Image(systemName: symbol)
-                .font(.system(size: 11, weight: .semibold))
+            IconView(icon, size: 12.5)
                 .frame(width: 24, height: 24)
                 .background(
                     RoundedRectangle(cornerRadius: 5, style: .continuous)
@@ -461,17 +454,17 @@ private struct HoverIconButton: View {
 }
 
 private struct SyncChip: View {
-    let symbol: String
+    let icon: Icon
     let label: String
     let help: String
     let action: () -> Void
 
-    init(symbol: String, count: Int, help: String, action: @escaping () -> Void) {
-        self.init(symbol: symbol, label: "\(count)", help: help, action: action)
+    init(icon: Icon, count: Int, help: String, action: @escaping () -> Void) {
+        self.init(icon: icon, label: "\(count)", help: help, action: action)
     }
 
-    init(symbol: String, label: String, help: String, action: @escaping () -> Void) {
-        self.symbol = symbol
+    init(icon: Icon, label: String, help: String, action: @escaping () -> Void) {
+        self.icon = icon
         self.label = label
         self.help = help
         self.action = action
@@ -480,7 +473,7 @@ private struct SyncChip: View {
     var body: some View {
         Button(action: action) {
             HStack(spacing: 2) {
-                Image(systemName: symbol).font(.system(size: 9, weight: .bold))
+                IconView(icon, size: 11)
                 Text(label).font(.vibex(size: 11, weight: .semibold))
             }
             .padding(.horizontal, 6)
@@ -500,8 +493,7 @@ private struct NoticeRow: View {
 
     var body: some View {
         HStack(spacing: 8) {
-            Image(systemName: symbol)
-                .font(.system(size: 13, weight: .semibold))
+            IconView(icon, size: 15)
                 .foregroundStyle(tint)
             text
                 .font(.vibex(size: 12))
@@ -509,8 +501,7 @@ private struct NoticeRow: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
             action
             Button(action: model.dismissNotice) {
-                Image(systemName: "xmark")
-                    .font(.system(size: 9, weight: .bold))
+                IconView(.close, size: 10.5)
                     .foregroundStyle(.secondary)
                     .frame(width: 24, height: 24)
                     .contentShape(Rectangle())
@@ -523,18 +514,18 @@ private struct NoticeRow: View {
         .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(tint.opacity(0.1)))
     }
 
-    private var symbol: String {
+    private var icon: Icon {
         switch notice {
-        case .committed: "checkmark.circle.fill"
-        case .pushed: "arrow.up.circle.fill"
-        case .discarded: "arrow.uturn.backward.circle.fill"
+        case .committed: .checkCircle
+        case .pushed: .upload
+        case .discarded: .undo
         }
     }
 
     private var tint: Color {
         switch notice {
-        case .committed, .pushed: Color(nsColor: .systemGreen)
-        case .discarded: .secondary
+        case .committed, .pushed: Theme.green
+        case .discarded: Theme.muted
         }
     }
 
@@ -582,8 +573,7 @@ private struct ProblemRow: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: 8) {
-            Image(systemName: "exclamationmark.triangle.fill")
-                .font(.system(size: 12, weight: .semibold))
+            IconView(.alert, size: 14)
                 .foregroundStyle(Color(nsColor: .systemRed))
                 .padding(.top, 5)
             VStack(alignment: .leading, spacing: 6) {
@@ -605,8 +595,7 @@ private struct ProblemRow: View {
             .padding(.vertical, 4)
             .frame(maxWidth: .infinity, alignment: .leading)
             Button(action: dismiss) {
-                Image(systemName: "xmark")
-                    .font(.system(size: 9, weight: .bold))
+                IconView(.close, size: 10.5)
                     .foregroundStyle(.secondary)
                     .frame(width: 24, height: 24)
                     .contentShape(Rectangle())

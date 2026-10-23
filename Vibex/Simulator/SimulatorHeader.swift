@@ -24,21 +24,20 @@ struct SimulatorHeader: View {
             devicePicker
             // Outside the menu: a macOS menu label only draws its title.
             if model.selectedSlimInfo?.isSlim ?? false {
-                Image(systemName: "leaf.fill")
-                    .font(.system(size: 10, weight: .semibold))
+                IconView(.feather, size: 11.5)
                     .foregroundStyle(Color.accentColor)
                     .help("Slim: \(model.selectedSlimInfo?.managedDisabled ?? 0) of \(model.selectedSlimInfo?.managedTotal ?? 0) daemons off")
             }
             Spacer(minLength: 4)
             ToolbarIconButton(
-                systemImage: isBooted ? "stop.fill" : "play.fill",
+                icon: isBooted ? .stop : .play,
                 help: isBooted ? "Shut Down" : (model.willBootSlim ? "Boot Slim" : "Boot"),
                 isEnabled: selected != nil && !model.isBusy,
                 action: isBooted ? actions.shutdown : actions.boot
             )
-            ToolbarIconButton(systemImage: "house", help: "Home (⇧⌘H)", isEnabled: isLive(), action: actions.home)
+            ToolbarIconButton(icon: .home, help: "Home (⇧⌘H)", isEnabled: isLive(), action: actions.home)
             ToolbarIconButton(
-                systemImage: flashScreenshot ? "checkmark" : "camera",
+                icon: flashScreenshot ? .check : .camera,
                 help: "Copy Screenshot (⇧⌘S)",
                 isEnabled: isBooted && !model.isBusy
             ) {
@@ -52,7 +51,7 @@ struct SimulatorHeader: View {
         }
         .padding(.horizontal, 8)
         .frame(height: 40)
-        .background(.bar)
+        .background(Theme.surface)
     }
 
     private var devicePicker: some View {
@@ -153,9 +152,8 @@ struct SimulatorEmptyState: View {
 
     var body: some View {
         VStack(spacing: 14) {
-            Image(systemName: icon)
-                .font(.system(size: 34, weight: .light))
-                .foregroundStyle(.secondary)
+            IconView(icon, size: 34)
+                .foregroundStyle(Theme.faint)
             VStack(spacing: 4) {
                 Text(title)
                     .font(.vibex(size: 14, weight: .semibold))
@@ -192,13 +190,11 @@ struct SimulatorEmptyState: View {
         .frame(width: 280)
     }
 
-    private var icon: String {
+    private var icon: Icon {
         switch state {
-        case .noDevices: "iphone.slash"
-        case .shutdown: "iphone"
-        case .connecting: "iphone.radiowaves.left.and.right"
-        case .failed: "exclamationmark.triangle"
-        case .live: "iphone"
+        case .noDevices, .shutdown, .live: .phone
+        case .connecting: .hourglass
+        case .failed: .alert
         }
     }
 

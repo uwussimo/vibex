@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import Testing
 @testable import Vibex
@@ -24,9 +25,9 @@ import Testing
 
 @Suite struct UpdatePromptTests {
     @Test func `release notes become a short plain list`() {
-        let notes = "**New**\n- **AI Agents** dashboard (⌃⇧A)\n- `Skills` sidebar\n\n**Fixed**\n- Blank diffs\n- One\n- Two\n- Three"
+        let notes = "**New**\n- **AI Usage** dashboard (⌃⇧A)\n- `Skills` sidebar\n\n**Fixed**\n- Blank diffs\n- One\n- Two\n- Three"
         let summary = Updater.summary(ofNotes: notes)
-        #expect(summary.hasPrefix("• AI Agents dashboard (⌃⇧A)\n• Skills sidebar\n• Blank diffs"))
+        #expect(summary.hasPrefix("• AI Usage dashboard (⌃⇧A)\n• Skills sidebar\n• Blank diffs"))
         #expect(summary.split(separator: "\n").count == 5)
         #expect(Updater.summary(ofNotes: "No bullets here.").isEmpty)
     }
@@ -38,5 +39,12 @@ import Testing
         #expect(TerminalPaneViewController.displayTitle("claude ~/D/e/vibex") == "claude · vibex")
         #expect(TerminalPaneViewController.displayTitle("~") == "~")
         #expect(TerminalPaneViewController.displayTitle("npm run dev") == "npm run dev")
+    }
+}
+
+@Suite struct IconTests {
+    @Test func `every icon has an image in the asset catalog`() {
+        let missing = Icon.allCases.filter { NSImage(named: $0.assetName) == nil }
+        #expect(missing.isEmpty, "run scripts/fetch-icons.sh: missing \(missing.map(\.rawValue))")
     }
 }

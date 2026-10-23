@@ -60,7 +60,7 @@ struct SetupView: View {
             footer
         }
         .frame(width: 580, height: 720)
-        .background(.background)
+        .background(Theme.background)
     }
 
     private var header: some View {
@@ -124,7 +124,7 @@ struct SetupView: View {
         }
         .padding(.horizontal, 28)
         .padding(.vertical, 16)
-        .background(.bar)
+        .background(Theme.surface)
         .overlay(alignment: .top) { Divider() }
         .animation(.spring(response: 0.3, dampingFraction: 1), value: model.isComplete)
         .animation(.spring(response: 0.3, dampingFraction: 1), value: model.readyCount)
@@ -141,8 +141,7 @@ private struct SetupRow: View {
 
     var body: some View {
         HStack(alignment: .center, spacing: 14) {
-            Image(systemName: content.symbol)
-                .font(.system(size: 14, weight: .semibold))
+            IconView(content.icon, size: 16)
                 .foregroundStyle(.white)
                 .frame(width: 30, height: 30)
                 .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(content.tint.gradient))
@@ -182,8 +181,7 @@ private struct SetupRow: View {
         case .checking:
             ProgressView().controlSize(.small)
         case .ready:
-            Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 18))
+            IconView(.checkCircle, size: 20.5)
                 .foregroundStyle(.green)
                 .transition(.scale(scale: 0.5).combined(with: .opacity))
         case .working:
@@ -222,28 +220,28 @@ private struct SetupRow: View {
         }
     }
 
-    private var content: (symbol: String, tint: Color, title: String, detail: String, optional: Bool) {
+    private var content: (icon: Icon, tint: Color, title: String, detail: String, optional: Bool) {
         switch id {
         case .fullDiskAccess:
-            ("lock.open.fill", .blue, "Full Disk Access",
+            (.unlock, .blue, "Full Disk Access",
              "Recommended. Lets terminal commands reach every project. Turn on Vibex, then come back.", false)
         case .folders:
-            ("folder.fill", .cyan, "Desktop, Documents and Downloads",
+            (.folder, .cyan, "Desktop, Documents and Downloads",
              "Without Full Disk Access, macOS asks once for each folder.", false)
         case .notifications:
-            ("bell.badge.fill", .red, "Notifications",
+            (.bell, .red, "Notifications",
              "Claude Code can tell you when a long task finishes.", true)
         case .xcode:
-            ("hammer.fill", .indigo, "Xcode and an iOS simulator",
+            (.codeBrowser, .indigo, "Xcode and an iOS simulator",
              "The simulator pane and iOS builds use Xcode 26 and an iOS runtime.", false)
         case .claude:
-            ("sparkles", .orange, "Claude Code",
+            (.sparkles, .orange, "Claude Code",
              "Vibex registers its MCP tools with Claude Code so it can drive the simulator and browser.", false)
         case .vibexSkill:
-            ("book.closed.fill", .purple, "Vibex skill for Claude Code",
+            (.book, .purple, "Vibex skill for Claude Code",
              "Teaches Claude Code in every project how to use Vibex's simulator, browser and terminal tools.", false)
         case .commandLine:
-            ("terminal.fill", .gray, "vibex command",
+            (.terminal, .gray, "vibex command",
              "Run “vibex .” in any terminal to open that folder here.", true)
         }
     }

@@ -61,7 +61,7 @@ enum Defaults {
         set { store.set(newValue, forKey: Key.notificationsRequested) }
     }
 
-    /// The AI Agents dashboard's spending period: 7, 30 or 90 days.
+    /// The AI Usage dashboard's spending period: 7, 30 or 90 days.
     /// The user removed the vibex skill in the Skills sidebar; launch no longer puts it back.
     static var vibexSkillRemoved: Bool {
         get { store.bool(forKey: Key.vibexSkillRemoved) }

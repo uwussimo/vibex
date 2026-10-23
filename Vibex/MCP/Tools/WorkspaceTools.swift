@@ -30,7 +30,7 @@ enum WorkspaceTools {
             },
             Tool(
                 name: "vibex_focus",
-                description: "Give keyboard focus to a pane: terminal, simulator or browser. \"agents\" opens the AI Agents tab and returns the current Claude session's API value and reset time.",
+                description: "Give keyboard focus to a pane: terminal, simulator or browser. \"agents\" opens the AI Usage tab and returns the current Claude session's API value and reset time.",
                 inputSchema: Schema.object(["pane": Schema.string("Pane", enum: ["terminal", "simulator", "browser", "agents"])], required: ["pane"])
             ) { args in
                 switch try args.requireString("pane") {
@@ -138,10 +138,10 @@ enum WorkspaceTools {
 
     /// "Session $36.43 · resets in 1h 3m · 61% of your largest session", from the dashboard's last pass.
     static func sessionSummary(_ summary: AgentUsageSummary?, now: Date = Date()) -> String {
-        guard let summary else { return "Opened AI Agents. Usage is still loading." }
-        guard let block = summary.currentBlock else { return "Opened AI Agents. No Claude session in the last 5 hours." }
+        guard let summary else { return "Opened AI Usage. Usage is still loading." }
+        guard let block = summary.currentBlock else { return "Opened AI Usage. No Claude session in the last 5 hours." }
         let minutes = max(0, Int(block.resetsAt.timeIntervalSince(now) / 60))
-        var text = String(format: "Opened AI Agents. Session $%.2f · resets in %dh %dm", block.cost, minutes / 60, minutes % 60)
+        var text = String(format: "Opened AI Usage. Session $%.2f · resets in %dh %dm", block.cost, minutes / 60, minutes % 60)
         if summary.largestBlockCost > 0 {
             text += " · \(Int((block.cost / summary.largestBlockCost * 100).rounded()))% of your largest session"
         }

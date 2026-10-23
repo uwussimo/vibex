@@ -4,9 +4,13 @@ DERIVED   := build/DerivedData
 XCB       := xcodebuild -project $(PROJECT) -scheme $(SCHEME) -derivedDataPath $(DERIVED) -skipPackagePluginValidation
 APP       := $(DERIVED)/Build/Products/Debug/Vibex.app
 
-.PHONY: gen build run test clean open icon release
+.PHONY: gen icons build run test clean open icon release
 
-gen:
+# Untitled UI's icons may not be redistributed, so they are fetched, not committed.
+icons:
+	./scripts/fetch-icons.sh
+
+gen: icons
 	xcodegen generate
 
 build: gen
