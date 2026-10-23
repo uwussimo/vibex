@@ -240,6 +240,14 @@ final class WorkspaceSplitViewController: NSSplitViewController, NSMenuItemValid
         terminalPane.reopen()
     }
 
+    /// Shows one terminal tab, reopening the terminal column if it was closed.
+    func showTerminalTab(_ id: UUID) {
+        guard terminalPane.hasTab(id) else { return }
+        terminalPane.selectTab(id)
+        updatePanes()
+        terminalPane.focusCurrentTerminal()
+    }
+
     @objc func focusSimulator(_ sender: Any?) {
         view.window?.makeKeyAndOrderFront(nil)
         editor.openSimulator(select: true)

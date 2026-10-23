@@ -22,6 +22,7 @@ title bar.
 - **Source Control**: changed files in the sidebar (⌃⇧G); a file's diff opens as an editor tab, side by side or inline, with syntax highlighting.
 - **Skills**: the Claude Code skills loaded for this project and globally (⌃⇧K). Remove one (Undo puts it back) or browse skills.sh and install for every project or just this one, in the same layout `npx skills` uses.
 - **AI Usage**: Claude Code and Codex usage at a glance (⌃⇧A, or AI Usage in the menu bar's bolt menu): the current 5-hour session, Codex limits, what your tokens are worth at API prices against your plan, what is running now, a 30-day trend, top models and projects, and a 13-week activity grid. Read from the local logs; nothing leaves your Mac.
+- **Approval inbox**: when Claude Code in any tab is waiting for your approval or an answer, the tab gets an orange dot, the Terminal button a count, the menu bar bolt an orange dot and a "Waiting for You" list, and a notification goes out if you aren't looking. Clicking any of them jumps to that tab. Vibex adds async hooks for this to `~/.claude/settings.json` (backing it up first; your own hooks stay), and they do nothing outside Vibex. Turn them off or on in Setup.
 - **MCP**: a built-in server so Claude Code can see and drive the simulator and the browser.
 
 <p align="center">

@@ -5,7 +5,7 @@ import UserNotifications
 /// One thing Vibex needs from the Mac, with its live state.
 struct SetupItem: Identifiable, Equatable {
     enum ID: String, CaseIterable {
-        case fullDiskAccess, folders, notifications, xcode, claude, vibexSkill, commandLine
+        case fullDiskAccess, folders, notifications, xcode, claude, vibexSkill, approvalHooks, commandLine
     }
 
     enum Status: Equatable {
@@ -99,6 +99,9 @@ final class SetupModel {
         case .vibexSkill:
             Defaults.vibexSkillRemoved = false
             run(id, "Installing…") { try VibexSkill.install() }
+        case .approvalHooks:
+            Defaults.claudeHooksRemoved = false
+            run(id, "Adding…") { try ClaudeHooks.install() }
         case .commandLine:
             run(id, "Installing…") { _ = try await CommandLineTool.install() }
         }
@@ -150,6 +153,7 @@ nonisolated enum SetupProbe {
             .xcode: hasIOSRuntime(),
             .claude: ClaudeCodeRegistrar.findClaude() != nil,
             .vibexSkill: [.current, .userOwned].contains(VibexSkill.status),
+            .approvalHooks: ClaudeHooks.status == .installed,
             .commandLine: CommandLineTool.installedPath != nil,
         ]
     }

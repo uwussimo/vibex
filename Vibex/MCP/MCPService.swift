@@ -48,9 +48,14 @@ final class MCPService {
         }
         self.server = server
         do {
-            let http = try MCPHTTPServer(port: port, token: token) { request in
+            let http = try MCPHTTPServer(port: port, token: token, handler: { request in
                 await server.handle(body: request.body, clientPort: request.clientPort)
-            }
+            }, hookHandler: { request in
+                guard let event = AttentionCenter.Event.parse(request.body),
+                      let tab = request.headers["x-vibex-tab"].flatMap(UUID.init(uuidString:)),
+                      let window = request.headers["x-vibex-window"] else { return }
+                await MainActor.run { AttentionCenter.shared.handle(event, tabID: tab, windowID: window) }
+            })
             http.start()
             self.http = http
             isRunning = true
@@ -62,6 +67,9 @@ final class MCPService {
         // The MCP tools come with a skill that teaches Claude Code how to use them.
         let removed = Defaults.vibexSkillRemoved
         Task.detached { VibexSkill.installIfNeeded(removedByUser: removed) }
+        // Hooks feed the approval inbox: which terminal tab's Claude is waiting for the user.
+        let hooksRemoved = Defaults.claudeHooksRemoved
+        Task.detached { ClaudeHooks.installIfNeeded(removedByUser: hooksRemoved) }
     }
 
     func register(force: Bool) async {
@@ -86,6 +94,6 @@ final class MCPService {
     }
 
     func environmentVariables() -> [String: String] {
-        ["VIBEX_MCP_URL": url, "VIBEX_MCP_TOKEN": token, "VIBEX_MCP_PORT": String(port)]
+        ["VIBEX_MCP_URL": url, "VIBEX_MCP_TOKEN": token, "VIBEX_MCP_PORT": String(port), "VIBEX_HOOK_URL": "http://127.0.0.1:\(port)/hooks"]
     }
 }

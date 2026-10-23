@@ -2,22 +2,26 @@ import Foundation
 import Network
 import os
 
-/// Localhost HTTP server for the MCP Streamable HTTP transport. One endpoint: `/mcp`.
+/// Localhost HTTP server for the MCP Streamable HTTP transport (`/mcp`), plus `/hooks`, where
+/// Claude Code's hooks report sessions waiting for the user. Both need the bearer token.
 /// Bytes are handled on a private queue; each request body is handed to `handler`, which decides
 /// where to run (the MCP server hops to the main actor).
 nonisolated final class MCPHTTPServer: Sendable {
     typealias Handler = @Sendable (HTTPRequest) async -> (status: Int, reason: String, body: Data)
+    typealias HookHandler = @Sendable (HTTPRequest) async -> Void
 
     let port: UInt16
     private let token: String
     private let handler: Handler
+    private let hookHandler: HookHandler
     private let queue = DispatchQueue(label: "com.yusuf.vibex.mcp.http", qos: .userInitiated)
     private let listener: NWListener
 
-    init(port: UInt16, token: String, handler: @escaping Handler) throws {
+    init(port: UInt16, token: String, handler: @escaping Handler, hookHandler: @escaping HookHandler = { _ in }) throws {
         self.port = port
         self.token = token
         self.handler = handler
+        self.hookHandler = hookHandler
         let parameters = NWParameters.tcp
         parameters.allowLocalEndpointReuse = true
         parameters.requiredInterfaceType = .loopback
@@ -102,7 +106,10 @@ nonisolated final class MCPHTTPServer: Sendable {
     private func respond(to request: HTTPRequest, on connection: NWConnection, parser: HTTPRequestParser) async {
         let keepAlive = request.wantsKeepAlive
         let response: Data
-        if request.path != "/mcp" && request.path != "/mcp/" {
+        if request.path == "/hooks", request.method == "POST", request.bearerToken == token {
+            await hookHandler(request)
+            response = HTTPResponse.make(status: 204, reason: "No Content", keepAlive: keepAlive)
+        } else if request.path != "/mcp" && request.path != "/mcp/" && request.path != "/hooks" {
             response = HTTPResponse.make(status: 404, reason: "Not Found", keepAlive: keepAlive)
         } else if request.bearerToken != token {
             response = HTTPResponse.make(status: 401, reason: "Unauthorized", body: Data(#"{"error":"missing or wrong bearer token"}"#.utf8), keepAlive: keepAlive)

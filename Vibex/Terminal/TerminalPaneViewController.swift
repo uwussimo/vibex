@@ -6,7 +6,7 @@ import SwiftUI
 /// Tabs of real PTY-backed terminals. Lives on the left, where Claude Code runs.
 final class TerminalPaneViewController: NSViewController {
     private final class Tab {
-        let id = UUID()
+        let id: UUID
         let terminal: LocalProcessTerminalView
         var title: String
         var directory: String?
@@ -15,7 +15,8 @@ final class TerminalPaneViewController: NSViewController {
         var onExit: ((Int32?) -> Void)?
         var fixedTitle: String?
 
-        init(terminal: LocalProcessTerminalView, title: String, directory: String?) {
+        init(id: UUID = UUID(), terminal: LocalProcessTerminalView, title: String, directory: String?) {
+            self.id = id
             self.terminal = terminal
             self.title = title
             self.directory = directory
@@ -25,6 +26,7 @@ final class TerminalPaneViewController: NSViewController {
     let session: ProjectSession
     private var tabs: [Tab] = []
     private var selectedID: UUID?
+    var selectedTabID: UUID? { selectedID }
     private let tabBarModel = TerminalTabBarModel()
     private let container = NSView()
     private var hasRestored = false
@@ -93,6 +95,7 @@ final class TerminalPaneViewController: NSViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        observeAttention()
         // SwiftTerm's mouseDown does not claim first responder, so after a click in the browser
         // keystrokes would keep going to the web view. Claim it on any click inside the pane.
         clickMonitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown, .otherMouseDown]) { [weak self] event in
@@ -104,6 +107,18 @@ final class TerminalPaneViewController: NSViewController {
     }
 
     // The pane lives as long as the window, so the monitor is never removed.
+
+    /// Redraws the tab dots whenever a session starts or stops waiting.
+    private func observeAttention() {
+        withObservationTracking {
+            _ = AttentionCenter.shared.waiting
+        } onChange: { [weak self] in
+            Task { @MainActor in
+                self?.syncTabBar()
+                self?.observeAttention()
+            }
+        }
+    }
 
     private func claimFocusIfClicked(_ event: NSEvent) {
         guard let window = view.window, event.window === window, let terminal = selectedTab?.terminal else { return }
@@ -141,13 +156,15 @@ final class TerminalPaneViewController: NSViewController {
     private func openTab(directory: String?) -> Tab {
         hasRestored = true
         if self.session.state.terminalClosed == true { self.session.update { $0.terminalClosed = false } }
+        // The tab's id travels in its environment, so Claude Code's hooks can say which tab is waiting.
+        let id = UUID()
         let session = TerminalSession.login(
             directory: directory ?? selectedTab?.directory ?? self.session.project.path,
-            environment: self.session.terminalEnvironment
+            environment: self.session.terminalEnvironment.merging(["VIBEX_TAB": id.uuidString]) { $1 }
         )
         let terminal = makeTerminalView()
 
-        let tab = Tab(terminal: terminal, title: Self.title(forDirectory: session.directory), directory: session.directory)
+        let tab = Tab(id: id, terminal: terminal, title: Self.title(forDirectory: session.directory), directory: session.directory)
         tabs.append(tab)
         syncTabBar()
         select(tab.id)
@@ -213,7 +230,9 @@ final class TerminalPaneViewController: NSViewController {
     }
 
     private func syncTabBar() {
-        tabBarModel.tabs = tabs.map { TabStripItem(id: $0.id, title: $0.title) }
+        let attention = AttentionCenter.shared
+        tabBarModel.tabs = tabs.map { TabStripItem(id: $0.id, title: $0.title, needsAttention: attention.isWaiting(tab: $0.id)) }
+        attention.forget(tabs: Set(tabs.map(\.id)), inWindow: session.windowID)
         tabBarModel.selectedID = selectedID
         emptyHost?.isHidden = !tabs.isEmpty
         onTabsChange()
@@ -247,6 +266,7 @@ final class TerminalPaneViewController: NSViewController {
     }
 
     func selectTab(_ id: UUID) { select(id) }
+    func hasTab(_ id: UUID) -> Bool { tabs.contains { $0.id == id } }
 
     /// Shell process ids of every tab, for finding which window an MCP caller runs in.
     var shellPIDs: [pid_t] { tabs.compactMap { $0.terminal.process?.shellPid } }
@@ -266,9 +286,10 @@ final class TerminalPaneViewController: NSViewController {
     ) -> UUID {
         if let previous { terminate(previous, close: true) }
         try? FileManager.default.createDirectory(at: logURL.deletingLastPathComponent(), withIntermediateDirectories: true)
-        let login = TerminalSession.login(directory: directory, environment: session.terminalEnvironment)
+        let id = UUID()
+        let login = TerminalSession.login(directory: directory, environment: session.terminalEnvironment.merging(["VIBEX_TAB": id.uuidString]) { $1 })
         let terminal = makeTerminalView()
-        let tab = Tab(terminal: terminal, title: title, directory: directory)
+        let tab = Tab(id: id, terminal: terminal, title: title, directory: directory)
         tab.fixedTitle = title
         tab.onExit = onExit
         tabs.append(tab)

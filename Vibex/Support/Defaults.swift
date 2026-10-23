@@ -20,6 +20,7 @@ enum Defaults {
         static let notificationsRequested = "setup.notificationsRequested"
         static let agentsPeriodDays = "agents.periodDays"
         static let vibexSkillRemoved = "skills.vibexRemoved"
+        static let claudeHooksRemoved = "inbox.hooksRemoved"
     }
 
     /// Boot simulators through simslim when it is installed. On by default.
@@ -66,6 +67,12 @@ enum Defaults {
     static var vibexSkillRemoved: Bool {
         get { store.bool(forKey: Key.vibexSkillRemoved) }
         set { store.set(newValue, forKey: Key.vibexSkillRemoved) }
+    }
+
+    /// The user turned off approval alerts in Setup; launch no longer adds the Claude Code hooks.
+    static var claudeHooksRemoved: Bool {
+        get { store.bool(forKey: Key.claudeHooksRemoved) }
+        set { store.set(newValue, forKey: Key.claudeHooksRemoved) }
     }
 
     static var agentsPeriodDays: Int {

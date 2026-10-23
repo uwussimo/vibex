@@ -18,17 +18,21 @@ final class MenuBarController: NSObject, NSMenuDelegate {
         menu.delegate = self
         menu.autoenablesItems = false
         statusItem.menu = menu
-        statusItem.button?.image = Self.icon(active: false)
+        statusItem.button?.image = Self.icon(dot: nil)
         statusItem.button?.toolTip = "Vibex"
         observeRuns()
     }
 
     /// Filled while any project is running, so a glance at the menu bar says something is live.
+    /// Orange while Claude waits for the user anywhere, green while a project runs.
     private func observeRuns() {
         Task { [weak self] in
-            let changes = Observations { WindowManager.shared.windows.contains { $0.runner.phase.isActive } }
-            for await active in changes {
-                self?.statusItem.button?.image = Self.icon(active: active)
+            let changes = Observations {
+                (WindowManager.shared.windows.contains { $0.runner.phase.isActive }, !AttentionCenter.shared.waiting.isEmpty)
+            }
+            for await (running, waiting) in changes {
+                self?.statusItem.button?.image = Self.icon(dot: waiting ? Theme.NS.orange : (running ? Theme.NS.green : nil))
+                self?.statusItem.button?.toolTip = waiting ? "Vibex: Claude is waiting for you" : "Vibex"
             }
         }
     }
@@ -51,8 +55,6 @@ final class MenuBarController: NSObject, NSMenuDelegate {
         return image
     }
 
-    private static func icon(active: Bool) -> NSImage? { icon(dot: active ? Theme.NS.green : nil) }
-
     // MARK: - NSMenuDelegate
 
     func menuNeedsUpdate(_ menu: NSMenu) { rebuild() }
@@ -74,6 +76,18 @@ final class MenuBarController: NSObject, NSMenuDelegate {
         menu.addItem(statusRow())
         menu.addItem(.separator())
 
+        let waiting = AttentionCenter.shared.all
+        if !waiting.isEmpty {
+            menu.addItem(header("Waiting for You"))
+            for item in waiting {
+                let project = windows.windows.first { $0.session.windowID == item.windowID }?.project.name ?? "Claude"
+                let row = action("\(project): \(item.message)", #selector(jumpToWaiting(_:)), icon: item.kind == .permission ? .key : .message)
+                row.representedObject = item.tabID.uuidString
+                row.toolTip = item.message
+                menu.addItem(row)
+            }
+            menu.addItem(.separator())
+        }
         menu.addItem(header("Projects"))
         if windows.windows.isEmpty {
             menu.addItem(disabled("No open projects"))
@@ -183,6 +197,11 @@ final class MenuBarController: NSObject, NSMenuDelegate {
 
     /// The project window used last, else any.
     private var targetWindow: MainWindowController? { windows.keyWindow ?? windows.windows.first }
+
+    @objc private func jumpToWaiting(_ sender: NSMenuItem) {
+        guard let tab = (sender.representedObject as? String).flatMap(UUID.init(uuidString:)) else { return }
+        AttentionCenter.shared.jump(to: tab)
+    }
 
     @objc private func showAgents(_ sender: Any?) {
         guard let window = targetWindow else { return }

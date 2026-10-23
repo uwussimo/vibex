@@ -1,4 +1,5 @@
 import AppKit
+import UserNotifications
 import os
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
@@ -23,6 +24,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         guard !Self.isRunningTests else { return }
+        // Clicking an approval notification jumps to the tab that is waiting.
+        UNUserNotificationCenter.current().delegate = self
         mcp.choosePort()
         TerminalSession.extraEnvironment = mcp.environmentVariables()
         windows.mcp = mcp
@@ -175,5 +178,17 @@ extension AppDelegate: NSMenuItemValidation {
         menuItem.isHidden = version == nil
         menuItem.title = version.map { "Restart to Update to \($0)" } ?? "Restart to Update"
         return version != nil
+    }
+}
+
+extension AppDelegate: UNUserNotificationCenterDelegate {
+    nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse) async {
+        guard let tab = (response.notification.request.content.userInfo["tab"] as? String).flatMap(UUID.init(uuidString:)) else { return }
+        await MainActor.run { AttentionCenter.shared.jump(to: tab) }
+    }
+
+    /// Shown while Vibex is in front too; it decides itself whether a notification is worth sending.
+    nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification) async -> UNNotificationPresentationOptions {
+        [.banner, .sound]
     }
 }

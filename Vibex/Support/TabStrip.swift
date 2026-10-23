@@ -5,6 +5,8 @@ struct TabStripItem: Identifiable, Equatable {
     let id: UUID
     var title: String
     var isLoading: Bool = false
+    /// Claude in this tab is waiting for an approval or an answer.
+    var needsAttention = false
 }
 
 struct TabStripActions {
@@ -79,7 +81,13 @@ private struct TabStripCell: View {
 
     var body: some View {
         HStack(spacing: 6) {
-            if item.isLoading {
+            if item.needsAttention {
+                Circle()
+                    .fill(Theme.orange)
+                    .frame(width: 7, height: 7)
+                    .help("Claude is waiting for you")
+                    .transition(.scale.combined(with: .opacity))
+            } else if item.isLoading {
                 ProgressView().controlSize(.mini)
             }
             Text(item.title)

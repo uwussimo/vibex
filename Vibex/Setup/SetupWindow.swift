@@ -49,7 +49,7 @@ struct SetupView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
                     section("Permissions", [.fullDiskAccess, .folders, .notifications])
-                    section("Tools", [.xcode, .claude, .vibexSkill, .commandLine])
+                    section("Tools", [.xcode, .claude, .vibexSkill, .approvalHooks, .commandLine])
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, 28)
@@ -217,6 +217,7 @@ private struct SetupRow: View {
         case .notifications: return Defaults.notificationsRequested ? "Open Settings" : "Allow"
         case .xcode: return FileManager.default.fileExists(atPath: Toolchain.developerDir) ? "Download iOS" : "Get Xcode"
         case .claude, .vibexSkill, .commandLine: return "Install"
+        case .approvalHooks: return "Turn On"
         }
     }
 
@@ -240,6 +241,9 @@ private struct SetupRow: View {
         case .vibexSkill:
             (.book, .purple, "Vibex skill for Claude Code",
              "Teaches Claude Code in every project how to use Vibex's simulator, browser and terminal tools.", false)
+        case .approvalHooks:
+            (.bellRinging, .orange, "Approval alerts",
+             "Claude Code tells Vibex when a session needs your approval, so the tab, the menu bar and a notification show it.", true)
         case .commandLine:
             (.terminal, .gray, "vibex command",
              "Run “vibex .” in any terminal to open that folder here.", true)

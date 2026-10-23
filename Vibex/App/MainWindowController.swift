@@ -101,8 +101,10 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
             tabs: workspace.editor.tabs,
             panes: workspace.panes,
             simulator: workspace.simulatorPane.model,
+            attention: .shared,
+            windowID: session.windowID,
             actions: ActivityBarActions(
-                showTerminal: { [weak self] in self?.workspace.focusTerminal(nil) },
+                showTerminal: { [weak self] in self?.showTerminalOrWaiting() },
                 showSimulator: { [weak self] in self?.workspace.focusSimulator(nil) },
                 showBrowser: { [weak self] in self?.workspace.focusBrowser(nil) },
                 toggleSourceControl: { [weak self] in self?.toggleSourceControl(nil) },
@@ -152,6 +154,15 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
         sidebar.panel = panel
         session.update { $0.sidebarPanel = panel.rawValue }
         if !isSidebarVisible { isSidebarVisible = true }
+    }
+
+    /// The Terminal button jumps to the first tab waiting on the user, if any.
+    private func showTerminalOrWaiting() {
+        if let item = AttentionCenter.shared.all.first(where: { $0.windowID == session.windowID }) {
+            workspace.showTerminalTab(item.tabID)
+        } else {
+            workspace.focusTerminal(nil)
+        }
     }
 
     /// ⌘T with focus outside the terminal and browser (the sidebar, or nothing open) still opens a

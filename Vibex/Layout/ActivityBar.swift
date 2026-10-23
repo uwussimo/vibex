@@ -9,6 +9,8 @@ struct ActivityBar: View {
     let tabs: EditorTabsModel
     let panes: PaneVisibility
     let simulator: SimulatorModel
+    let attention: AttentionCenter
+    let windowID: String
     let actions: ActivityBarActions
 
     static let width: CGFloat = 52
@@ -17,8 +19,11 @@ struct ActivityBar: View {
         VStack(spacing: 2) {
             ActivityButton(
                 icon: .terminal,
-                help: panes.terminal ? "Terminal (⌘1)" : "Open Terminal (⌘1)",
+                help: waiting > 0
+                    ? "Claude is waiting in \(waiting) tab\(waiting == 1 ? "" : "s") (⌘1)"
+                    : (panes.terminal ? "Terminal (⌘1)" : "Open Terminal (⌘1)"),
                 isSelected: panes.terminal,
+                attention: waiting,
                 action: actions.showTerminal
             )
             ActivityButton(
@@ -66,6 +71,8 @@ struct ActivityBar: View {
             Rectangle().fill(Theme.line).frame(width: 1)
         }
     }
+
+    private var waiting: Int { attention.count(windowID: windowID) }
 
     /// Space plus a hairline: the panes above, the sidebar views below.
     private var groupDivider: some View {
