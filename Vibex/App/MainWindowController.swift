@@ -88,7 +88,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
         }
         window.setFrameAutosaveName(autosave)
         installToastOverlay()
-        installTitlebarAccessory(RunButton(runner: runner), width: 220)
+        installTitlebarAccessory(RunButton(runner: runner), width: 320)
         installActivityBar(in: activityBar)
         sidebar.isVisible = !sidebarItem.isCollapsed
         sourceControl.start()
@@ -99,18 +99,15 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
             sidebar: sidebar,
             sourceControl: sourceControl,
             tabs: workspace.editor.tabs,
+            panes: workspace.panes,
             simulator: workspace.simulatorPane.model,
-            runner: runner,
             actions: ActivityBarActions(
+                showTerminal: { [weak self] in self?.workspace.focusTerminal(nil) },
+                showSimulator: { [weak self] in self?.workspace.focusSimulator(nil) },
+                showBrowser: { [weak self] in self?.workspace.focusBrowser(nil) },
                 toggleSourceControl: { [weak self] in self?.toggleSourceControl(nil) },
                 toggleSkills: { [weak self] in self?.toggleSkills(nil) },
                 showAgents: { [weak self] in self?.showAgents(nil) },
-                showBrowser: { [weak self] in self?.workspace.focusBrowser(nil) },
-                showSimulator: { [weak self] in self?.workspace.focusSimulator(nil) },
-                toggleRun: { [weak self] in
-                    guard let runner = self?.runner else { return }
-                    runner.phase.isActive ? runner.stop() : runner.run()
-                },
                 showSetup: { NSApp.sendAction(#selector(AppDelegate.showSetup(_:)), to: nil, from: nil) }
             )
         ))
@@ -155,6 +152,12 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
         sidebar.panel = panel
         session.update { $0.sidebarPanel = panel.rawValue }
         if !isSidebarVisible { isSidebarVisible = true }
+    }
+
+    /// ⌘T with focus outside the terminal and browser (the sidebar, or nothing open) still opens a
+    /// terminal tab: the responder chain ends here after the panes.
+    @objc func newTab(_ sender: Any?) {
+        if workspace.terminalPane.isEmpty { workspace.focusTerminal(nil) } else { workspace.terminalPane.newTab(nil) }
     }
 
     @objc func toggleSourceControl(_ sender: Any?) { toggleSidebar(.sourceControl) }

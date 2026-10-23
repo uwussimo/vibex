@@ -11,8 +11,10 @@
 
 <p align="center"><a href="https://uwussimo.github.io/vibex/">uwussimo.github.io/vibex</a> · free and open source under the <a href="LICENSE">MIT license</a></p>
 
-Laid out like VS Code: an activity bar on the far left (Source Control, Skills, Browser, Simulator, Run, AI Agents,
-Setup), a sidebar, the terminal as the main column, and one tabbed editor area on the right.
+Laid out like VS Code: an activity bar on the far left (Terminal, Simulator and Browser; then Source Control and
+Skills; AI Agents and Setup at the bottom), a sidebar, the terminal as the main column, and one tabbed editor area on
+the right. Closing a column's last tab closes the column; its activity bar button brings it back. Run lives in the
+title bar.
 
 - **Terminal**: real PTY terminals with tabs (SwiftTerm, Metal renderer), fish by default. Run Claude Code here.
 - **Simulator**: the iOS Simulator rendered inside Vibex from CoreSimulator's framebuffer, with touch, keyboard and buttons. No Simulator.app window. Its editor tab appears when a device boots (from the header, Run or MCP) or from the activity bar.
@@ -40,7 +42,8 @@ Or download **Vibex-1.1.0.dmg** from [Releases](https://github.com/uwussimo/vibe
 Applications. Vibex is not notarized yet, so macOS blocks a DMG downloaded in a browser: click **Done**, then
 **System Settings → Privacy & Security → Open Anyway** (or `xattr -d com.apple.quarantine ~/Downloads/Vibex-*.dmg`).
 
-Vibex updates itself. It checks GitHub for a new release at launch and every six hours; a new version
+Vibex updates itself. It checks GitHub for a new release on every launch and every six hours. One found at
+launch is offered right away with its release notes; otherwise a new version
 installs when you quit (through the same installer, which verifies the download's SHA-256), or right away
 with **Vibex → Restart to Update**. The installer's log is in `~/Library/Logs/Vibex/update.log`.
 

@@ -38,6 +38,8 @@ final class EditorTabsModel {
 
     var items: [Item] = []
     var selected: Tab?
+    /// No tabs at all: the workspace collapses the editor column.
+    var isEmpty: Bool { items.isEmpty }
 }
 
 /// Hosts the browser, the simulator, the diff, AI Agents and the skills marketplace as tabs of one
@@ -55,6 +57,8 @@ final class EditorAreaViewController: NSViewController {
     private(set) var isSimulatorOpen = false
     /// What Build mode should size the area to: the simulator's natural width while it is showing.
     var onPreferredWidthChange: (CGFloat) -> Void = { _ in }
+    /// Tabs opened or closed; the workspace collapses the column when none are left.
+    var onTabsChange: () -> Void = {}
     private var simulatorPreferredWidth: CGFloat = 0
     private var lastNonDiffTab: EditorTabsModel.Tab?
     /// Created when opened and removed when closed, so their views stop updating with the tab.
@@ -134,7 +138,9 @@ final class EditorAreaViewController: NSViewController {
         case "skills": openSkillsMarketplace()
         default: break
         }
-        if tabs.selected == nil, let id = browserPane.selectedID ?? browserPane.tabs.first?.id { select(.browser(id)) }
+        if tabs.selected == nil {
+            if let id = browserPane.selectedID ?? browserPane.tabs.first?.id { select(.browser(id)) } else if let first = tabs.items.first { select(first.tab) }
+        }
     }
 
     private func embed(_ child: NSView) {
@@ -170,13 +176,34 @@ final class EditorAreaViewController: NSViewController {
         reportPreferredWidth()
     }
 
+    /// Gives keyboard focus to the selected tab's content.
+    func focusSelected() {
+        switch tabs.selected {
+        case .browser: browserPane.focusWebView()
+        case .simulator: simulatorPane.focus()
+        default: break
+        }
+    }
+
+    private func showNothing() {
+        tabs.selected = nil
+        for view in [browserPane.view, simulatorPane.view, diffHost, agentsHost, skillsHost] { view?.isHidden = true }
+        simulatorPane.setVisible(false)
+        reportPreferredWidth()
+    }
+
     private func isBrowser(_ tab: EditorTabsModel.Tab?) -> Bool {
         if case .browser = tab { return true }
         return false
     }
 
+    /// Shows the browser, opening a tab on the start page when every tab was closed.
     func showBrowser() {
-        if let id = browserPane.selectedID ?? browserPane.tabs.first?.id { select(.browser(id)) }
+        if let id = browserPane.selectedID ?? browserPane.tabs.first?.id {
+            select(.browser(id))
+        } else {
+            browserPane.openTab(url: nil) // selects itself through onSelect
+        }
     }
 
     func openSimulator(select shouldSelect: Bool) {
@@ -216,7 +243,6 @@ final class EditorAreaViewController: NSViewController {
             browserPane.close(id)
         case .simulator:
             isSimulatorOpen = false
-            if tabs.selected == .simulator { showBrowser() }
             rebuildItems()
         case .diff:
             sourceControl.select(nil)
@@ -262,9 +288,18 @@ final class EditorAreaViewController: NSViewController {
         if let change = sourceControl.selection {
             items.append(EditorTabsModel.Item(tab: .diff, title: change.fileName, symbol: "plus.forwardslash.minus", tint: change.kind.color, isPreview: true))
         }
+        let wasEmpty = tabs.isEmpty
         if items != tabs.items { tabs.items = items }
+        defer { if tabs.isEmpty != wasEmpty { onTabsChange() } }
         if let selected = tabs.selected, !items.contains(where: { $0.tab == selected }) {
-            if let fallback = lastNonDiffTab, items.contains(where: { $0.tab == fallback }) { select(fallback) } else { showBrowser() }
+            // The selected tab closed: show the one used before it, or any that is left.
+            if let fallback = lastNonDiffTab, items.contains(where: { $0.tab == fallback }) {
+                select(fallback)
+            } else if let first = items.first(where: { $0.tab != .diff }) ?? items.first {
+                select(first.tab)
+            } else {
+                showNothing()
+            }
         }
     }
 

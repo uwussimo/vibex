@@ -48,6 +48,9 @@ nonisolated struct ProjectState: Codable, Equatable, Sendable {
     var sourceControlWidth: Double?
     /// The selected editor tab: "browser", "simulator" or "diff".
     var editorTab: String?
+    /// The user closed every tab of the pane; it stays closed until reopened from the activity bar.
+    var terminalClosed: Bool?
+    var browserClosed: Bool?
 
     var layout: LayoutMode {
         get { LayoutMode(rawValue: layoutMode) ?? .balanced }

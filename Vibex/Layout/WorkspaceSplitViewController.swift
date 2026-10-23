@@ -1,14 +1,23 @@
 import AppKit
 import os
 
+/// Which columns are showing, for the activity bar.
+@Observable
+final class PaneVisibility {
+    var terminal = true
+    var editor = true
+}
+
 /// Two columns: the terminal and the tabbed editor area (browser tabs, simulator, diff). Owns the
-/// layout modes and the spring that moves the divider between them.
+/// layout modes and the spring that moves the divider between them. A column whose last tab closed
+/// collapses, and comes back from the activity bar.
 final class WorkspaceSplitViewController: NSSplitViewController, NSMenuItemValidation {
     let session: ProjectSession
     let terminalPane: TerminalPaneViewController
     let editor: EditorAreaViewController
     var simulatorPane: SimulatorPaneViewController { editor.simulatorPane }
     var browserPane: BrowserPaneViewController { editor.browserPane }
+    let panes = PaneVisibility()
 
     private(set) var mode: LayoutMode = .balanced
     private var manualWidths: ColumnWidths?
@@ -18,8 +27,8 @@ final class WorkspaceSplitViewController: NSSplitViewController, NSMenuItemValid
     private var hasAppliedInitialLayout = false
     private lazy var animator = SpringAnimator(view: splitView)
 
-    private var terminalItem: NSSplitViewItem { splitViewItems[0] }
-    private var editorItem: NSSplitViewItem { splitViewItems[1] }
+    private var terminalItem: NSSplitViewItem!
+    private var editorItem: NSSplitViewItem!
 
     init(session: ProjectSession, sourceControl: SourceControlModel, skills: SkillsModel) {
         self.session = session
@@ -43,15 +52,15 @@ final class WorkspaceSplitViewController: NSSplitViewController, NSMenuItemValid
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        let terminal = NSSplitViewItem(viewController: terminalPane)
-        terminal.minimumThickness = LayoutPlan.minTerminal
-        terminal.holdingPriority = NSLayoutConstraint.Priority(250)
+        terminalItem = NSSplitViewItem(viewController: terminalPane)
+        terminalItem.minimumThickness = LayoutPlan.minTerminal
+        terminalItem.holdingPriority = NSLayoutConstraint.Priority(250)
 
-        let editorItem = NSSplitViewItem(viewController: editor)
+        editorItem = NSSplitViewItem(viewController: editor)
         editorItem.minimumThickness = LayoutPlan.minEditor
         editorItem.holdingPriority = NSLayoutConstraint.Priority(300)
 
-        addSplitViewItem(terminal)
+        addSplitViewItem(terminalItem)
         addSplitViewItem(editorItem)
 
         animator.onFrame = { [weak self] positions in self?.setDividerPosition(positions[0]) }
@@ -63,7 +72,59 @@ final class WorkspaceSplitViewController: NSSplitViewController, NSMenuItemValid
             terminalPane.runCommandInNewTab(command)
             view.window?.makeKeyAndOrderFront(nil)
         }
+        terminalPane.emptyActions = PaneEmptyActions(
+            terminal: { [weak self] in self?.focusTerminal(nil) },
+            simulator: { [weak self] in self?.focusSimulator(nil) },
+            browser: { [weak self] in self?.focusBrowser(nil) }
+        )
+        terminalPane.onTabsChange = { [weak self] in self?.updatePanes() }
+        editor.onTabsChange = { [weak self] in self?.updatePanes() }
     }
+
+    // MARK: - Closing and reopening columns
+
+    /// A column with no tabs closes. When both are empty the terminal column stays, showing a
+    /// "Nothing open" state, so the window is never blank. Closing removes the column's split item
+    /// (it has nothing left to keep alive), which takes effect at once, unlike collapsing.
+    private func updatePanes() {
+        guard isViewLoaded, terminalItem != nil else { return }
+        let editorEmpty = editor.tabs.isEmpty
+        let terminalEmpty = terminalPane.isEmpty && terminalPane.hasLoadedTabs
+        let showTerminal = !terminalEmpty || editorEmpty
+        let showEditor = !editorEmpty
+        let reopening = (showTerminal && !isShowing(terminalItem)) || (showEditor && !isShowing(editorItem))
+        guard showTerminal != isShowing(terminalItem) || showEditor != isShowing(editorItem) else {
+            syncPanes()
+            return
+        }
+        animator.cancel()
+        if showTerminal, !isShowing(terminalItem) { insertSplitViewItem(terminalItem, at: 0) }
+        if showEditor, !isShowing(editorItem) { addSplitViewItem(editorItem) }
+        if !showTerminal, isShowing(terminalItem) { removeSplitViewItem(terminalItem) }
+        if !showEditor, isShowing(editorItem) { removeSplitViewItem(editorItem) }
+        view.layoutSubtreeIfNeeded()
+        syncPanes()
+        // Keystrokes follow whichever column is still showing.
+        if !showEditor { terminalPane.focusCurrentTerminal() } else if !showTerminal { editor.focusSelected() }
+        // Both columns are back: put the divider where the layout mode wants it.
+        if reopening, isBothShowing {
+            DispatchQueue.main.async { [weak self] in
+                guard let self else { return }
+                apply(mode: mode, animated: false)
+            }
+        }
+    }
+
+    private func isShowing(_ item: NSSplitViewItem) -> Bool { splitViewItems.contains(item) }
+
+    private func syncPanes() {
+        let terminal = isShowing(terminalItem) && !terminalPane.isEmpty
+        let editor = isShowing(editorItem)
+        if panes.terminal != terminal { panes.terminal = terminal }
+        if panes.editor != editor { panes.editor = editor }
+    }
+
+    private var isBothShowing: Bool { splitViewItems.count == 2 }
 
     override func viewDidAppear() {
         super.viewDidAppear()
@@ -104,6 +165,8 @@ final class WorkspaceSplitViewController: NSSplitViewController, NSMenuItemValid
         case .balanced: break
         }
 
+        // With one column closed there is no divider to place.
+        guard isBothShowing else { return }
         let target = Double(LayoutPlan.widths(mode: newMode, available: available, editorPreferred: editorPreferredWidth, manual: manualWidths).terminal)
         if animated, !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion {
             animator.animate(from: [currentPosition], to: [target])
@@ -123,6 +186,7 @@ final class WorkspaceSplitViewController: NSSplitViewController, NSMenuItemValid
     }
 
     private func captureManualWidths() {
+        guard isBothShowing else { return }
         let widths = ColumnWidths(terminal: terminalItem.viewController.view.frame.width, editor: editorItem.viewController.view.frame.width)
         guard widths.total > 0 else { return }
         manualWidths = widths
@@ -150,7 +214,7 @@ final class WorkspaceSplitViewController: NSSplitViewController, NSMenuItemValid
         guard hasAppliedInitialLayout, lastLayoutWidth > 0, abs(width - lastLayoutWidth) > 0.5, !animator.isAnimating else { return }
         // Positioning inside the split view's own layout pass gets overridden; do it right after.
         DispatchQueue.main.async { [weak self] in
-            guard let self, !animator.isAnimating else { return }
+            guard let self, !animator.isAnimating, isBothShowing else { return }
             let target = LayoutPlan.widths(mode: mode, available: available, editorPreferred: editorPreferredWidth, manual: manualWidths).terminal
             setDividerPosition(Double(target))
         }
@@ -162,7 +226,7 @@ final class WorkspaceSplitViewController: NSSplitViewController, NSMenuItemValid
         super.splitViewDidResizeSubviews(notification)
         // Only the user dragging the divider (mouse down, same overall width) changes the
         // remembered ratio; layout passes that squeeze a column for a moment must not.
-        guard !isSettingPosition, !animator.isAnimating, hasAppliedInitialLayout,
+        guard !isSettingPosition, !animator.isAnimating, hasAppliedInitialLayout, isBothShowing,
               NSEvent.pressedMouseButtons & 1 == 1,
               abs(splitView.bounds.width - lastLayoutWidth) <= 0.5 else { return }
         captureManualWidthsIfBalanced()
@@ -172,7 +236,8 @@ final class WorkspaceSplitViewController: NSSplitViewController, NSMenuItemValid
 
     @objc func focusTerminal(_ sender: Any?) {
         view.window?.makeKeyAndOrderFront(nil)
-        terminalPane.focusCurrentTerminal()
+        // Opens a shell when every tab was closed; the column expands through onTabsChange.
+        terminalPane.reopen()
     }
 
     @objc func focusSimulator(_ sender: Any?) {
@@ -184,7 +249,8 @@ final class WorkspaceSplitViewController: NSSplitViewController, NSMenuItemValid
     @objc func focusBrowser(_ sender: Any?) {
         view.window?.makeKeyAndOrderFront(nil)
         editor.showBrowser()
-        browserPane.focusWebView()
+        // A freshly opened tab joins the window on the next pass.
+        DispatchQueue.main.async { [weak self] in self?.browserPane.focusWebView() }
     }
 
     func windowDidBecomeKey() {

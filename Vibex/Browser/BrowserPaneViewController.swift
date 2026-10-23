@@ -73,6 +73,7 @@ final class BrowserPaneViewController: NSViewController, NSMenuItemValidation {
 
     @discardableResult
     func openTab(url: URL?, select shouldSelect: Bool = true) -> BrowserTab {
+        if session.state.browserClosed == true { session.update { $0.browserClosed = false } }
         let tab = BrowserTab()
         tab.webView.navigationDelegate = self
         tab.webView.uiDelegate = self
@@ -106,7 +107,11 @@ final class BrowserPaneViewController: NSViewController, NSMenuItemValidation {
         tab.webView.removeFromSuperview()
         tab.tearDown()
         if tabs.isEmpty {
-            openTab(url: nil)
+            // Closing the last tab closes the browser; the activity bar brings it back.
+            selectedID = nil
+            session.update { $0.browserClosed = true }
+            syncStrip()
+            persistTabs()
             return
         }
         if selectedID == id {
@@ -127,7 +132,7 @@ final class BrowserPaneViewController: NSViewController, NSMenuItemValidation {
         hasRestored = true
         let urls = session.state.browserTabURLs.compactMap(URL.init(string:))
         if urls.isEmpty {
-            openTab(url: nil)
+            if session.state.browserClosed != true { openTab(url: nil) }
         } else {
             for url in urls { openTab(url: url, select: false) }
             let index = min(max(session.state.browserSelectedTab, 0), tabs.count - 1)

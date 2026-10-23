@@ -29,6 +29,16 @@ final class TerminalPaneViewController: NSViewController {
     private let container = NSView()
     private var hasRestored = false
     private var clickMonitor: Any?
+    /// Tabs were opened or closed (the workspace collapses the column when none are left).
+    var onTabsChange: () -> Void = {}
+    var isEmpty: Bool { tabs.isEmpty }
+    /// False until the saved tabs were restored, so an empty pane at launch isn't taken for a closed one.
+    var hasLoadedTabs: Bool { hasRestored }
+    /// What the "Nothing open" state offers when this and the editor area are both empty.
+    var emptyActions = PaneEmptyActions(terminal: {}, simulator: {}, browser: {}) {
+        didSet { emptyHost?.rootView = PaneEmptyState(actions: emptyActions) }
+    }
+    private var emptyHost: NSHostingView<PaneEmptyState>?
 
     init(session: ProjectSession) {
         self.session = session
@@ -66,6 +76,18 @@ final class TerminalPaneViewController: NSViewController {
             container.trailingAnchor.constraint(equalTo: root.trailingAnchor),
             container.bottomAnchor.constraint(equalTo: root.bottomAnchor),
         ])
+        let empty = NSHostingView(rootView: PaneEmptyState(actions: emptyActions))
+        empty.sizingOptions = []
+        empty.translatesAutoresizingMaskIntoConstraints = false
+        empty.isHidden = true
+        root.addSubview(empty)
+        NSLayoutConstraint.activate([
+            empty.topAnchor.constraint(equalTo: root.topAnchor),
+            empty.leadingAnchor.constraint(equalTo: root.leadingAnchor),
+            empty.trailingAnchor.constraint(equalTo: root.trailingAnchor),
+            empty.bottomAnchor.constraint(equalTo: root.bottomAnchor),
+        ])
+        emptyHost = empty
         view = root
     }
 
@@ -96,10 +118,11 @@ final class TerminalPaneViewController: NSViewController {
         hasRestored = true
         let directories = session.state.terminalDirectories.filter { FileManager.default.fileExists(atPath: $0) }
         if directories.isEmpty {
-            openTab(directory: session.project.path)
+            if session.state.terminalClosed != true { openTab(directory: session.project.path) }
         } else {
             for directory in directories { openTab(directory: directory) }
         }
+        syncTabBar()
         focusCurrentTerminal()
     }
 
@@ -107,8 +130,17 @@ final class TerminalPaneViewController: NSViewController {
 
     private var selectedTab: Tab? { tabs.first { $0.id == selectedID } }
 
+    /// Brings the pane back after its last tab was closed: one shell in the project folder.
+    func reopen() {
+        hasRestored = true
+        if tabs.isEmpty { openTab(directory: session.project.path) }
+        focusCurrentTerminal()
+    }
+
     @discardableResult
     private func openTab(directory: String?) -> Tab {
+        hasRestored = true
+        if self.session.state.terminalClosed == true { self.session.update { $0.terminalClosed = false } }
         let session = TerminalSession.login(
             directory: directory ?? selectedTab?.directory ?? self.session.project.path,
             environment: self.session.terminalEnvironment
@@ -167,7 +199,10 @@ final class TerminalPaneViewController: NSViewController {
         tab.terminal.removeFromSuperview()
         tabs.remove(at: index)
         if tabs.isEmpty {
-            openTab(directory: tab.directory)
+            // Closing the last tab closes the terminal; the activity bar brings it back.
+            selectedID = nil
+            session.update { $0.terminalClosed = true }
+            syncTabBar()
             return
         }
         if selectedID == id {
@@ -180,6 +215,18 @@ final class TerminalPaneViewController: NSViewController {
     private func syncTabBar() {
         tabBarModel.tabs = tabs.map { TabStripItem(id: $0.id, title: $0.title) }
         tabBarModel.selectedID = selectedID
+        emptyHost?.isHidden = !tabs.isEmpty
+        onTabsChange()
+    }
+
+    /// Shells title tabs with an abbreviated working directory ("~/D/e/vibex", or "claude ~/D/e/vibex"
+    /// while a command runs). Show the folder's name instead, keeping the command.
+    nonisolated static func displayTitle(_ title: String) -> String {
+        var words = title.split(separator: " ").map(String.init)
+        guard let last = words.last, last.hasPrefix("/") || last.hasPrefix("~") else { return title }
+        let folder = last == "~" || last == "/" ? last : (last as NSString).lastPathComponent
+        words.removeLast()
+        return words.isEmpty ? folder : words.joined(separator: " ") + " · " + folder
     }
 
     private static func title(forDirectory directory: String?) -> String {
@@ -302,7 +349,7 @@ extension TerminalPaneViewController: LocalProcessTerminalViewDelegate {
 
     func setTerminalTitle(source: LocalProcessTerminalView, title: String) {
         guard let tab = tabs.first(where: { $0.terminal === source }), tab.fixedTitle == nil else { return }
-        tab.title = title.isEmpty ? Self.title(forDirectory: tab.directory) : title
+        tab.title = title.isEmpty ? Self.title(forDirectory: tab.directory) : Self.displayTitle(title)
         syncTabBar()
     }
 

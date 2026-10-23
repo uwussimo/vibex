@@ -24,6 +24,14 @@ final class Runner {
             }
         }
 
+        /// A spinner beside the label while work is under way.
+        var showsProgress: Bool {
+            switch self {
+            case .preparing, .building, .launching: true
+            default: false
+            }
+        }
+
         var label: String {
             switch self {
             case .idle: "Run"
