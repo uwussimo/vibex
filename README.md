@@ -30,7 +30,7 @@ title bar.
 - **MCP**: a built-in server so Claude Code can see and drive the simulator and the browser.
 
 <p align="center">
-  <img src="docs/screenshot.png" alt="Vibex window: terminal tabs on the left, an iPhone 17 Pro Max simulator running a habits app in the middle, and a browser tab on the right">
+  <img src="docs/og.png" alt="The old way vs. the Vibex way: instead of five apps and a lot of Command-Tab, one window that Claude can see and drive. It runs your app, taps the simulator, shows every diff, tracks usage, installs skills and reads the console. $0, 50 MCP tools, MIT licensed.">
 </p>
 
 ## Install
