@@ -15,3 +15,9 @@
 
 /og.png
   Cache-Control: public, max-age=86400
+
+/launch.mp4
+  Cache-Control: public, max-age=86400
+
+/launch-poster.jpg
+  Cache-Control: public, max-age=86400

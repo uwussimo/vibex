@@ -161,6 +161,9 @@
   .stage { margin-top: 48px; position: relative; }
   .stage-frame { border-radius: 16px; background: var(--surface); padding: 8px; border: 1px solid var(--line); }
   .stage-scale { position: relative; overflow: hidden; border-radius: 10px; }
+
+  /* Launch film */
+  .film video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; border-radius: 10px; background: #000; }
   .app {
     --w: 1080px; --h: 620px;
     width: var(--w); height: var(--h);
@@ -855,6 +858,18 @@
     <p>Meet <span class="brand-pill"><img src="icon.png" alt="">Vibex</span>, a window built for your coding agent. Agents used to work blind and wait for you to run, look and explain. Here Claude runs it, sees it and fixes it. You just review.</p>
   </div>
 </div>
+
+<section id="film" class="film">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <h2>Watch Claude see what it builds</h2>
+      <p>Claude writes the code, runs the app, taps through it and checks its own work, all in one window.</p>
+    </div>
+    <div class="stage-frame reveal">
+      <video src="launch.mp4" poster="launch-poster.jpg" controls playsinline preload="metadata" aria-label="Vibex launch film, one minute"></video>
+    </div>
+  </div>
+</section>
 
 <section id="how" style="padding-top:40px">
   <div class="grid-lines">
