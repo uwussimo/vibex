@@ -34,6 +34,10 @@ Or download **Vibex-1.0.0.dmg** from [Releases](https://github.com/uwussimo/vibe
 Applications. Vibex is not notarized yet, so macOS blocks a DMG downloaded in a browser: click **Done**, then
 **System Settings → Privacy & Security → Open Anyway** (or `xattr -d com.apple.quarantine ~/Downloads/Vibex-*.dmg`).
 
+Vibex updates itself. It checks GitHub for a new release at launch and every six hours; a new version
+installs when you quit (through the same installer, which verifies the download's SHA-256), or right away
+with **Vibex → Restart to Update**. The installer's log is in `~/Library/Logs/Vibex/update.log`.
+
 Open a project from a terminal with `vibex .` (or `vibex <folder>…`), like VS Code's `code`. The installer links
 the command into the first writable folder on your PATH; with the DMG, use **Vibex → Install 'vibex' Command**.
 

@@ -3,6 +3,7 @@ import os
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     let mcp = MCPService()
+    let updater = Updater()
     private var windows: WindowManager { .shared }
     private var hasLaunched = false
     /// Folders macOS hands over before launch finishes (`vibex .` on a cold start); opened once MCP is up.
@@ -27,7 +28,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         mcp.registry.register(BrowserTools.make())
         mcp.registry.register(SimulatorTools.make())
         mcp.start()
-        menuBar = MenuBarController(mcp: mcp)
+        menuBar = MenuBarController(mcp: mcp, updater: updater)
+        updater.start()
         hasLaunched = true
         if pendingURLs.isEmpty {
             windows.restoreOrWelcome()
@@ -70,6 +72,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc func clearRecents(_ sender: Any?) { ProjectStore.shared.clearRecents() }
 
     @objc func showWelcome(_ sender: Any?) { windows.showWelcome() }
+
+    @objc func checkForUpdates(_ sender: Any?) {
+        guard Updater.isEnabled else {
+            windows.keyWindow?.toast.show(title: "Updates are off in development builds", message: "Install a release to get automatic updates.")
+            return
+        }
+        Task { await updater.check(userInitiated: true) }
+    }
+
+    @objc func restartToUpdate(_ sender: Any?) { updater.restartToUpdate() }
 
     @objc func showSetup(_ sender: Any?) {
         let controller = setup ?? SetupWindowController()
@@ -129,6 +141,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationWillTerminate(_ notification: Notification) {
         guard !Self.isRunningTests else { return }
         windows.prepareForTermination()
+        updater.installOnQuitIfNeeded()
     }
 }
 
@@ -149,5 +162,16 @@ extension AppDelegate: NSMenuDelegate {
         let clear = menu.addItem(withTitle: "Clear Menu", action: #selector(clearRecents(_:)), keyEquivalent: "")
         clear.target = self
         clear.isEnabled = !recents.isEmpty
+    }
+}
+
+extension AppDelegate: NSMenuItemValidation {
+    /// Restart to Update appears only once a newer release is waiting.
+    func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
+        guard menuItem.action == #selector(restartToUpdate(_:)) else { return true }
+        let version = updater.availableVersion
+        menuItem.isHidden = version == nil
+        menuItem.title = version.map { "Restart to Update to \($0)" } ?? "Restart to Update"
+        return version != nil
     }
 }

@@ -73,11 +73,14 @@ mkdir -p "$mount"
 hdiutil attach "$tmp/Vibex.dmg" -nobrowse -readonly -quiet -mountpoint "$mount" || die "Could not open the DMG."
 [ -d "$mount/$APP_NAME" ] || die "The DMG does not contain $APP_NAME."
 
-if [ -z "${VIBEX_INSTALL_DIR:-}" ] && pgrep -x Vibex >/dev/null 2>&1; then
+# Quit the copy being replaced (matched by path, so a development build elsewhere keeps running).
+running="$dest/Contents/MacOS/Vibex"
+if pgrep -f "^$running" >/dev/null 2>&1; then
   say "Quitting the running Vibex (your windows come back on relaunch)"
-  osascript -e 'tell application "Vibex" to quit' >/dev/null 2>&1 || true
+  osascript -e "tell application \"$dest\" to quit" >/dev/null 2>&1 || true
   i=0
-  while pgrep -x Vibex >/dev/null 2>&1 && [ $i -lt 20 ]; do sleep 0.5; i=$((i + 1)); done
+  while pgrep -f "^$running" >/dev/null 2>&1 && [ $i -lt 40 ]; do sleep 0.5; i=$((i + 1)); done
+  pgrep -f "^$running" >/dev/null 2>&1 && die "Vibex is still running; quit it and run the installer again."
 fi
 
 say "Installing to $dest"

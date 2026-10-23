@@ -6,11 +6,13 @@ final class MenuBarController: NSObject, NSMenuDelegate {
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
     private let menu = NSMenu()
     private let mcp: MCPService
+    private let updater: Updater
     private var windows: WindowManager { .shared }
     private var bootedDevices: [SimDevice] = []
 
-    init(mcp: MCPService) {
+    init(mcp: MCPService, updater: Updater) {
         self.mcp = mcp
+        self.updater = updater
         super.init()
         menu.delegate = self
         menu.autoenablesItems = false
@@ -97,6 +99,11 @@ final class MenuBarController: NSObject, NSMenuDelegate {
         }
 
         menu.addItem(.separator())
+        if let version = updater.availableVersion {
+            menu.addItem(action("Restart to Update to \(version)", #selector(AppDelegate.restartToUpdate(_:)), symbol: "arrow.down.circle.fill", target: NSApp.delegate))
+        } else {
+            menu.addItem(action("Check for Updates…", #selector(AppDelegate.checkForUpdates(_:)), symbol: "arrow.down.circle", target: NSApp.delegate))
+        }
         menu.addItem(action("Setup & Permissions…", #selector(AppDelegate.showSetup(_:)), symbol: "checklist", target: NSApp.delegate))
         if CommandLineTool.installedPath == nil {
             menu.addItem(action("Install 'vibex' Command", #selector(AppDelegate.installCommandLineTool(_:)), symbol: "terminal", target: NSApp.delegate))
