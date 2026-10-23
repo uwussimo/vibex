@@ -61,6 +61,12 @@ struct ActivityBar: View {
                 isSelected: sidebar.isShowing(.skills),
                 action: actions.toggleSkills
             )
+            ActivityButton(
+                icon: .puzzle,
+                help: "MCP Servers: tools for Claude Code (⌃⇧M)",
+                isSelected: sidebar.isShowing(.mcp),
+                action: actions.toggleMCP
+            )
             Spacer()
             ActivityButton(
                 icon: .agents,
@@ -107,6 +113,7 @@ struct ActivityBarActions {
     var toggleSourceControl: () -> Void
     var toggleAgents: () -> Void
     var toggleSkills: () -> Void
+    var toggleMCP: () -> Void
     var showAgents: () -> Void
     var showSetup: () -> Void
 }

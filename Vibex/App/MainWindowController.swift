@@ -18,6 +18,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
     private(set) lazy var browserAutomation = BrowserAutomation(pane: workspace.browserPane)
     private(set) lazy var runner = Runner(window: self)
     private(set) lazy var deviceMatrix = DeviceMatrixModel(session: session)
+    private(set) lazy var mcpServers = MCPServersModel(folder: session.project.url)
 
     var project: Project { session.project }
     var onClose: (MainWindowController) -> Void = { _ in }
@@ -58,8 +59,10 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
             skills: skills,
             agents: agents,
             agentActions: agentActions(),
+            mcpServers: mcpServers,
             window: { [weak window] in window },
-            browseSkills: { [weak workspace] in workspace?.editor.openSkillsMarketplace() }
+            browseSkills: { [weak workspace] in workspace?.editor.openSkillsMarketplace() },
+            browseMCP: { [weak self] in self?.browseMCPServers(nil) }
         )))
         sidebarItem.minimumThickness = 240
         sidebarItem.maximumThickness = 440
@@ -118,6 +121,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
                 toggleSourceControl: { [weak self] in self?.toggleSourceControl(nil) },
                 toggleAgents: { [weak self] in self?.toggleAgents(nil) },
                 toggleSkills: { [weak self] in self?.toggleSkills(nil) },
+                toggleMCP: { [weak self] in self?.toggleMCPServers(nil) },
                 showAgents: { [weak self] in self?.showAgents(nil) },
                 showSetup: { NSApp.sendAction(#selector(AppDelegate.showSetup(_:)), to: nil, from: nil) }
             )
@@ -262,6 +266,12 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
         }
     }
     @objc func toggleSkills(_ sender: Any?) { toggleSidebar(.skills) }
+    @objc func toggleMCPServers(_ sender: Any?) { toggleSidebar(.mcp) }
+
+    @objc func browseMCPServers(_ sender: Any?) {
+        showSidebar(.mcp)
+        workspace.editor.openMCPMarketplace(model: mcpServers)
+    }
     @objc func showAgents(_ sender: Any?) { workspace.editor.openAgents() }
     @objc func browseSkills(_ sender: Any?) {
         showSidebar(.skills)

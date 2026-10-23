@@ -15,6 +15,7 @@ final class EditorTabsModel {
         case skills
         case compare
         case devices
+        case mcp
 
         var kind: String {
             switch self {
@@ -25,6 +26,7 @@ final class EditorTabsModel {
             case .skills: "skills"
             case .compare: "compare"
             case .devices: "devices"
+            case .mcp: "mcp"
             }
         }
     }
@@ -70,6 +72,7 @@ final class EditorAreaViewController: NSViewController {
     private var skillsHost: NSView?
     private var compareHost: NSView?
     private var devicesController: DeviceMatrixViewController?
+    private var mcpHost: NSView?
 
     private let container = NSView()
     private lazy var diffHost: NSHostingView<DiffView> = {
@@ -181,6 +184,7 @@ final class EditorAreaViewController: NSViewController {
         skillsHost?.isHidden = tab != .skills
         compareHost?.isHidden = tab != .compare
         devicesController?.view.isHidden = tab != .devices
+        mcpHost?.isHidden = tab != .mcp
         session.update { $0.editorTab = tab.kind }
         reportPreferredWidth()
     }
@@ -196,7 +200,7 @@ final class EditorAreaViewController: NSViewController {
 
     private func showNothing() {
         tabs.selected = nil
-        for view in [browserPane.view, simulatorPane.view, diffHost, agentsHost, skillsHost, compareHost, devicesController?.view] { view?.isHidden = true }
+        for view in [browserPane.view, simulatorPane.view, diffHost, agentsHost, skillsHost, compareHost, devicesController?.view, mcpHost] { view?.isHidden = true }
         simulatorPane.setVisible(false)
         reportPreferredWidth()
     }
@@ -229,6 +233,15 @@ final class EditorAreaViewController: NSViewController {
             rebuildItems()
         }
         select(.agents)
+    }
+
+    /// The MCP server marketplace.
+    func openMCPMarketplace(model: MCPServersModel) {
+        if mcpHost == nil {
+            mcpHost = host(MCPMarketplaceView(model: model))
+            rebuildItems()
+        }
+        select(.mcp)
     }
 
     /// Several simulators side by side.
@@ -288,6 +301,10 @@ final class EditorAreaViewController: NSViewController {
             compareHost?.removeFromSuperview()
             compareHost = nil
             rebuildItems()
+        case .mcp:
+            mcpHost?.removeFromSuperview()
+            mcpHost = nil
+            rebuildItems()
         case .devices:
             devicesController?.prepareForTermination()
             devicesController?.view.removeFromSuperview()
@@ -330,6 +347,9 @@ final class EditorAreaViewController: NSViewController {
         }
         if devicesController != nil {
             items.append(EditorTabsModel.Item(tab: .devices, title: "Devices", icon: .grid))
+        }
+        if mcpHost != nil {
+            items.append(EditorTabsModel.Item(tab: .mcp, title: "MCP Servers", icon: .puzzle))
         }
         if let change = sourceControl.selection {
             items.append(EditorTabsModel.Item(tab: .diff, title: change.fileName, icon: .fileCode, tint: change.kind.color, isPreview: true))

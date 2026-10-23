@@ -87,6 +87,9 @@ enum MainMenu {
         let skills = menu.addItem(withTitle: "Skills", action: #selector(MainWindowController.toggleSkills(_:)), keyEquivalent: "k")
         skills.keyEquivalentModifierMask = [.control, .shift]
         menu.addItem(withTitle: "Browse Skills…", action: #selector(MainWindowController.browseSkills(_:)), keyEquivalent: "")
+        let mcp = menu.addItem(withTitle: "MCP Servers", action: #selector(MainWindowController.toggleMCPServers(_:)), keyEquivalent: "m")
+        mcp.keyEquivalentModifierMask = [.control, .shift]
+        menu.addItem(withTitle: "Browse MCP Servers…", action: #selector(MainWindowController.browseMCPServers(_:)), keyEquivalent: "")
         let agents = menu.addItem(withTitle: "AI Usage", action: #selector(MainWindowController.showAgents(_:)), keyEquivalent: "a")
         agents.keyEquivalentModifierMask = [.control, .shift]
         let nextChange = menu.addItem(withTitle: "Next Change", action: #selector(MainWindowController.nextChange(_:)), keyEquivalent: String(UnicodeScalar(NSDownArrowFunctionKey)!))

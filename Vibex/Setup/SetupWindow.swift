@@ -141,10 +141,18 @@ private struct SetupRow: View {
 
     var body: some View {
         HStack(alignment: .center, spacing: 14) {
-            IconView(content.icon, size: 16)
-                .foregroundStyle(.white)
-                .frame(width: 30, height: 30)
-                .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(content.tint.gradient))
+            Group {
+                if let logo {
+                    BrandLogoView(logo, size: 20)
+                        .frame(width: 30, height: 30)
+                        .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Theme.raised))
+                } else {
+                    IconView(content.icon, size: 16)
+                        .foregroundStyle(.white)
+                        .frame(width: 30, height: 30)
+                        .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(content.tint.gradient))
+                }
+            }
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 6) {
                     Text(content.title)
@@ -218,6 +226,15 @@ private struct SetupRow: View {
         case .xcode: return FileManager.default.fileExists(atPath: Toolchain.developerDir) ? "Download iOS" : "Get Xcode"
         case .claude, .vibexSkill, .commandLine: return "Install"
         case .approvalHooks: return "Turn On"
+        }
+    }
+
+    /// The tool's own logo, for rows about a tool rather than a permission.
+    private var logo: BrandLogo? {
+        switch id {
+        case .xcode: .xcode
+        case .claude, .vibexSkill, .approvalHooks: .claude
+        default: nil
         }
     }
 
