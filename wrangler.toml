@@ -1,6 +1,8 @@
-# Cloudflare Pages: the landing page at vibex.cc. Connect this repo in the Cloudflare dashboard
-# (Workers & Pages → Create → Pages → Import a Git repository) and name the project "vibex";
-# Pages reads this file, so there is no build command and docs/ is published as is.
+# Cloudflare: the landing page at vibex.cc, a Worker that serves docs/ as static assets.
+# Connect this repo in the Cloudflare dashboard (Workers & Pages → Create → Import a repository);
+# the default deploy command, `npx wrangler deploy`, reads this file. There is no build step.
 name = "vibex"
-pages_build_output_dir = "./docs"
 compatibility_date = "2026-10-01"
+
+[assets]
+directory = "./docs"
