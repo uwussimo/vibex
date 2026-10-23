@@ -81,6 +81,7 @@ enum MainMenu {
         palette.keyEquivalentModifierMask = [.command, .shift]
         let sourceControl = menu.addItem(withTitle: "Source Control", action: #selector(MainWindowController.toggleSourceControl(_:)), keyEquivalent: "g")
         sourceControl.keyEquivalentModifierMask = [.control, .shift]
+        menu.addItem(withTitle: "Devices", action: #selector(MainWindowController.showDevices(_:)), keyEquivalent: "")
         let agentsPanel = menu.addItem(withTitle: "Agents", action: #selector(MainWindowController.toggleAgents(_:)), keyEquivalent: "n")
         agentsPanel.keyEquivalentModifierMask = [.control, .shift]
         let skills = menu.addItem(withTitle: "Skills", action: #selector(MainWindowController.toggleSkills(_:)), keyEquivalent: "k")

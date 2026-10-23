@@ -36,3 +36,16 @@ import Testing
         #expect(CompareView.fit(NSSize(width: 400, height: 100), in: CGSize(width: 200, height: 200)) == CGSize(width: 200, height: 50))
     }
 }
+
+@MainActor @Suite struct DeviceMatrixTests {
+    func device(_ name: String, _ runtime: String = "iOS 26.6") -> SimDevice {
+        SimDevice(udid: UUID().uuidString, name: name, runtime: runtime, state: "Shutdown")
+    }
+
+    @Test func `presets pick a small phone, a large phone and an iPad`() {
+        let devices = [device("iPhone 17 Pro"), device("iPhone 17 Pro Max"), device("iPhone 16e"), device("iPad Air 13-inch (M3)"), device("iPhone SE (3rd generation)", "iOS 18.6")]
+        #expect(DeviceMatrixModel.presets(from: devices).map(\.name) == ["iPhone 16e", "iPhone 17 Pro Max", "iPad Air 13-inch (M3)"])
+        #expect(DeviceMatrixModel.presets(from: [device("iPhone 17")]).map(\.name) == ["iPhone 17"])
+        #expect(DeviceMatrixModel.presets(from: []).isEmpty)
+    }
+}

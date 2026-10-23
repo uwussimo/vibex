@@ -9,6 +9,7 @@ struct SimulatorHeaderActions {
     var toggleSlim: () -> Void
     var installSimslim: () -> Void
     var compare: () -> Void
+    var devices: () -> Void
 }
 
 struct SimulatorHeader: View {
@@ -55,6 +56,7 @@ struct SimulatorHeader: View {
                 help: snapshots.snapshots.count >= 2 ? "Compare Before and After" : "Compare Before and After: take two screenshots first",
                 action: actions.compare
             )
+            ToolbarIconButton(icon: .grid, help: "Devices: several simulators side by side", action: actions.devices)
         }
         .padding(.horizontal, 8)
         .frame(height: 40)

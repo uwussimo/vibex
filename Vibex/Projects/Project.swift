@@ -51,6 +51,8 @@ nonisolated struct ProjectState: Codable, Equatable, Sendable {
     /// The user closed every tab of the pane; it stays closed until reopened from the activity bar.
     var terminalClosed: Bool?
     var browserClosed: Bool?
+    /// The simulators in the Devices tab, by UDID.
+    var matrixDevices: [String]?
 
     var layout: LayoutMode {
         get { LayoutMode(rawValue: layoutMode) ?? .balanced }

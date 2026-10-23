@@ -46,7 +46,9 @@ user to open Vibex, or to choose **Vibex › Re-register MCP with Claude Code**.
 5. Before a UI change, call `simulator_snapshot` with label "before"; after it, "after". The user compares
    them in Vibex's Compare tab by dragging a divider across.
 6. Read the app's logs with `simulator_logs` (filter by bundle id). Deep links: `simulator_open_url`.
-7. Manage apps with `simulator_install_app`, `simulator_launch_app`, `simulator_terminate_app`,
+7. To check a layout on several screen sizes, `simulator_screenshot_all` returns every simulator in the
+   Devices tab in one image.
+8. Manage apps with `simulator_install_app`, `simulator_launch_app`, `simulator_terminate_app`,
    `simulator_list_apps`; devices with `simulator_list`, `simulator_boot`, `simulator_shutdown`.
 
 Add accessibility labels and identifiers to views you build; they make the app testable this way.

@@ -20,6 +20,8 @@ final class SimulatorPaneViewController: NSViewController, NSMenuItemValidation 
     let snapshots: SnapshotHistory
     /// Opens the Compare tab.
     var openCompare: () -> Void = {}
+    /// Opens the Devices tab.
+    var openDevices: () -> Void = {}
 
     var onPreferredWidthChange: (CGFloat) -> Void = { _ in }
     /// Runs a shell command in a new terminal tab (used to install simslim in plain sight).
@@ -65,7 +67,8 @@ final class SimulatorPaneViewController: NSViewController, NSMenuItemValidation 
             lock: { [weak self] in self?.input?.press(.lock) },
             toggleSlim: { [weak self] in self?.toggleSlim() },
             installSimslim: { [weak self] in self?.installSimslim(nil) },
-            compare: { [weak self] in self?.openCompare() }
+            compare: { [weak self] in self?.openCompare() },
+            devices: { [weak self] in self?.openDevices() }
         )
         let header = NSHostingView(rootView: SimulatorHeader(model: model, snapshots: snapshots, isLive: { [weak self] in self?.displayState == .live }, actions: actions))
         header.sizingOptions = []

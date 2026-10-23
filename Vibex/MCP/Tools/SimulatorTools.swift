@@ -43,6 +43,17 @@ enum SimulatorTools {
                 let png = try Data(contentsOf: window.workspace.simulatorPane.snapshots.url(of: snapshot))
                 return .image(png, caption: "Saved \"\(snapshot.label)\". \(window.workspace.simulatorPane.snapshots.snapshots.count) screenshots in Compare.")
             },
+            Tool(name: "simulator_screenshot_all", description: "One image of every simulator in Vibex's Devices tab, side by side (e.g. a small phone, a large phone and an iPad), to check a layout on all screen sizes at once. Opens the tab; add devices there or ask the user to.", inputSchema: Schema.object()) { _ in
+                let window = try WindowManager.shared.toolTarget()
+                window.showDevices(nil)
+                let matrix = window.deviceMatrix
+                await matrix.refresh()
+                guard !matrix.shown.isEmpty else { throw ToolError("The Devices tab has no simulators yet. Add some there (or boot them with simulator_boot and add them).") }
+                guard let image = await DeviceMatrixViewController.combinedScreenshot(of: matrix.shown) else {
+                    throw ToolError("None of the Devices tab's simulators are booted.")
+                }
+                return .image(image, caption: matrix.shown.filter(\.isBooted).map(\.name).joined(separator: " · "))
+            },
             Tool(name: "simulator_tap", description: "Tap at a point (screen points, origin top-left).", inputSchema: Schema.object(["x": Schema.number("X in points"), "y": Schema.number("Y in points")], required: ["x", "y"])) { args in
                 try await auto().tap(x: try args.requireDouble("x"), y: try args.requireDouble("y"))
                 return .text("Tapped.")

@@ -17,6 +17,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
     private(set) lazy var simulatorAutomation = SimulatorAutomation(pane: workspace.simulatorPane)
     private(set) lazy var browserAutomation = BrowserAutomation(pane: workspace.browserPane)
     private(set) lazy var runner = Runner(window: self)
+    private(set) lazy var deviceMatrix = DeviceMatrixModel(session: session)
 
     var project: Project { session.project }
     var onClose: (MainWindowController) -> Void = { _ in }
@@ -97,6 +98,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
         sidebar.isVisible = !sidebarItem.isCollapsed
         sourceControl.start()
         agents.refresh()
+        workspace.simulatorPane.openDevices = { [weak self] in self?.showDevices(nil) }
     }
 
     private func installActivityBar(in container: NSView) {
@@ -180,6 +182,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
 
     @objc func toggleSourceControl(_ sender: Any?) { toggleSidebar(.sourceControl) }
     @objc func toggleAgents(_ sender: Any?) { toggleSidebar(.agents) }
+    @objc func showDevices(_ sender: Any?) { workspace.editor.openDevices(model: deviceMatrix, runner: runner) }
 
     /// File › New Agent: the Agents sidebar with its form open.
     @objc func newAgent(_ sender: Any?) {

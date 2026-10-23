@@ -14,6 +14,7 @@ final class EditorTabsModel {
         case agents
         case skills
         case compare
+        case devices
 
         var kind: String {
             switch self {
@@ -23,6 +24,7 @@ final class EditorTabsModel {
             case .agents: "agents"
             case .skills: "skills"
             case .compare: "compare"
+            case .devices: "devices"
             }
         }
     }
@@ -67,6 +69,7 @@ final class EditorAreaViewController: NSViewController {
     private var agentsHost: NSView?
     private var skillsHost: NSView?
     private var compareHost: NSView?
+    private var devicesController: DeviceMatrixViewController?
 
     private let container = NSView()
     private lazy var diffHost: NSHostingView<DiffView> = {
@@ -177,6 +180,7 @@ final class EditorAreaViewController: NSViewController {
         agentsHost?.isHidden = tab != .agents
         skillsHost?.isHidden = tab != .skills
         compareHost?.isHidden = tab != .compare
+        devicesController?.view.isHidden = tab != .devices
         session.update { $0.editorTab = tab.kind }
         reportPreferredWidth()
     }
@@ -192,7 +196,7 @@ final class EditorAreaViewController: NSViewController {
 
     private func showNothing() {
         tabs.selected = nil
-        for view in [browserPane.view, simulatorPane.view, diffHost, agentsHost, skillsHost, compareHost] { view?.isHidden = true }
+        for view in [browserPane.view, simulatorPane.view, diffHost, agentsHost, skillsHost, compareHost, devicesController?.view] { view?.isHidden = true }
         simulatorPane.setVisible(false)
         reportPreferredWidth()
     }
@@ -225,6 +229,18 @@ final class EditorAreaViewController: NSViewController {
             rebuildItems()
         }
         select(.agents)
+    }
+
+    /// Several simulators side by side.
+    func openDevices(model: DeviceMatrixModel, runner: Runner) {
+        if devicesController == nil {
+            let controller = DeviceMatrixViewController(model: model, runner: runner)
+            addChild(controller)
+            embed(controller.view)
+            devicesController = controller
+            rebuildItems()
+        }
+        select(.devices)
     }
 
     /// Before and after: the simulator's screenshot history.
@@ -272,6 +288,12 @@ final class EditorAreaViewController: NSViewController {
             compareHost?.removeFromSuperview()
             compareHost = nil
             rebuildItems()
+        case .devices:
+            devicesController?.prepareForTermination()
+            devicesController?.view.removeFromSuperview()
+            devicesController?.removeFromParent()
+            devicesController = nil
+            rebuildItems()
         }
     }
 
@@ -305,6 +327,9 @@ final class EditorAreaViewController: NSViewController {
         }
         if compareHost != nil {
             items.append(EditorTabsModel.Item(tab: .compare, title: "Compare", icon: .compare))
+        }
+        if devicesController != nil {
+            items.append(EditorTabsModel.Item(tab: .devices, title: "Devices", icon: .grid))
         }
         if let change = sourceControl.selection {
             items.append(EditorTabsModel.Item(tab: .diff, title: change.fileName, icon: .fileCode, tint: change.kind.color, isPreview: true))
@@ -355,6 +380,7 @@ final class EditorAreaViewController: NSViewController {
     }
 
     func prepareForTermination() {
+        devicesController?.prepareForTermination()
         browserPane.prepareForTermination()
         simulatorPane.prepareForTermination()
     }
