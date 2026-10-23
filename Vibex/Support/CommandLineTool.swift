@@ -21,6 +21,15 @@ nonisolated enum CommandLineTool {
     /// Homebrew's bin first (writable without a password), then /usr/local/bin, which is on the default PATH.
     static let directories = ["/opt/homebrew/bin", "/usr/local/bin"]
 
+    /// Where a working `vibex` link already is, if anywhere (the curl installer may also use ~/.local/bin or ~/bin).
+    static var installedPath: String? {
+        let home = FileManager.default.homeDirectoryForCurrentUser.path
+        return (directories + ["\(home)/.local/bin", "\(home)/bin"]).map { "\($0)/\(name)" }.first { path in
+            guard let destination = try? FileManager.default.destinationOfSymbolicLink(atPath: path) else { return false }
+            return destination.hasSuffix(".app/Contents/Resources/\(name)") && FileManager.default.isExecutableFile(atPath: path)
+        }
+    }
+
     /// Links the command and returns where it went. Asks for an administrator password only when no directory is writable.
     @concurrent static func install() async throws -> String {
         guard let source = bundled else { throw CommandLineToolError.missingFromBundle }

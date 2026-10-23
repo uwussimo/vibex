@@ -53,10 +53,25 @@ targets:
         # Registers the bundled Google Sans fonts (they are copied flat into Contents/Resources).
         ATSApplicationFontsPath: "."
         LSMinimumSystemVersion: "26.0"
+        # Commands run in Vibex's terminal are attributed to Vibex. Without these strings macOS
+        # silently denies them instead of asking (osascript, scripts in ~/Desktop, ffmpeg…).
+        NSDesktopFolderUsageDescription: "Commands you run in Vibex's terminal need to read and write projects on your Desktop."
+        NSDocumentsFolderUsageDescription: "Commands you run in Vibex's terminal need to read and write projects in Documents."
+        NSDownloadsFolderUsageDescription: "Commands you run in Vibex's terminal need to read files in Downloads."
+        NSRemovableVolumesUsageDescription: "Commands you run in Vibex's terminal need to read and write projects on external drives."
+        NSNetworkVolumesUsageDescription: "Commands you run in Vibex's terminal need to read and write projects on network drives."
+        NSAppleEventsUsageDescription: "Scripts you run in Vibex's terminal (osascript, build tools) want to control this app."
+        NSLocalNetworkUsageDescription: "Vibex's browser and terminal connect to development servers on your local network."
+        NSCameraUsageDescription: "Websites in Vibex's browser and commands in its terminal want to use the camera."
+        NSMicrophoneUsageDescription: "Websites in Vibex's browser and commands in its terminal want to use the microphone."
     entitlements:
       path: Vibex/Resources/Vibex.entitlements
       properties:
         com.apple.security.cs.allow-jit: true
+        # The hardened runtime blocks these unless declared, even with a usage string.
+        com.apple.security.automation.apple-events: true
+        com.apple.security.device.camera: true
+        com.apple.security.device.audio-input: true
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.yusuf.vibex

@@ -26,12 +26,30 @@
 	<string>public.app-category.developer-tools</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>26.0</string>
+	<key>NSAppleEventsUsageDescription</key>
+	<string>Scripts you run in Vibex's terminal (osascript, build tools) want to control this app.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Websites in Vibex's browser and commands in its terminal want to use the camera.</string>
+	<key>NSDesktopFolderUsageDescription</key>
+	<string>Commands you run in Vibex's terminal need to read and write projects on your Desktop.</string>
+	<key>NSDocumentsFolderUsageDescription</key>
+	<string>Commands you run in Vibex's terminal need to read and write projects in Documents.</string>
+	<key>NSDownloadsFolderUsageDescription</key>
+	<string>Commands you run in Vibex's terminal need to read files in Downloads.</string>
 	<key>NSHighResolutionCapable</key>
 	<true/>
 	<key>NSHumanReadableCopyright</key>
 	<string>© 2026 Yusuf Abdurakhimov</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Vibex's browser and terminal connect to development servers on your local network.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Websites in Vibex's browser and commands in its terminal want to use the microphone.</string>
+	<key>NSNetworkVolumesUsageDescription</key>
+	<string>Commands you run in Vibex's terminal need to read and write projects on network drives.</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>NSRemovableVolumesUsageDescription</key>
+	<string>Commands you run in Vibex's terminal need to read and write projects on external drives.</string>
 	<key>NSSupportsAutomaticTermination</key>
 	<false/>
 	<key>NSSupportsSuddenTermination</key>

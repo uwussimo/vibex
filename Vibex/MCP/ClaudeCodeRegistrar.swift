@@ -60,7 +60,7 @@ nonisolated struct ClaudeCodeRegistrar: Sendable {
             return path
         }
         let home = FileManager.default.homeDirectoryForCurrentUser.path
-        var candidates = ["\(home)/.claude/local/claude", "/opt/homebrew/bin/claude", "/usr/local/bin/claude"]
+        var candidates = ["\(home)/.local/bin/claude", "\(home)/.claude/local/claude", "/opt/homebrew/bin/claude", "/usr/local/bin/claude"]
         if let versions = try? FileManager.default.contentsOfDirectory(atPath: "\(home)/.nvm/versions/node") {
             for version in versions.sorted(by: { $0.compare($1, options: .numeric) == .orderedDescending }) {
                 candidates.append("\(home)/.nvm/versions/node/\(version)/bin/claude")

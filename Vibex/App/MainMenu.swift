@@ -19,6 +19,7 @@ enum MainMenu {
     private static func appMenu() -> NSMenuItem {
         let menu = NSMenu(title: "Vibex")
         menu.addItem(withTitle: "About Vibex", action: #selector(NSApplication.orderFrontStandardAboutPanel(_:)), keyEquivalent: "")
+        menu.addItem(withTitle: "Setup & Permissions…", action: #selector(AppDelegate.showSetup(_:)), keyEquivalent: "")
         menu.addItem(.separator())
         menu.addItem(withTitle: "Copy MCP Config", action: #selector(AppDelegate.copyMCPConfig(_:)), keyEquivalent: "")
         menu.addItem(withTitle: "Re-register MCP with Claude Code", action: #selector(AppDelegate.reregisterMCP(_:)), keyEquivalent: "")

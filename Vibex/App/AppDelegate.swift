@@ -7,6 +7,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var hasLaunched = false
     /// Folders macOS hands over before launch finishes (`vibex .` on a cold start); opened once MCP is up.
     private var pendingURLs: [URL] = []
+    private var setup: SetupWindowController?
 
     func applicationWillFinishLaunching(_ notification: Notification) {
         NSApp.mainMenu = MainMenu.build()
@@ -32,6 +33,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             openFolders(pendingURLs)
             pendingURLs = []
         }
+        if SetupModel.needsSetup { showSetup(nil) }
         NSApp.activate()
         Log.app.info("Vibex launched")
     }
@@ -66,6 +68,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc func clearRecents(_ sender: Any?) { ProjectStore.shared.clearRecents() }
 
     @objc func showWelcome(_ sender: Any?) { windows.showWelcome() }
+
+    @objc func showSetup(_ sender: Any?) {
+        let controller = setup ?? SetupWindowController()
+        setup = controller
+        controller.showWindow(sender)
+    }
 
     @objc func copyMCPConfig(_ sender: Any?) {
         let pasteboard = NSPasteboard.general

@@ -15,6 +15,9 @@ enum Defaults {
         static let mcpToken = "mcp.token"
         static let mcpPort = "mcp.port"
         static let browserSelectedTab = "browser.selectedTab"
+        static let setupVersion = "setup.version"
+        static let foldersRequested = "setup.foldersRequested"
+        static let notificationsRequested = "setup.notificationsRequested"
     }
 
     /// Boot simulators through simslim when it is installed. On by default.
@@ -36,6 +39,24 @@ enum Defaults {
     static var mcpPort: Int {
         get { store.integer(forKey: Key.mcpPort) }
         set { store.set(newValue, forKey: Key.mcpPort) }
+    }
+
+    /// The setup window version the user last finished; 0 before the first launch.
+    static var setupVersion: Int {
+        get { store.integer(forKey: Key.setupVersion) }
+        set { store.set(newValue, forKey: Key.setupVersion) }
+    }
+
+    /// Whether setup has listed Desktop, Documents and Downloads (which is what makes macOS ask).
+    static var foldersRequested: Bool {
+        get { store.bool(forKey: Key.foldersRequested) }
+        set { store.set(newValue, forKey: Key.foldersRequested) }
+    }
+
+    /// Whether the notification prompt has been shown; after that only System Settings can change it.
+    static var notificationsRequested: Bool {
+        get { store.bool(forKey: Key.notificationsRequested) }
+        set { store.set(newValue, forKey: Key.notificationsRequested) }
     }
 
 }
