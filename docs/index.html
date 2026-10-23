@@ -81,6 +81,7 @@
     transition: transform 140ms var(--ease-out), background-color 160ms ease, border-color 160ms ease;
   }
   .btn:active { transform: scale(0.97); }
+  .btn > svg, .btn > img { width: 17px; height: 17px; flex: none; margin-left: -2px; }
   .btn-dark { background: var(--btn); color: var(--btn-text); box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 1px 2px rgba(0,0,0,.2); }
   .btn-light { background: var(--card); border-color: var(--line-strong); box-shadow: var(--shadow); }
   .btn-sm { height: 32px; padding: 0 12px; font-size: 13.5px; border-radius: 8px; }
@@ -123,6 +124,10 @@
     border: 1px solid var(--line); border-radius: 8px; background: var(--card); font-size: 13px; font-weight: 500;
   }
   .mini-tag i { width: 16px; height: 16px; border-radius: 4px; display: grid; place-items: center; font-style: normal; font-size: 10px; }
+  svg.ui { width: 1em; height: 1em; flex: none; }
+  .mini-tag i svg.ui { width: 11px; height: 11px; }
+  .chips svg.ui { width: 15px; height: 15px; }
+  .stat .stat-ico svg.ui { width: 22px; height: 22px; color: var(--muted); }
 
   /* Hero */
   .hero { padding: 64px 0 0; }
@@ -130,7 +135,8 @@
   .hero-lede { font-size: 17px; color: var(--muted); max-width: 400px; padding-bottom: 8px; }
   .hero-cta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 30px; }
   .hero-meta { margin-top: 16px; font-size: 13.5px; color: var(--faint); display: flex; flex-wrap: wrap; gap: 6px 14px; }
-  .hero-meta span::before { content: ""; display: inline-block; width: 5px; height: 5px; border-radius: 50%; background: var(--green); margin-right: 7px; vertical-align: 2px; }
+  .hero-meta span { display: inline-flex; align-items: center; gap: 7px; }
+  .hero-meta svg.ui { width: 15px; height: 15px; color: var(--green); flex: none; }
   @media (max-width: 860px) { .hero-grid { grid-template-columns: 1fr; gap: 18px; } }
 
   /* App mockup */
@@ -359,7 +365,8 @@
   .old-list div { display: grid; grid-template-columns: 18px 1fr; gap: 8px; font-size: 15px; line-height: 1.3; }
   .old-list i { width: 16px; height: 16px; border-radius: 50%; background: var(--red-soft); color: var(--red); display: grid; place-items: center; font-style: normal; font-size: 10px; font-weight: 700; margin-top: 2px; }
   .old-list small { display: block; color: var(--faint); font-size: 12.5px; }
-  .vs-arrow { position: absolute; left: 50%; top: 50%; width: 38px; height: 38px; transform: translate(-50%, -50%); border-radius: 50%; border: 1px solid var(--line-strong); background: var(--card); display: grid; place-items: center; color: var(--muted); }
+  .vs-arrow svg.ui { width: 18px; height: 18px; }
+  .vs-arrow { position: absolute; left: 50%; top: 50%; width: 38px; height: 38px; aspect-ratio: 1; box-sizing: border-box; transform: translate(-50%, -50%); border-radius: 50%; border: 1px solid var(--line-strong); background: var(--card); display: grid; place-items: center; color: var(--muted); }
   .greet { display: inline-flex; align-items: center; gap: 10px; margin-top: 26px; }
   .greet img { width: 34px; height: 34px; border-radius: 9px; }
   .greet span { background: var(--surface); padding: 8px 12px; border-radius: 12px; font-weight: 500; }
@@ -396,6 +403,8 @@
   .li .r { margin-left: auto; color: var(--muted); font-size: 13px; }
   .li .r.ok { color: var(--green); font-weight: 500; }
   .ico { width: 26px; height: 26px; border-radius: 7px; display: grid; place-items: center; flex: none; }
+  .ico.logo { background: var(--surface-2); border: 1px solid var(--line); }
+  .ico.logo img { width: 17px; height: 17px; }
   .ico svg { width: 15px; height: 15px; }
   .btn-xs { height: 26px; padding: 0 10px; border-radius: 7px; font-size: 12.5px; font-weight: 500; display: inline-flex; align-items: center; border: 1px solid var(--line-strong); background: var(--card); }
   .btn-xs.dark { background: var(--btn); color: var(--btn-text); border-color: transparent; }
@@ -479,6 +488,9 @@
 </style>
 </head>
 <body>
+<!-- Icons: Untitled UI free icons -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="i-arrow-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16m0 0-6-6m6 6-6 6"/></symbol><symbol id="i-arrow-down-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18m0 0h8m-8 0v-8"/></symbol><symbol id="i-play" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4.99c0-.972 0-1.457.202-1.725a1 1 0 0 1 .738-.395c.335-.02.74.25 1.548.788l10.515 7.01c.668.446 1.002.668 1.118.949a1 1 0 0 1 0 .766c-.116.28-.45.503-1.118.948l-10.515 7.01c-.809.54-1.213.809-1.548.789a1 1 0 0 1-.738-.395C5 20.467 5 19.98 5 19.01V4.99Z"/></symbol><symbol id="i-tap" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3.5V2M5.06 5.06 4 4m1.06 9L4 14.06m9-9L14.06 4M3.5 9H2m13.864 7.19-2.491 4.627c-.285.529-.427.793-.598.86a.5.5 0 0 1-.451-.044c-.155-.099-.243-.386-.42-.96L8.445 9.445c-.144-.468-.216-.703-.158-.861a.5.5 0 0 1 .297-.297c.158-.058.393.014.861.158l11.228 3.459c.574.177.86.265.96.42a.5.5 0 0 1 .044.45c-.067.172-.331.314-.86.599l-4.627 2.492a1.08 1.08 0 0 0-.153.09.493.493 0 0 0-.082.082 1.08 1.08 0 0 0-.09.153Z"/></symbol><symbol id="i-compare" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 17H4m0 0 4-4m-4 4 4 4M4 7h16m0 0-4-4m4 4-4 4"/></symbol><symbol id="i-gauge" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12a7 7 0 0 1 7-7m4.5 2.5L12 12m10 0c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2s10 4.477 10 10Zm-9 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"/></symbol><symbol id="i-stars" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 22v-5m0-10V2M2 4.5h5m-5 15h5M13 3l-1.734 4.509c-.282.733-.423 1.1-.643 1.408a3 3 0 0 1-.706.707c-.308.219-.675.36-1.408.642L4 12l4.509 1.734c.733.282 1.1.423 1.408.643.273.194.512.433.707.706.219.308.36.675.642 1.408L13 21l1.734-4.509c.282-.733.423-1.1.643-1.408.194-.273.433-.512.706-.707.308-.219.675-.36 1.408-.642L22 12l-4.509-1.734c-.733-.282-1.1-.423-1.408-.642a3 3 0 0 1-.706-.707c-.22-.308-.36-.675-.643-1.408L13 3Z"/></symbol><symbol id="i-console" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m4 17 6-6-6-6m8 14h8"/></symbol><symbol id="i-zap" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4.093 12.688c-.348.418-.523.628-.525.804a.5.5 0 0 0 .185.397c.138.111.41.111.955.111H12l-1 8 8.907-10.688c.348-.418.523-.628.525-.804a.5.5 0 0 0-.185-.397c-.138-.111-.41-.111-.955-.111H12l1-8Z"/></symbol><symbol id="i-undo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h10a6 6 0 0 1 0 12H4M4 7l4-4M4 7l4 4"/></symbol><symbol id="i-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 7H4.6c-.56 0-.84 0-1.054.109a1 1 0 0 0-.437.437C3 7.76 3 8.04 3 8.6v10.8c0 .56 0 .84.109 1.054a1 1 0 0 0 .437.437C3.76 21 4.04 21 4.6 21H9m0 0h6m-6 0V4.6c0-.56 0-.84.109-1.054a1 1 0 0 1 .437-.437C9.76 3 10.04 3 10.6 3h2.8c.56 0 .84 0 1.054.109a1 1 0 0 1 .437.437C15 3.76 15 4.04 15 4.6V21m0-10h4.4c.56 0 .84 0 1.054.109a1 1 0 0 1 .437.437C21 11.76 21 12.04 21 12.6v6.8c0 .56 0 .84-.109 1.054a1 1 0 0 1-.437.437C20.24 21 19.96 21 19.4 21H15"/></symbol><symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21 21-4.35-4.35M19 11a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z"/></symbol><symbol id="i-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21v-7.4c0-.56 0-.84.109-1.054a1 1 0 0 1 .437-.437C9.76 12 10.04 12 10.6 12h2.8c.56 0 .84 0 1.054.109a1 1 0 0 1 .437.437C15 12.76 15 13.04 15 13.6V21M11.018 2.764 4.235 8.039c-.453.353-.68.53-.843.75a2 2 0 0 0-.318.65C3 9.704 3 9.991 3 10.565V17.8c0 1.12 0 1.68.218 2.108a2 2 0 0 0 .874.874C4.52 21 5.08 21 6.2 21h11.6c1.12 0 1.68 0 2.108-.218a2 2 0 0 0 .874-.874C21 19.48 21 18.92 21 17.8v-7.235c0-.574 0-.861-.074-1.126a2.002 2.002 0 0 0-.318-.65c-.163-.22-.39-.397-.843-.75l-6.783-5.275c-.351-.273-.527-.41-.72-.462a1 1 0 0 0-.523 0c-.194.052-.37.189-.721.462Z"/></symbol><symbol id="i-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.354 21A3.99 3.99 0 0 0 12 22c1.015 0 1.94-.378 2.646-1M2.294 5.82A4.007 4.007 0 0 1 4.326 2.3m17.376 3.52A4.007 4.007 0 0 0 19.67 2.3M18 8A6 6 0 1 0 6 8c0 3.09-.78 5.206-1.65 6.605-.735 1.18-1.102 1.771-1.088 1.936.014.182.053.252.2.36.133.099.73.099 1.927.099h13.222c1.197 0 1.795 0 1.927-.098.147-.11.186-.179.2-.361.014-.165-.353-.755-1.087-1.936C18.78 13.206 18 11.09 18 8Z"/></symbol><symbol id="i-dollar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.667A2.333 2.333 0 0 0 10.833 17H13a2.5 2.5 0 0 0 0-5h-2a2.5 2.5 0 0 1 0-5h2.167A2.333 2.333 0 0 1 15.5 9.333M12 5.5V7m0 10v1.5M22 12c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2s10 4.477 10 10Z"/></symbol><symbol id="i-branch" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v10.2c0 1.68 0 2.52.327 3.162a3 3 0 0 0 1.311 1.311C5.28 18 6.12 18 7.8 18H15m0 0a3 3 0 1 0 6 0 3 3 0 0 0-6 0ZM3 8h12m0 0a3 3 0 1 0 6 0 3 3 0 0 0-6 0Z"/></symbol><symbol id="i-columns" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M7.8 3h8.4c1.68 0 2.52 0 3.162.327a3 3 0 0 1 1.311 1.311C21 5.28 21 6.12 21 7.8v8.4c0 1.68 0 2.52-.327 3.162a3 3 0 0 1-1.311 1.311C18.72 21 17.88 21 16.2 21H7.8c-1.68 0-2.52 0-3.162-.327a3 3 0 0 1-1.311-1.311C3 18.72 3 17.88 3 16.2V7.8c0-1.68 0-2.52.327-3.162a3 3 0 0 1 1.311-1.311C5.28 3 6.12 3 7.8 3Z"/></symbol><symbol id="i-grid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h18m-9-9v18M7.8 3h8.4c1.68 0 2.52 0 3.162.327a3 3 0 0 1 1.311 1.311C21 5.28 21 6.12 21 7.8v8.4c0 1.68 0 2.52-.327 3.162a3 3 0 0 1-1.311 1.311C18.72 21 17.88 21 16.2 21H7.8c-1.68 0-2.52 0-3.162-.327a3 3 0 0 1-1.311-1.311C3 18.72 3 17.88 3 16.2V7.8c0-1.68 0-2.52.327-3.162a3 3 0 0 1 1.311-1.311C5.28 3 6.12 3 7.8 3Z"/></symbol><symbol id="i-puzzle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 4.5a2.5 2.5 0 0 1 5 0V6h1c1.398 0 2.097 0 2.648.228a3 3 0 0 1 1.624 1.624C18 8.403 18 9.102 18 10.5h1.5a2.5 2.5 0 0 1 0 5H18v1.7c0 1.68 0 2.52-.327 3.162a3 3 0 0 1-1.311 1.311C15.72 22 14.88 22 13.2 22h-.7v-1.75a2.25 2.25 0 0 0-4.5 0V22H6.8c-1.68 0-2.52 0-3.162-.327a3 3 0 0 1-1.311-1.311C2 19.72 2 18.88 2 17.2v-1.7h1.5a2.5 2.5 0 0 0 0-5H2c0-1.398 0-2.097.228-2.648a3 3 0 0 1 1.624-1.624C4.403 6 5.102 6 6.5 6h1V4.5Z"/></symbol><symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10V8a5 5 0 0 1 9.584-2M12 14.5v2M8.8 21h6.4c1.68 0 2.52 0 3.162-.327a3 3 0 0 0 1.311-1.311C20 18.72 20 17.88 20 16.2v-1.4c0-1.68 0-2.52-.327-3.162a3 3 0 0 0-1.311-1.311C17.72 10 16.88 10 15.2 10H8.8c-1.68 0-2.52 0-3.162.327a3 3 0 0 0-1.311 1.311C4 12.28 4 13.12 4 14.8v1.4c0 1.68 0 2.52.327 3.162a3 3 0 0 0 1.311 1.311C6.28 21 7.12 21 8.8 21Z"/></symbol><symbol id="i-globe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10m0-20a15.3 15.3 0 0 0-4 10 15.3 15.3 0 0 0 4 10m0-20C6.477 2 2 6.477 2 12s4.477 10 10 10m0-20c5.523 0 10 4.477 10 10s-4.477 10-10 10M2.5 9h19m-19 6h19"/></symbol><symbol id="i-gift" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6v16m0-16H8.464c-.52 0-1.02-.21-1.389-.586A2.019 2.019 0 0 1 6.5 4c0-.53.207-1.04.575-1.414A1.947 1.947 0 0 1 8.465 2C11.214 2 12 6 12 6Zm0 0h3.536c.52 0 1.02-.21 1.389-.586A2.02 2.02 0 0 0 17.5 4c0-.53-.207-1.04-.575-1.414A1.947 1.947 0 0 0 15.535 2C12.786 2 12 6 12 6Zm8 5v7.8c0 1.12 0 1.68-.218 2.108a2 2 0 0 1-.874.874C18.48 22 17.92 22 16.8 22H7.2c-1.12 0-1.68 0-2.108-.218a2 2 0 0 1-.874-.874C4 20.48 4 19.92 4 18.8V11M2 7.6v1.8c0 .56 0 .84.109 1.054a1 1 0 0 0 .437.437C2.76 11 3.04 11 3.6 11h16.8c.56 0 .84 0 1.054-.109a1 1 0 0 0 .437-.437C22 10.24 22 9.96 22 9.4V7.6c0-.56 0-.84-.109-1.054a1 1 0 0 0-.437-.437C21.24 6 20.96 6 20.4 6H3.6c-.56 0-.84 0-1.054.109a1 1 0 0 0-.437.437C2 6.76 2 7.04 2 7.6Z"/></symbol><symbol id="i-code" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m17 17 5-5-5-5M7 7l-5 5 5 5m7-14-4 18"/></symbol><symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 11.5 2 2L15.5 9m4.5 3c0 4.908-5.354 8.478-7.302 9.615-.221.129-.332.194-.488.227a1.137 1.137 0 0 1-.42 0c-.156-.034-.267-.098-.488-.227C9.354 20.478 4 16.908 4 12V7.217c0-.799 0-1.199.13-1.542a2 2 0 0 1 .548-.79c.276-.243.65-.383 1.398-.664l5.362-2.01c.208-.078.312-.117.419-.133a1 1 0 0 1 .286 0c.107.016.21.055.419.133l5.362 2.01c.748.28 1.123.421 1.398.664a2 2 0 0 1 .547.79c.131.343.131.743.131 1.542V12Z"/></symbol><symbol id="i-chip" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2v2m6-2v2M9 20v2m6-2v2m5-13h2m-2 5h2M2 9h2m-2 5h2m4.8 6h6.4c1.68 0 2.52 0 3.162-.327a3 3 0 0 0 1.311-1.311C20 17.72 20 16.88 20 15.2V8.8c0-1.68 0-2.52-.327-3.162a3 3 0 0 0-1.311-1.311C17.72 4 16.88 4 15.2 4H8.8c-1.68 0-2.52 0-3.162.327a3 3 0 0 0-1.311 1.311C4 6.28 4 7.12 4 8.8v6.4c0 1.68 0 2.52.327 3.162a3 3 0 0 0 1.311 1.311C6.28 20 7.12 20 8.8 20Zm1.8-5h2.8c.56 0 .84 0 1.054-.109a1 1 0 0 0 .437-.437C15 14.24 15 13.96 15 13.4v-2.8c0-.56 0-.84-.109-1.054a1 1 0 0 0-.437-.437C14.24 9 13.96 9 13.4 9h-2.8c-.56 0-.84 0-1.054.109a1 1 0 0 0-.437.437C9 9.76 9 10.04 9 10.6v2.8c0 .56 0 .84.109 1.054a1 1 0 0 0 .437.437C9.76 15 10.04 15 10.6 15Z"/></symbol></svg>
+<!-- Icons: Untitled UI free icons -->
 <script>document.documentElement.classList.add('js')</script>
 
 <header class="nav">
@@ -509,10 +521,15 @@
       <p class="hero-lede">Claude Code's terminal, the iOS Simulator, a browser, every Git diff and your AI usage, side by side in a native Mac app. Free and open source, for good.</p>
     </div>
     <div class="hero-cta">
-      <a class="btn btn-dark" href="#install">Download for Mac</a>
-      <a class="btn btn-light" href="https://github.com/uwussimo/vibex">View the source</a>
+      <a class="btn btn-dark" href="#install"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.4 12.6c0-2.6 2.1-3.8 2.2-3.9-1.2-1.8-3.1-2-3.7-2-1.6-.2-3.1.9-3.9.9-.8 0-2-.9-3.4-.9-1.7 0-3.3 1-4.2 2.6-1.8 3.1-.5 7.7 1.3 10.2.8 1.2 1.8 2.6 3.1 2.6 1.3-.1 1.7-.8 3.3-.8 1.5 0 1.9.8 3.3.8 1.4 0 2.2-1.3 3-2.5 1-1.4 1.3-2.7 1.4-2.8-.1 0-2.4-.9-2.4-4.2zM13.9 5c.7-.9 1.2-2 1-3.2-1 0-2.3.7-3 1.6-.7.8-1.2 2-1.1 3.1 1.2.1 2.3-.6 3.1-1.5z"/></svg>Download for Mac</a>
+      <a class="btn btn-light" href="https://github.com/uwussimo/vibex"><img class="mono" src="logos/github.svg" alt="">View the source</a>
     </div>
-    <div class="hero-meta"><span>Free forever</span><span>MIT licensed</span><span>No account</span><span>Apple silicon &amp; Intel</span></div>
+    <div class="hero-meta">
+      <span><svg class="ui"><use href="#i-gift"/></svg>Free forever</span>
+      <span><svg class="ui"><use href="#i-code"/></svg>MIT licensed</span>
+      <span><svg class="ui"><use href="#i-shield"/></svg>No account</span>
+      <span><svg class="ui"><use href="#i-chip"/></svg>Apple silicon &amp; Intel</span>
+    </div>
 
     <div class="stage" aria-label="Animated preview of the Vibex window">
       <div class="stage-frame">
@@ -717,9 +734,9 @@
         <div class="step reveal" style="--d:80ms">
           <div class="step-vis">
             <div class="list-card">
-              <div class="li"><span class="ico c-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="3"/></svg></span>Full Disk Access<span class="r ok">Ready</span></div>
-              <div class="li"><span class="ico c-violet"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 4l-4 16"/></svg></span>Xcode &amp; iOS runtime<span class="r ok">Ready</span></div>
-              <div class="li"><span class="ico c-orange"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l1.8 5.6L19.5 10l-5.7 1.6L12 17l-1.8-5.4L4.5 10l5.7-1.4z"/></svg></span>Claude Code<span class="r"><span class="btn-xs">Install</span></span></div>
+              <div class="li"><span class="ico c-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2.5"/><path d="M8 11V7a4 4 0 0 1 7.5-2"/><circle cx="12" cy="16" r="1.2" fill="currentColor"/></svg></span>Full Disk Access<span class="r ok">Ready</span></div>
+              <div class="li"><span class="ico logo"><img src="logos/xcode.svg" alt=""></span>Xcode &amp; iOS runtime<span class="r ok">Ready</span></div>
+              <div class="li"><span class="ico logo"><img src="logos/claude.svg" alt=""></span>Claude Code<span class="r"><span class="btn-xs">Install</span></span></div>
             </div>
           </div>
           <small>02</small>
@@ -758,17 +775,17 @@
         <p class="sub">One window that Claude can see and drive.</p>
         <div class="greet"><img src="icon.png" alt=""><span>What should we build today?</span></div>
         <div class="chips">
-          <span class="c-green">▶ Runs your app</span><span class="c-blue">◎ Taps the simulator</span>
-          <span class="c-violet">± Shows every diff</span><span class="c-orange">◔ Tracks usage</span>
-          <span class="c-pink">✦ Installs skills</span><span class="c-red">◉ Reads the console</span>
+          <span class="c-green"><svg class="ui"><use href="#i-play"/></svg>Runs your app</span><span class="c-blue"><svg class="ui"><use href="#i-tap"/></svg>Taps the simulator</span>
+          <span class="c-violet"><svg class="ui"><use href="#i-compare"/></svg>Shows every diff</span><span class="c-orange"><svg class="ui"><use href="#i-gauge"/></svg>Tracks usage</span>
+          <span class="c-pink"><svg class="ui"><use href="#i-stars"/></svg>Installs skills</span><span class="c-red"><svg class="ui"><use href="#i-console"/></svg>Reads the console</span>
         </div>
       </div>
-      <div class="vs-arrow" aria-hidden="true">→</div>
+      <div class="vs-arrow" aria-hidden="true"><svg class="ui"><use href="#i-arrow-right"/></svg></div>
     </div>
     <div class="stats-row">
-      <div class="stat reveal"><span>↙</span><b>$0</b><span>Forever. No plans, no trial.</span></div>
-      <div class="stat reveal" style="--d:80ms"><span>↙</span><b>50</b><span>MCP tools for Claude Code</span></div>
-      <div class="stat reveal" style="--d:160ms"><span>↙</span><b>MIT</b><span>Fork it, ship it, change it</span></div>
+      <div class="stat reveal"><span class="stat-ico"><svg class="ui"><use href="#i-arrow-down-left"/></svg></span><b>$0</b><span>Forever. No plans, no trial.</span></div>
+      <div class="stat reveal" style="--d:80ms"><span class="stat-ico"><svg class="ui"><use href="#i-arrow-down-left"/></svg></span><b>50</b><span>MCP tools for Claude Code</span></div>
+      <div class="stat reveal" style="--d:160ms"><span class="stat-ico"><svg class="ui"><use href="#i-arrow-down-left"/></svg></span><b>MIT</b><span>Fork it, ship it, change it</span></div>
     </div>
   </div>
 </section>
@@ -786,7 +803,7 @@
           <div class="steps-log" style="margin-left:32px"><div>simulator_boot<span>2.1s</span></div><div>simulator_install_app<span>0.8s</span></div><div>simulator_launch_app<span>0.4s</span></div><div>simulator_describe<span>0.2s</span></div></div>
           <div class="approve" style="margin-left:32px"><div class="row2"><b>button "Continue"</b><small>ref r3 · 180,503</small></div></div>
         </div>
-        <div class="lbl"><span class="mini-tag"><i class="c-green">◎</i>Accessibility tree</span><h3>Claude taps by label, not by guessing pixels</h3></div>
+        <div class="lbl"><span class="mini-tag"><i class="c-green"><svg class="ui"><use href="#i-tap"/></svg></i>Accessibility tree</span><h3>Claude taps by label, not by guessing pixels</h3></div>
       </div>
       <div class="cell c5 grey reveal" style="--d:80ms">
         <div class="vis"><div class="list-card">
@@ -794,7 +811,7 @@
           <div class="li"><span class="ico c-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="3" width="14" height="18" rx="2.5"/></svg></span>iPad Air<span class="r">Shut down</span></div>
           <div class="li"><span class="ico c-violet"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 7c-6 0-10 4-10 10 4 0 9-2 10-10Z"/></svg></span>Slim boots<span class="r">simslim</span></div>
         </div></div>
-        <div class="lbl"><span class="mini-tag"><i class="c-violet">⚡</i>Embedded</span><h3>No Simulator.app window to lose</h3></div>
+        <div class="lbl"><span class="mini-tag"><i class="c-violet"><svg class="ui"><use href="#i-zap"/></svg></i>Embedded</span><h3>No Simulator.app window to lose</h3></div>
       </div>
     </div>
   </div>
@@ -815,14 +832,14 @@
           <div class="row add"><span class="n">17</span><span class="t">        .transition(.scale(scale: <span class="nu">0.9</span>))</span></div>
           <div class="row"><span class="n">18</span><span class="t">}</span></div>
         </div></div>
-        <div class="lbl"><span class="mini-tag"><i class="c-orange">±</i>Diffs</span><h3>Syntax-highlighted diffs, side by side</h3></div>
+        <div class="lbl"><span class="mini-tag"><i class="c-orange"><svg class="ui"><use href="#i-compare"/></svg></i>Diffs</span><h3>Syntax-highlighted diffs, side by side</h3></div>
       </div>
       <div class="cell c4 grey reveal" style="--d:80ms">
         <div class="vis" style="gap:8px">
           <div class="approve" style="background:var(--green-soft);border-color:transparent"><div class="row2"><span>✓ Committed <b class="code">a1b2c3d</b></span><span class="btn-xs dark">Push</span></div></div>
           <div class="approve"><div class="row2"><span>Discarded “Notes.md”</span><span class="btn-xs">Undo</span></div></div>
         </div>
-        <div class="lbl"><span class="mini-tag"><i class="c-green">↺</i>Forgiving</span><h3>Commit, push, and undo a discard</h3></div>
+        <div class="lbl"><span class="mini-tag"><i class="c-green"><svg class="ui"><use href="#i-undo"/></svg></i>Forgiving</span><h3>Commit, push, and undo a discard</h3></div>
       </div>
     </div>
   </div>
@@ -840,11 +857,11 @@
           <div class="acard" style="padding:14px 16px"><h6>✳︎ Claude <span class="plan">Max 20×</span></h6><div class="row2"><small class="muted">Session · resets in 1h 3m</small><span class="big">$36.43</span></div><div class="meter"><b style="--v:61%"></b></div></div>
           <div class="acard" style="padding:14px 16px"><h6>Spending <span style="margin-left:auto;color:var(--muted);font-weight:400">30 days</span></h6><div class="row2"><span class="big">$2,017 <small class="muted" style="font-size:13px;font-weight:400">API value</small></span><span class="chip m">10×</span></div></div>
         </div>
-        <div class="lbl"><span class="mini-tag"><i class="c-orange">◔</i>Limits</span><h3>Session and plan limits at a glance</h3></div>
+        <div class="lbl"><span class="mini-tag"><i class="c-orange"><svg class="ui"><use href="#i-gauge"/></svg></i>Limits</span><h3>Session and plan limits at a glance</h3></div>
       </div>
       <div class="cell c6 grey reveal" style="--d:80ms">
         <div class="vis"><div class="acard" style="padding:14px 16px"><h6>Trend <span style="margin-left:auto;color:var(--muted);font-weight:400">Oct 8 · $25.97</span></h6><div class="bars" data-bars="30" style="height:110px"></div></div></div>
-        <div class="lbl"><span class="mini-tag"><i class="c-blue">▮</i>Trend</span><h3>Every day, model and project</h3></div>
+        <div class="lbl"><span class="mini-tag"><i class="c-blue"><svg class="ui"><use href="#i-chart"/></svg></i>Trend</span><h3>Every day, model and project</h3></div>
       </div>
       <div class="cell c12 reveal" style="min-height:0;flex-direction:row;align-items:center;flex-wrap:wrap;gap:28px">
         <div class="heat" data-heat></div>
@@ -864,11 +881,11 @@
     <div class="bento">
       <div class="cell c7 reveal">
         <div class="vis"><div class="list-card">
-          <div class="li"><span class="ico c-violet">✦</span><span><b style="font-weight:500">write-swift</b><br><small class="muted">emilkowalski/skills · 112K installs</small></span><span class="r"><span class="btn-xs dark">Install</span></span></div>
-          <div class="li"><span class="ico c-blue">✦</span><span><b style="font-weight:500">swiftui-pro</b><br><small class="muted">twostraws/swiftui-agent-skill · 34K</small></span><span class="r"><span class="btn-xs">Global ⌄</span></span></div>
-          <div class="li"><span class="ico c-green">✦</span><span><b style="font-weight:500">find-skills</b><br><small class="muted">vercel-labs/skills · 4M installs</small></span><span class="r ok">Installed</span></div>
+          <div class="li"><span class="ico c-violet"><svg class="ui"><use href="#i-stars"/></svg></span><span><b style="font-weight:500">write-swift</b><br><small class="muted">emilkowalski/skills · 112K installs</small></span><span class="r"><span class="btn-xs dark">Install</span></span></div>
+          <div class="li"><span class="ico c-blue"><svg class="ui"><use href="#i-stars"/></svg></span><span><b style="font-weight:500">swiftui-pro</b><br><small class="muted">twostraws/swiftui-agent-skill · 34K</small></span><span class="r"><span class="btn-xs">Global ⌄</span></span></div>
+          <div class="li"><span class="ico c-green"><svg class="ui"><use href="#i-stars"/></svg></span><span><b style="font-weight:500">find-skills</b><br><small class="muted">vercel-labs/skills · 4M installs</small></span><span class="r ok">Installed</span></div>
         </div></div>
-        <div class="lbl"><span class="mini-tag"><i class="c-violet">⌕</i>Browse</span><h3>Search thousands of skills and install in one click</h3></div>
+        <div class="lbl"><span class="mini-tag"><i class="c-violet"><svg class="ui"><use href="#i-search"/></svg></i>Browse</span><h3>Search thousands of skills and install in one click</h3></div>
       </div>
       <div class="cell c5 grey reveal" style="--d:80ms">
         <div class="vis"><div class="list-card">
@@ -877,7 +894,7 @@
           <div class="li" style="color:var(--muted);font-size:12px;font-weight:600">THIS PROJECT</div>
           <div class="li">apple-design<span class="r">.claude/skills</span></div>
         </div></div>
-        <div class="lbl"><span class="mini-tag"><i class="c-blue">⌂</i>Scopes</span><h3>Global and per-project, side by side</h3></div>
+        <div class="lbl"><span class="mini-tag"><i class="c-blue"><svg class="ui"><use href="#i-home"/></svg></i>Scopes</span><h3>Global and per-project, side by side</h3></div>
       </div>
     </div>
   </div>
@@ -892,15 +909,15 @@
     <div class="bento">
       <div class="cell c6 grey reveal">
         <div class="vis"><div class="cmd">[vite] ready on <span class="p">localhost:5173</span><br><span class="ok">✓</span> GET /api/habits 200 · 18 ms<br><span class="dim">browser_console → 0 errors</span></div></div>
-        <div class="lbl"><span class="mini-tag"><i class="c-pink">◉</i>Console &amp; network</span><h3>Claude reads the console so you don't paste it</h3></div>
+        <div class="lbl"><span class="mini-tag"><i class="c-pink"><svg class="ui"><use href="#i-console"/></svg></i>Console &amp; network</span><h3>Claude reads the console so you don't paste it</h3></div>
       </div>
       <div class="cell c6 reveal" style="--d:80ms">
         <div class="vis"><div class="list-card">
-          <div class="li"><span class="ico c-green">▶</span>iOS<span class="r">build, install, launch</span></div>
-          <div class="li"><span class="ico c-blue">▶</span>Web<span class="r">dev server + preview tab</span></div>
-          <div class="li"><span class="ico c-orange">▶</span>Swift, Cargo, Go<span class="r">just run</span></div>
+          <div class="li"><span class="ico logo"><img class="mono" src="logos/apple.svg" alt=""></span>iOS<span class="r">build, install, launch</span></div>
+          <div class="li"><span class="ico logo"><img src="logos/vitejs.svg" alt=""></span>Web<span class="r">dev server + preview tab</span></div>
+          <div class="li"><span class="ico logo"><img src="logos/swift.svg" alt=""></span>Swift, Cargo, Go<span class="r">just run</span></div>
         </div></div>
-        <div class="lbl"><span class="mini-tag"><i class="c-green">▶</i>vibex_run</span><h3>Claude runs any project for you</h3></div>
+        <div class="lbl"><span class="mini-tag"><i class="c-green"><svg class="ui"><use href="#i-play"/></svg></i>vibex_run</span><h3>Claude runs any project for you</h3></div>
       </div>
     </div>
   </div>
@@ -919,32 +936,32 @@
           <div class="row"><span class="dot" style="background:var(--orange)"></span>api · terminal 1<span class="r">Claude has a question</span></div>
           <div class="row"><span class="dot" style="background:var(--green)"></span>site · terminal 1<span class="r">working</span></div>
         </div>
-        <div class="lbl"><span class="mini-tag"><i class="c-orange">●</i>Approval inbox</span><h3>See which Claude is waiting for you</h3><p class="muted">Every session that needs a yes shows on its tab, in the menu bar and as a notification. One click jumps to it.</p></div>
+        <div class="lbl"><span class="mini-tag"><i class="c-orange"><svg class="ui"><use href="#i-bell"/></svg></i>Approval inbox</span><h3>See which Claude is waiting for you</h3><p class="muted">Every session that needs a yes shows on its tab, in the menu bar and as a notification. One click jumps to it.</p></div>
       </div>
       <div class="cell c6 reveal" style="--d:80ms">
         <div class="vis">
           <div class="row" style="display:block"><div style="display:flex;align-items:baseline;gap:8px"><span class="big">$42</span><span class="muted">of $50 this session</span><span class="chip" style="margin-left:auto;background:var(--orange-soft);color:var(--orange)">84%</span></div><div class="meter"><i></i></div></div>
         </div>
-        <div class="lbl"><span class="mini-tag"><i class="c-green">$</i>Budget alerts</span><h3>A limit per session, a nudge at 80%</h3><p class="muted">Pick a limit or let Vibex learn it from your past sessions. You get a notification before you blow through it.</p></div>
+        <div class="lbl"><span class="mini-tag"><i class="c-green"><svg class="ui"><use href="#i-dollar"/></svg></i>Budget alerts</span><h3>A limit per session, a nudge at 80%</h3><p class="muted">Pick a limit or let Vibex learn it from your past sessions. You get a notification before you blow through it.</p></div>
       </div>
       <div class="cell c4 reveal">
         <div class="vis">
           <div class="row"><span class="code">vibex/onboarding</span><span class="r" style="color:var(--green)">+182 −20</span></div>
           <div class="row"><span class="code">vibex/onboarding-2</span><span class="r" style="color:var(--green)">+96 −4</span></div>
         </div>
-        <div class="lbl"><span class="mini-tag"><i class="c-violet">⇄</i>Parallel agents</span><h3>Two attempts, two branches</h3><p class="muted">Each agent gets its own git worktree. Review the diff, merge the winner, throw the rest away.</p></div>
+        <div class="lbl"><span class="mini-tag"><i class="c-violet"><svg class="ui"><use href="#i-branch"/></svg></i>Parallel agents</span><h3>Two attempts, two branches</h3><p class="muted">Each agent gets its own git worktree. Review the diff, merge the winner, throw the rest away.</p></div>
       </div>
       <div class="cell c4 reveal" style="--d:80ms">
         <div class="vis"><div class="split"><span style="left:10px">Before</span><span style="right:10px">After</span></div></div>
-        <div class="lbl"><span class="mini-tag"><i class="c-pink">◐</i>Before &amp; after</span><h3>Drag to see what changed</h3><p class="muted">Every run saves a screenshot. Compare any two, then copy them side by side into your PR.</p></div>
+        <div class="lbl"><span class="mini-tag"><i class="c-pink"><svg class="ui"><use href="#i-columns"/></svg></i>Before &amp; after</span><h3>Drag to see what changed</h3><p class="muted">Every run saves a screenshot. Compare any two, then copy them side by side into your PR.</p></div>
       </div>
       <div class="cell c4 reveal" style="--d:160ms">
         <div class="vis"><div class="phones"><i style="width:44px;height:90px"></i><i style="width:52px;height:110px"></i><i style="width:96px;height:128px"></i></div></div>
-        <div class="lbl"><span class="mini-tag"><i class="c-blue">▦</i>Devices</span><h3>Every screen size at once</h3><p class="muted">A small phone, a big phone and an iPad, live and touchable. Run on All installs the app everywhere.</p></div>
+        <div class="lbl"><span class="mini-tag"><i class="c-blue"><svg class="ui"><use href="#i-grid"/></svg></i>Devices</span><h3>Every screen size at once</h3><p class="muted">A small phone, a big phone and an iPad, live and touchable. Run on All installs the app everywhere.</p></div>
       </div>
       <div class="cell c12 reveal">
         <div class="vis mcp-vis">
-          <div class="lbl"><span class="mini-tag"><i class="c-green">⧉</i>MCP servers</span><h3>Give Claude new tools in one click</h3><p class="muted">See the MCP servers Claude Code uses, then browse featured ones or search the official MCP registry. Vibex asks for any API key and installs it for every project or just this one.</p></div>
+          <div class="lbl"><span class="mini-tag"><i class="c-green"><svg class="ui"><use href="#i-puzzle"/></svg></i>MCP servers</span><h3>Give Claude new tools in one click</h3><p class="muted">See the MCP servers Claude Code uses, then browse featured ones or search the official MCP registry. Vibex asks for any API key and installs it for every project or just this one.</p></div>
           <div class="logo-grid">
             <span><img src="logos/playwright.svg" alt="Playwright"></span><span><img class="mono" src="logos/github.svg" alt="GitHub"></span><span><img src="logos/figma.svg" alt="Figma"></span><span><img src="logos/supabase.svg" alt="Supabase"></span>
             <span><img class="mono" src="logos/linear.svg" alt="Linear"></span><span><img class="mono" src="logos/sentry.svg" alt="Sentry"></span><span><img src="logos/notion.svg" alt="Notion"></span><span><img src="logos/chrome.svg" alt="Chrome DevTools"></span>
