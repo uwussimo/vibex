@@ -46,7 +46,7 @@ You also need, and Vibex cannot bundle:
 - **Claude Code** (`npm install -g @anthropic-ai/claude-code`) to drive Vibex over MCP.
 - **fish** is optional (`brew install fish`); without it terminals use your login shell.
 
-Apple Silicon and macOS 26 only.
+macOS 26 on Apple silicon or Intel (the app and its bundled tools are universal).
 
 ## Requirements
 

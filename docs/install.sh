@@ -19,7 +19,6 @@ die() { printf '\033[1;31merror:\033[0m %s\n' "$1" >&2; exit 1; }
 
 # --- Checks ---------------------------------------------------------------
 [ "$(uname -s)" = "Darwin" ] || die "Vibex is a macOS app."
-[ "$(uname -m)" = "arm64" ] || die "Vibex needs a Mac with Apple silicon."
 major=$(sw_vers -productVersion | cut -d. -f1)
 [ "$major" -ge 26 ] || die "Vibex needs macOS 26 or later (this Mac runs $(sw_vers -productVersion))."
 command -v curl >/dev/null || die "curl is required."

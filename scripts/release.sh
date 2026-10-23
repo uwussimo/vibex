@@ -1,5 +1,6 @@
 #!/bin/sh
-# Builds Vibex.app in Release, bundles simslim and XcodeGen, signs everything, and packs a DMG.
+# Builds a universal (arm64 + x86_64) Vibex.app in Release, bundles universal simslim and XcodeGen,
+# signs everything, and packs a DMG.
 # Usage: scripts/release.sh            (version comes from project.yml)
 #        SIGN_IDENTITY=<sha1|name> scripts/release.sh
 set -eu
@@ -12,9 +13,22 @@ DERIVED=$OUT/DerivedData
 APP=$OUT/Vibex.app
 DMG=$OUT/Vibex-$VERSION.dmg
 
+# Bundled tools, pinned. Built or downloaded fresh so both architectures are included
+# (Homebrew bottles are arm64-only).
+SIMSLIM_VERSION=0.12.2
+XCODEGEN_VERSION=2.46.0
+ARCHS="arm64 x86_64"
+
 need() { command -v "$1" >/dev/null 2>&1 || { echo "error: $1 is required ($2)" >&2; exit 1; }; }
 need xcodegen "brew install xcodegen"
-need simslim "brew install mobai-app/tap/simslim"
+need go "brew install go (builds simslim for both architectures)"
+
+# Fails unless the binary contains every architecture in $ARCHS.
+universal() {
+  for arch in $ARCHS; do
+    lipo "$1" -verify_arch "$arch" 2>/dev/null || { echo "error: $1 is missing $arch" >&2; exit 1; }
+  done
+}
 
 echo "==> Vibex $VERSION, signing with $IDENTITY"
 rm -rf "$OUT"
@@ -23,22 +37,36 @@ mkdir -p "$OUT"
 echo "==> Building Release"
 xcodegen generate >/dev/null
 xcodebuild -project Vibex.xcodeproj -scheme Vibex -configuration Release \
-  -derivedDataPath "$DERIVED" -skipPackagePluginValidation build 2>&1 \
+  -derivedDataPath "$DERIVED" -skipPackagePluginValidation ARCHS="$ARCHS" ONLY_ACTIVE_ARCH=NO build 2>&1 \
   | grep -E "^/.*(error|warning):|^\*\* BUILD" | grep -v SourcePackages || true
 cp -R "$DERIVED/Build/Products/Release/Vibex.app" "$APP"
+universal "$APP/Contents/MacOS/Vibex"
 
 echo "==> Bundling tools"
 TOOLS=$APP/Contents/Resources/tools
 mkdir -p "$TOOLS/bin" "$TOOLS/share" "$TOOLS/licenses"
-SIMSLIM=$(brew --prefix simslim 2>/dev/null || dirname "$(dirname "$(command -v simslim)")")
-XCODEGEN=$(brew --prefix xcodegen 2>/dev/null || dirname "$(dirname "$(command -v xcodegen)")")
-cp "$SIMSLIM/bin/simslim" "$TOOLS/bin/simslim"
-cp "$XCODEGEN/bin/xcodegen" "$TOOLS/bin/xcodegen"
-cp -R "$XCODEGEN/share/xcodegen" "$TOOLS/share/xcodegen"
-cp "$SIMSLIM/LICENSE" "$TOOLS/licenses/simslim-LICENSE.txt"
-cp "$XCODEGEN/LICENSE" "$TOOLS/licenses/xcodegen-LICENSE.txt"
-SIMSLIM_VERSION=$("$TOOLS/bin/simslim" --version 2>/dev/null | head -1 || echo unknown)
-XCODEGEN_VERSION=$("$TOOLS/bin/xcodegen" --version 2>/dev/null | head -1 || echo unknown)
+WORK=$OUT/tools-src
+mkdir -p "$WORK"
+
+echo "    simslim $SIMSLIM_VERSION (from source)"
+git clone -q --depth 1 --branch "v$SIMSLIM_VERSION" https://github.com/MobAI-App/simslim "$WORK/simslim" 2>/dev/null
+for arch in $ARCHS; do
+  goarch=$arch; [ "$arch" = x86_64 ] && goarch=amd64
+  (cd "$WORK/simslim" && CGO_ENABLED=0 GOOS=darwin GOARCH=$goarch go build -trimpath \
+    -ldflags "-s -w -X main.version=$SIMSLIM_VERSION" -o "../simslim-$arch" ./cmd/simslim)
+done
+lipo -create -output "$TOOLS/bin/simslim" $(for arch in $ARCHS; do echo "$WORK/simslim-$arch"; done)
+cp "$WORK/simslim/LICENSE" "$TOOLS/licenses/simslim-LICENSE.txt"
+
+echo "    XcodeGen $XCODEGEN_VERSION (release zip)"
+curl -fsSL "https://github.com/yonaskolb/XcodeGen/releases/download/$XCODEGEN_VERSION/xcodegen.zip" -o "$WORK/xcodegen.zip"
+unzip -q "$WORK/xcodegen.zip" -d "$WORK"
+cp "$WORK/xcodegen/bin/xcodegen" "$TOOLS/bin/xcodegen"
+cp -R "$WORK/xcodegen/share/xcodegen" "$TOOLS/share/xcodegen"
+cp "$WORK/xcodegen/LICENSE" "$TOOLS/licenses/xcodegen-LICENSE.txt"
+rm -rf "$WORK"
+universal "$TOOLS/bin/simslim"
+universal "$TOOLS/bin/xcodegen"
 cat > "$TOOLS/licenses/README.txt" <<NOTICE
 Vibex bundles these MIT-licensed tools. Copies you install yourself take precedence.
 
