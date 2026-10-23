@@ -14,7 +14,7 @@ struct MCPStatusView: View {
                 .fill(color)
                 .frame(width: 7, height: 7)
             Text(service.isRunning ? "mcp :" + String(service.port) : "mcp off")
-                .font(.system(size: 11, weight: .medium, design: .monospaced))
+                .font(.vibexCode(size: 11, weight: .medium))
                 .foregroundStyle(.secondary)
         }
         .fixedSize()

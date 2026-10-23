@@ -51,6 +51,8 @@ targets:
         NSSupportsAutomaticTermination: false
         NSSupportsSuddenTermination: false
         NSHighResolutionCapable: true
+        # Registers the bundled Google Sans fonts (they are copied flat into Contents/Resources).
+        ATSApplicationFontsPath: "."
         LSMinimumSystemVersion: "26.0"
     entitlements:
       path: Vibex/Resources/Vibex.entitlements

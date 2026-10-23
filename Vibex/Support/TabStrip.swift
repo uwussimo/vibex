@@ -84,7 +84,7 @@ private struct TabStripCell: View {
                 ProgressView().controlSize(.mini)
             }
             Text(item.title)
-                .font(.system(size: 12, weight: isSelected ? .medium : .regular))
+                .font(.vibex(size: 12, weight: isSelected ? .medium : .regular))
                 .foregroundStyle(textColor)
                 .lineLimit(1)
                 .truncationMode(.middle)

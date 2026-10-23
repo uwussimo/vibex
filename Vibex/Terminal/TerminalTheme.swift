@@ -8,7 +8,7 @@ enum TerminalTheme {
     static let caret = NSColor(srgbRed: 0.42, green: 0.66, blue: 1.0, alpha: 1)             // #6CA8FF
     static let selection = caret.withAlphaComponent(0.32)
     static let tabBar = NSColor(srgbRed: 0.086, green: 0.086, blue: 0.098, alpha: 1)       // #161619
-    static let font = NSFont.monospacedSystemFont(ofSize: 13, weight: .regular)
+    static let font = AppFont.code(size: 13)
 
     /// ANSI 0–15.
     static let ansi: [SwiftTerm.Color] = [

@@ -69,7 +69,7 @@ struct CommandPaletteView: View {
                     .foregroundStyle(.secondary)
                 TextField("Search commands, projects, tabs… ($ runs a command)", text: $model.query)
                     .textFieldStyle(.plain)
-                    .font(.system(size: 17))
+                    .font(.vibex(size: 17))
                     .focused($fieldFocused)
                     .onSubmit { runSelected(rows) }
                     .onExitCommand(perform: dismiss)
@@ -103,7 +103,7 @@ struct CommandPaletteView: View {
             } else if !model.query.isEmpty {
                 Divider()
                 Text("No matches")
-                    .font(.system(size: 13))
+                    .font(.vibex(size: 13))
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity)
                     .frame(height: 48)
@@ -134,12 +134,12 @@ private struct PaletteRow: View {
                 .frame(width: 20)
             VStack(alignment: .leading, spacing: 1) {
                 Text(highlighted)
-                    .font(.system(size: 13.5))
+                    .font(.vibex(size: 13.5))
                     .foregroundStyle(isSelected ? Color.white : Color.primary)
                     .lineLimit(1)
                 if let subtitle = row.item.subtitle, !subtitle.isEmpty {
                     Text(subtitle)
-                        .font(.system(size: 11))
+                        .font(.vibex(size: 11))
                         .foregroundStyle(isSelected ? Color.white.opacity(0.75) : Color.secondary)
                         .lineLimit(1)
                         .truncationMode(.middle)
@@ -148,7 +148,7 @@ private struct PaletteRow: View {
             Spacer(minLength: 8)
             if let shortcut = row.item.shortcut {
                 Text(shortcut)
-                    .font(.system(size: 12, weight: .medium, design: .rounded))
+                    .font(.vibex(size: 12, weight: .medium))
                     .foregroundStyle(isSelected ? Color.white.opacity(0.85) : Color.primary.opacity(0.5))
             }
         }
@@ -168,7 +168,7 @@ private struct PaletteRow: View {
         for position in row.positions where position < characters.count {
             let start = text.index(text.startIndex, offsetByCharacters: position)
             let end = text.index(start, offsetByCharacters: 1)
-            text[start..<end].font = .system(size: 13.5, weight: .bold)
+            text[start..<end].font = .vibex(size: 13.5, weight: .bold)
         }
         return text
     }

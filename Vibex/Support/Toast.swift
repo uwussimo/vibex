@@ -45,10 +45,10 @@ struct ToastView: View {
                         .padding(.top, 1)
                     VStack(alignment: .leading, spacing: 2) {
                         Text(toast.title)
-                            .font(.system(size: 13, weight: .semibold))
+                            .font(.vibex(size: 13, weight: .semibold))
                         if let message = toast.message, !message.isEmpty {
                             Text(message)
-                                .font(.system(size: 12))
+                                .font(.vibex(size: 12))
                                 .foregroundStyle(.secondary)
                                 .lineLimit(4)
                         }

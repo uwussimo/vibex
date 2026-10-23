@@ -102,10 +102,10 @@ struct SimulatorHeader: View {
                     .fill(statusColor)
                     .frame(width: 7, height: 7)
                 Text(selected?.name ?? "No simulators")
-                    .font(.system(size: 12.5, weight: .medium))
+                    .font(.vibex(size: 12.5, weight: .medium))
                     .lineLimit(1)
                 Text(secondaryLabel)
-                    .font(.system(size: 11))
+                    .font(.vibex(size: 11))
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
                     .contentTransition(.numericText())
@@ -163,9 +163,9 @@ struct SimulatorEmptyState: View {
                 .foregroundStyle(.secondary)
             VStack(spacing: 4) {
                 Text(title)
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(.vibex(size: 14, weight: .semibold))
                 Text(subtitle)
-                    .font(.system(size: 12))
+                    .font(.vibex(size: 12))
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
@@ -182,13 +182,14 @@ struct SimulatorEmptyState: View {
                         Text(buttonTitle).frame(minWidth: 100)
                     }
                 }
+                .font(.vibex(size: 13, weight: .medium))
                 .buttonStyle(.borderedProminent)
                 .controlSize(.regular)
                 .disabled(isBusy || state == .connecting)
             }
             if let errorMessage {
                 Text(errorMessage)
-                    .font(.system(size: 11))
+                    .font(.vibex(size: 11))
                     .foregroundStyle(.red)
                     .multilineTextAlignment(.center)
                     .lineLimit(3)

@@ -80,9 +80,9 @@ struct WelcomeView: View {
                 .resizable()
                 .frame(width: 88, height: 88)
             Text("Vibex")
-                .font(.system(size: 26, weight: .semibold))
+                .font(.vibex(size: 26, weight: .semibold))
             Text("Terminal, simulator and browser for one project per window")
-                .font(.system(size: 12.5))
+                .font(.vibex(size: 12.5))
                 .foregroundStyle(.secondary)
         }
     }
@@ -102,9 +102,9 @@ struct WelcomeView: View {
             VStack(spacing: 6) {
                 Spacer()
                 Text("No recent projects")
-                    .font(.system(size: 13, weight: .medium))
+                    .font(.vibex(size: 13, weight: .medium))
                 Text("Open a folder, or drop one here.")
-                    .font(.system(size: 12))
+                    .font(.vibex(size: 12))
                     .foregroundStyle(.secondary)
                 Spacer()
             }
@@ -162,10 +162,10 @@ private struct WelcomeAction: View {
                     .font(.system(size: 14, weight: .medium))
                     .frame(width: 20)
                 Text(title)
-                    .font(.system(size: 13, weight: .medium))
+                    .font(.vibex(size: 13, weight: .medium))
                 Spacer()
                 Text(shortcut)
-                    .font(.system(size: 12))
+                    .font(.vibex(size: 12))
                     .foregroundStyle(.tertiary)
             }
             .padding(.horizontal, 14)
@@ -191,10 +191,10 @@ private struct RecentRow: View {
                 .frame(width: 18)
             VStack(alignment: .leading, spacing: 1) {
                 Text(project.name)
-                    .font(.system(size: 13, weight: .medium))
+                    .font(.vibex(size: 13, weight: .medium))
                     .lineLimit(1)
                 Text(project.displayPath)
-                    .font(.system(size: 11))
+                    .font(.vibex(size: 11))
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
                     .truncationMode(.middle)

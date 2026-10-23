@@ -57,7 +57,7 @@ struct BrowserToolbar: View {
                 .foregroundStyle(.secondary)
             TextField("Search or enter website", text: $draft)
                 .textFieldStyle(.plain)
-                .font(.system(size: 12.5))
+                .font(.vibex(size: 12.5))
                 .focused($isEditing)
                 .onSubmit {
                     actions.navigate(draft)

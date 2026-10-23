@@ -31,7 +31,7 @@ struct RunButton: View {
                     if case .launching = runner.phase { ProgressView().controlSize(.mini) }
                     if case .preparing = runner.phase { ProgressView().controlSize(.mini) }
                     Text(runner.phase.label)
-                        .font(.system(size: 11, weight: .medium))
+                        .font(.vibex(size: 11, weight: .medium))
                         .foregroundStyle(statusColor)
                         .lineLimit(1)
                 }
