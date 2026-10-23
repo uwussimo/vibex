@@ -134,6 +134,16 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
         if !isSourceControlVisible { sourceControl.select(nil) }
     }
 
+    /// Steps through the changed files' diffs, opening the sidebar so the list shows where you are.
+    @objc func nextChange(_ sender: Any?) { stepChange(1) }
+    @objc func previousChange(_ sender: Any?) { stepChange(-1) }
+
+    private func stepChange(_ offset: Int) {
+        guard !sourceControl.orderedChanges.isEmpty else { NSSound.beep(); return }
+        if !isSourceControlVisible { isSourceControlVisible = true }
+        sourceControl.selectAdjacent(offset)
+    }
+
     // MARK: - Command palette
 
     private var paletteHost: NSView?

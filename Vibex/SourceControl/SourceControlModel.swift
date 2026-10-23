@@ -15,6 +15,13 @@ final class SourceControlModel {
 
     enum DiffStyle: String { case split, unified }
 
+    /// What just happened, shown under the commit box with the natural next step.
+    enum Notice: Equatable {
+        case committed(hash: String, branch: String)
+        case pushed(to: String)
+        case discarded(summary: String)
+    }
+
     private(set) var state: State = .loading
     private(set) var status = GitStatus()
     private(set) var selection: GitChange?
@@ -27,14 +34,20 @@ final class SourceControlModel {
     var diffStyle: DiffStyle = .split
     /// Mirrors the window's sidebar so the titlebar button can show it as pressed.
     var isSidebarVisible = false
-    /// Shown in the sidebar until the next action; git's own wording is usually the clearest.
-    var error: String?
+    /// Shown in the sidebar until the next action or until dismissed.
+    var problem: GitProblem?
+    private(set) var notice: Notice?
+    /// Remotes, looked up only while the branch has no upstream (to offer Publish Branch).
+    private(set) var remotes: [String] = []
 
     let folder: URL
     private var repository: GitRepository?
     private var watcher: FileWatcher?
     private var refreshTask: Task<Void, Never>?
     private var refreshQueued = false
+    private var discardBackup: DiscardBackup?
+    private var noticeToken = 0
+    private var expiringNoticeToken: Int?
 
     init(folder: URL) {
         self.folder = folder
@@ -82,8 +95,11 @@ final class SourceControlModel {
         guard let repository else { return }
         do {
             let next = try await repository.status()
+            let nextRemotes = next.upstream == nil && next.branch != nil ? await repository.remotes() : []
             if next != status { status = next }
+            if nextRemotes != remotes { remotes = nextRemotes }
             state = .ready
+            if case .committed = notice, !hasPushWork { expireNotice(after: 6) }
             reconcileSelection()
         } catch {
             state = .failed(error.localizedDescription)
@@ -124,7 +140,7 @@ final class SourceControlModel {
             do {
                 result = try await repository.diff(for: change)
             } catch {
-                self.error = error.localizedDescription
+                problem = GitProblem.explain(error)
                 result = FileDiff()
             }
             let spans = await Self.highlight(result, path: change.path)
@@ -141,6 +157,24 @@ final class SourceControlModel {
         DiffHighlighter.highlight(diff, path: path)
     }
 
+    // MARK: - Navigation
+
+    /// Every change in the order the sidebar lists them.
+    var orderedChanges: [GitChange] { status.conflicted + status.staged + status.unstaged }
+
+    /// Opens the next (or previous) change after the open one, or the first (or last) when none is open.
+    func selectAdjacent(_ offset: Int) {
+        let all = orderedChanges
+        guard !all.isEmpty else { return }
+        guard let current = selection, let index = all.firstIndex(where: { $0.id == current.id }) else {
+            select(offset > 0 ? all.first : all.last)
+            return
+        }
+        let target = index + offset
+        guard all.indices.contains(target) else { return }
+        select(all[target])
+    }
+
     // MARK: - Actions
 
     func stage(_ changes: [GitChange]) {
@@ -154,25 +188,61 @@ final class SourceControlModel {
     func stageAll() { stage(status.unstaged + status.conflicted) }
     func unstageAll() { unstage(status.staged) }
 
-    /// Discarding can't be undone, so it always asks first.
+    /// Stages (or unstages) the open file and opens the next one in its group, so reviewing a set of
+    /// changes never needs a trip back to the list.
+    func toggleStageAndAdvance(_ change: GitChange) {
+        let group = change.area == .staged ? status.staged : (change.area == .conflicted ? status.conflicted : status.unstaged)
+        var next: GitChange?
+        if let index = group.firstIndex(where: { $0.id == change.id }) {
+            next = group.indices.contains(index + 1) ? group[index + 1] : (index > 0 ? group[index - 1] : nil)
+        }
+        let paths = [change.path]
+        let work: (GitRepository) async throws -> Void = change.area == .staged
+            ? { try await $0.unstage(paths) }
+            : { try await $0.stage(paths) }
+        perform(change.area == .staged ? "Unstaging…" : "Staging…", work) { [weak self] in
+            if let next { self?.select(next) }
+        }
+    }
+
+    /// One file goes straight away (Undo puts it back); several ask first.
     func discard(_ changes: [GitChange], in window: NSWindow?) {
         guard !changes.isEmpty else { return }
+        guard changes.count > 1 else {
+            performDiscard(changes)
+            return
+        }
         let alert = NSAlert()
-        let deletes = changes.contains { $0.kind == .untracked }
-        alert.messageText = changes.count == 1
-            ? "Discard changes to “\(changes[0].fileName)”?"
-            : "Discard changes to \(changes.count) files?"
-        alert.informativeText = deletes
-            ? "Untracked files will be deleted. This can't be undone."
-            : "Your edits will be lost. This can't be undone."
+        alert.messageText = "Discard changes to \(changes.count) files?"
+        alert.informativeText = changes.contains { $0.kind == .untracked }
+            ? "Untracked files move to the Trash. You can undo this from the sidebar."
+            : "You can undo this from the sidebar."
         alert.alertStyle = .warning
-        alert.addButton(withTitle: deletes ? "Delete" : "Discard").hasDestructiveAction = true
+        alert.addButton(withTitle: "Discard").hasDestructiveAction = true
         alert.addButton(withTitle: "Cancel")
         let run: (NSApplication.ModalResponse) -> Void = { [weak self] response in
             guard response == .alertFirstButtonReturn else { return }
-            self?.perform("Discarding…") { try await $0.discard(changes) }
+            self?.performDiscard(changes)
         }
         if let window { alert.beginSheetModal(for: window, completionHandler: run) } else { run(alert.runModal()) }
+    }
+
+    private func performDiscard(_ changes: [GitChange]) {
+        let summary = changes.count == 1 ? "Discarded “\(changes[0].fileName)”" : "Discarded \(changes.count) files"
+        perform("Discarding…") { try await $0.discard(changes) } onSuccess: { [weak self] backup in
+            self?.discardBackup = backup
+            self?.show(.discarded(summary: summary))
+        }
+    }
+
+    var canUndoDiscard: Bool { discardBackup != nil }
+
+    func undoDiscard() {
+        guard let backup = discardBackup else { return }
+        perform("Restoring…", clearsNotice: false) { try await $0.restore(backup) } onSuccess: { [weak self] in
+            self?.discardBackup = nil
+            self?.dismissNotice()
+        }
     }
 
     /// Commits what is staged; with nothing staged, stages everything first (like VS Code's smart commit).
@@ -181,11 +251,13 @@ final class SourceControlModel {
         guard !message.isEmpty else { return }
         let stageEverything = status.staged.isEmpty
         let paths = (status.unstaged + status.conflicted).map(\.path)
+        let branch = branchLabel
         perform("Committing…") { repository in
             if stageEverything { try await repository.stage(paths) }
-            try await repository.commit(message: message)
-        } onSuccess: { [weak self] in
+            return try await repository.commit(message: message)
+        } onSuccess: { [weak self] hash in
             self?.commitMessage = ""
+            self?.show(.committed(hash: hash, branch: branch))
         }
     }
 
@@ -193,8 +265,35 @@ final class SourceControlModel {
         busy == nil && !commitMessage.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !status.isClean
     }
 
-    func push() { perform("Pushing…") { try await $0.push() } }
+    /// The branch has no upstream but there is a remote to publish it to.
+    var canPublish: Bool { status.upstream == nil && status.branch != nil && !remotes.isEmpty }
+
+    /// Commits are waiting to go to the remote.
+    var hasPushWork: Bool { canPublish || (status.upstream != nil && status.ahead > 0) }
+
+    func push() {
+        guard status.upstream != nil else { return publish() }
+        let upstream = status.upstream ?? "the remote"
+        perform("Pushing…") { try await $0.push() } onSuccess: { [weak self] in
+            self?.show(.pushed(to: upstream), for: 4)
+        }
+    }
+
+    func publish() {
+        let branch = branchLabel
+        perform("Publishing…") { try await $0.publish() } onSuccess: { [weak self] remote in
+            self?.show(.pushed(to: "\(remote)/\(branch)"), for: 4)
+        }
+    }
+
     func pull() { perform("Pulling…") { try await $0.pull() } }
+
+    func fix(_ fix: GitProblem.Fix) {
+        switch fix {
+        case .pull: pull()
+        case .publish: publish()
+        }
+    }
 
     func initializeRepository() {
         busy = "Creating repository…"
@@ -202,25 +301,60 @@ final class SourceControlModel {
             do {
                 try await GitRepository.initialize(at: folder)
                 repository = nil
-                error = nil
+                problem = nil
             } catch {
-                self.error = error.localizedDescription
+                problem = GitProblem.explain(error)
             }
             busy = nil
             refresh()
         }
     }
 
-    private func perform(_ activity: String, _ work: @escaping (GitRepository) async throws -> Void, onSuccess: (() -> Void)? = nil) {
+    // MARK: - Notices
+
+    func dismissNotice() {
+        notice = nil
+        noticeToken += 1
+    }
+
+    private func show(_ notice: Notice, for seconds: Double? = nil) {
+        self.notice = notice
+        noticeToken += 1
+        expiringNoticeToken = nil
+        if let seconds { expireNotice(after: seconds) }
+    }
+
+    private func expireNotice(after seconds: Double) {
+        let token = noticeToken
+        guard expiringNoticeToken != token else { return }
+        expiringNoticeToken = token
+        Task {
+            try? await Task.sleep(for: .seconds(seconds))
+            if noticeToken == token { dismissNotice() }
+        }
+    }
+
+    // MARK: - Running
+
+    private func perform<Value>(
+        _ activity: String,
+        clearsNotice: Bool = true,
+        _ work: @escaping (GitRepository) async throws -> Value,
+        onSuccess: ((Value) -> Void)? = nil
+    ) {
         guard let repository, busy == nil else { return }
         busy = activity
-        error = nil
+        problem = nil
+        if clearsNotice {
+            dismissNotice()
+            discardBackup = nil
+        }
         Task {
             do {
-                try await work(repository)
-                onSuccess?()
+                let value = try await work(repository)
+                onSuccess?(value)
             } catch {
-                self.error = error.localizedDescription
+                problem = GitProblem.explain(error)
                 Log.app.error("git: \(error.localizedDescription, privacy: .public)")
             }
             busy = nil

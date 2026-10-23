@@ -280,7 +280,7 @@ final class SimulatorPaneViewController: NSViewController, NSMenuItemValidation 
     private func emptyStatePrimaryAction() {
         switch displayState {
         case .noDevices:
-            Task { await model.refresh(); reconcile() }
+            Task { await model.createDefaultDevice(); reconcile() }
         case .shutdown:
             boot()
         case .connecting, .live:

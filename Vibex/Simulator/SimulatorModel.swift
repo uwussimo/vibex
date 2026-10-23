@@ -73,6 +73,16 @@ final class SimulatorModel {
         }
     }
 
+    /// For a Mac with no simulators yet: makes an iPhone on the newest runtime and selects it.
+    func createDefaultDevice() async {
+        guard !isBusy else { return }
+        var created: String?
+        await perform("Creating an iPhone…") {
+            created = try await simctl.createDefaultiPhone()
+        }
+        if let created, devices.contains(where: { $0.udid == created }) { selectedUDID = created }
+    }
+
     func shutdownSelected() async {
         guard let device = selectedDevice, !isBusy else { return }
         await perform("Shutting down \(device.name)…") {

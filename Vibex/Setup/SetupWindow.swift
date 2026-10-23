@@ -103,10 +103,15 @@ struct SetupView: View {
 
     private var footer: some View {
         HStack {
-            Text(model.isComplete ? "You're all set." : "Optional items can wait. Find this again in the Vibex menu.")
-                .font(.vibex(size: 11.5))
-                .foregroundStyle(.secondary)
-                .contentTransition(.opacity)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("\(model.readyCount) of \(model.totalCount) ready")
+                    .font(.vibex(size: 12, weight: .medium))
+                    .contentTransition(.numericText())
+                Text(model.isComplete ? "You're all set." : "Optional items can wait. Reopen this from the Vibex menu.")
+                    .font(.vibex(size: 11.5))
+                    .foregroundStyle(.secondary)
+                    .contentTransition(.opacity)
+            }
             Spacer()
             Button(action: done) {
                 Text(model.isComplete ? "Start Using Vibex" : "Continue")
@@ -122,6 +127,7 @@ struct SetupView: View {
         .background(.bar)
         .overlay(alignment: .top) { Divider() }
         .animation(.spring(response: 0.3, dampingFraction: 1), value: model.isComplete)
+        .animation(.spring(response: 0.3, dampingFraction: 1), value: model.readyCount)
     }
 }
 

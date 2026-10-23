@@ -34,6 +34,8 @@ struct SourceControlSidebar: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .animation(.spring(response: 0.3, dampingFraction: 1), value: model.status)
         .animation(.spring(response: 0.25, dampingFraction: 1), value: model.busy)
+        .animation(.spring(response: 0.25, dampingFraction: 1), value: model.notice)
+        .animation(.spring(response: 0.25, dampingFraction: 1), value: model.problem)
     }
 
     // MARK: - Header
@@ -54,8 +56,14 @@ struct SourceControlSidebar: View {
                     Button("Discard All Changes…") { model.discard(model.status.unstaged, in: window()) }
                         .disabled(model.status.unstaged.isEmpty)
                     Divider()
-                    Button("Pull") { model.pull() }.disabled(model.status.upstream == nil)
-                    Button("Push") { model.push() }.disabled(model.status.upstream == nil)
+                    if model.status.upstream != nil {
+                        Button("Pull") { model.pull() }
+                        Button("Push") { model.push() }
+                    } else if model.canPublish {
+                        Button("Publish Branch") { model.publish() }
+                    } else {
+                        Button("No Remote to Push To") {}.disabled(true)
+                    }
                     Divider()
                     Button("Show in Finder") { NSWorkspace.shared.activateFileViewerSelecting([model.folder]) }
                 } label: {
@@ -125,13 +133,11 @@ struct SourceControlSidebar: View {
                 }
                 .transition(.opacity)
             }
-            if let error = model.error {
-                Text(error)
-                    .font(.vibex(size: 11.5))
-                    .foregroundStyle(.red)
-                    .lineLimit(4)
-                    .textSelection(.enabled)
-                    .onTapGesture { model.error = nil }
+            if let problem = model.problem {
+                ProblemRow(problem: problem, fix: model.fix, dismiss: { model.problem = nil })
+                    .transition(.opacity)
+            } else if let notice = model.notice {
+                NoticeRow(notice: notice, model: model)
                     .transition(.opacity)
             }
         }
@@ -155,7 +161,16 @@ struct SourceControlSidebar: View {
             if model.status.ahead > 0 {
                 SyncChip(symbol: "arrow.up", count: model.status.ahead, help: "Push \(model.status.ahead) to \(model.status.upstream ?? "upstream")") { model.push() }
             }
+            // While the commit notice offers Publish, one button for it is enough.
+            if model.canPublish, !isCommitNotice {
+                SyncChip(symbol: "icloud.and.arrow.up", label: "Publish", help: "Push \(model.branchLabel) to the remote and track it") { model.publish() }
+            }
         }
+    }
+
+    private var isCommitNotice: Bool {
+        if case .committed = model.notice { return true }
+        return false
     }
 
     private var commitPlaceholder: String {
@@ -361,7 +376,8 @@ private struct ChangeRow: View {
                 }
             }
             Spacer(minLength: 4)
-            if isHovering {
+            // The selected row keeps its actions, so they don't depend on where the pointer is.
+            if isHovering || isSelected {
                 HStack(spacing: 0) {
                     HoverIconButton(symbol: "doc.text", help: "Open File", action: open)
                     switch change.area {
@@ -431,7 +447,7 @@ private struct HoverIconButton: View {
         Button(action: action) {
             Image(systemName: symbol)
                 .font(.system(size: 11, weight: .semibold))
-                .frame(width: 22, height: 22)
+                .frame(width: 24, height: 24)
                 .background(
                     RoundedRectangle(cornerRadius: 5, style: .continuous)
                         .fill(Color.primary.opacity(isHovering ? 0.1 : 0))
@@ -446,15 +462,26 @@ private struct HoverIconButton: View {
 
 private struct SyncChip: View {
     let symbol: String
-    let count: Int
+    let label: String
     let help: String
     let action: () -> Void
+
+    init(symbol: String, count: Int, help: String, action: @escaping () -> Void) {
+        self.init(symbol: symbol, label: "\(count)", help: help, action: action)
+    }
+
+    init(symbol: String, label: String, help: String, action: @escaping () -> Void) {
+        self.symbol = symbol
+        self.label = label
+        self.help = help
+        self.action = action
+    }
 
     var body: some View {
         Button(action: action) {
             HStack(spacing: 2) {
                 Image(systemName: symbol).font(.system(size: 9, weight: .bold))
-                Text("\(count)").font(.vibex(size: 11, weight: .semibold))
+                Text(label).font(.vibex(size: 11, weight: .semibold))
             }
             .padding(.horizontal, 6)
             .padding(.vertical, 2)
@@ -463,6 +490,133 @@ private struct SyncChip: View {
         }
         .buttonStyle(PressFeedbackButtonStyle())
         .help(help)
+    }
+}
+
+/// What just happened, with the next step: Push after a commit, Undo after a discard.
+private struct NoticeRow: View {
+    let notice: SourceControlModel.Notice
+    let model: SourceControlModel
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: symbol)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(tint)
+            text
+                .font(.vibex(size: 12))
+                .lineLimit(2)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            action
+            Button(action: model.dismissNotice) {
+                Image(systemName: "xmark")
+                    .font(.system(size: 9, weight: .bold))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 24, height: 24)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(PressFeedbackButtonStyle())
+            .help("Dismiss")
+        }
+        .padding(.leading, 10)
+        .padding(.vertical, 4)
+        .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(tint.opacity(0.1)))
+    }
+
+    private var symbol: String {
+        switch notice {
+        case .committed: "checkmark.circle.fill"
+        case .pushed: "arrow.up.circle.fill"
+        case .discarded: "arrow.uturn.backward.circle.fill"
+        }
+    }
+
+    private var tint: Color {
+        switch notice {
+        case .committed, .pushed: Color(nsColor: .systemGreen)
+        case .discarded: .secondary
+        }
+    }
+
+    private var text: Text {
+        switch notice {
+        case let .committed(hash, branch):
+            hash.isEmpty ? Text("Committed to \(branch)") : Text("Committed \(Text(hash).font(.vibexCode(size: 11.5, weight: .semibold))) to \(branch)")
+        case let .pushed(destination):
+            Text("Pushed to \(destination)")
+        case let .discarded(summary):
+            Text(summary)
+        }
+    }
+
+    @ViewBuilder
+    private var action: some View {
+        switch notice {
+        case .committed where model.canPublish:
+            noticeButton("Publish", prominent: true, action: model.publish)
+        case .committed where model.hasPushWork:
+            noticeButton("Push", prominent: true, action: model.push)
+        case .discarded where model.canUndoDiscard:
+            noticeButton("Undo", prominent: false, action: model.undoDiscard)
+        default:
+            EmptyView()
+        }
+    }
+
+    @ViewBuilder
+    private func noticeButton(_ title: String, prominent: Bool, action: @escaping () -> Void) -> some View {
+        let label = Text(title).font(.vibex(size: 12, weight: .medium))
+        if prominent {
+            Button(action: action) { label }.buttonStyle(.borderedProminent).controlSize(.small).disabled(model.busy != nil)
+        } else {
+            Button(action: action) { label }.buttonStyle(.bordered).controlSize(.small).disabled(model.busy != nil)
+        }
+    }
+}
+
+/// A git failure in plain words, the button that usually fixes it, and git's own text on hover.
+private struct ProblemRow: View {
+    let problem: GitProblem
+    let fix: (GitProblem.Fix) -> Void
+    let dismiss: () -> Void
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 8) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(Color(nsColor: .systemRed))
+                .padding(.top, 5)
+            VStack(alignment: .leading, spacing: 6) {
+                Text(problem.message)
+                    .font(.vibex(size: 12))
+                    .fixedSize(horizontal: false, vertical: true)
+                    .textSelection(.enabled)
+                    .help(problem.detail ?? problem.message)
+                if let action = problem.fix {
+                    Button {
+                        fix(action)
+                    } label: {
+                        Text(action == .pull ? "Pull" : "Publish Branch").font(.vibex(size: 12, weight: .medium))
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                }
+            }
+            .padding(.vertical, 4)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            Button(action: dismiss) {
+                Image(systemName: "xmark")
+                    .font(.system(size: 9, weight: .bold))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 24, height: 24)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(PressFeedbackButtonStyle())
+            .help("Dismiss")
+        }
+        .padding(.leading, 10)
+        .padding(.vertical, 2)
+        .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Color(nsColor: .systemRed).opacity(0.1)))
     }
 }
 

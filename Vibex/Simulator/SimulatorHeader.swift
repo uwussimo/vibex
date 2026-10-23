@@ -22,18 +22,24 @@ struct SimulatorHeader: View {
     var body: some View {
         HStack(spacing: 4) {
             devicePicker
+            // Outside the menu: a macOS menu label only draws its title.
+            if model.selectedSlimInfo?.isSlim ?? false {
+                Image(systemName: "leaf.fill")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(Color.accentColor)
+                    .help("Slim: \(model.selectedSlimInfo?.managedDisabled ?? 0) of \(model.selectedSlimInfo?.managedTotal ?? 0) daemons off")
+            }
             Spacer(minLength: 4)
             ToolbarIconButton(
                 systemImage: isBooted ? "stop.fill" : "play.fill",
-                help: isBooted ? "Shut down" : (model.willBootSlim ? "Boot slim" : "Boot"),
+                help: isBooted ? "Shut Down" : (model.willBootSlim ? "Boot Slim" : "Boot"),
                 isEnabled: selected != nil && !model.isBusy,
                 action: isBooted ? actions.shutdown : actions.boot
             )
-            ToolbarIconButton(systemImage: "house", help: "Home", isEnabled: isLive(), action: actions.home)
-            ToolbarIconButton(systemImage: "lock", help: "Lock / wake", isEnabled: isLive(), action: actions.lock)
+            ToolbarIconButton(systemImage: "house", help: "Home (⇧⌘H)", isEnabled: isLive(), action: actions.home)
             ToolbarIconButton(
                 systemImage: flashScreenshot ? "checkmark" : "camera",
-                help: "Copy screenshot",
+                help: "Copy Screenshot (⇧⌘S)",
                 isEnabled: isBooted && !model.isBusy
             ) {
                 actions.screenshot()
@@ -43,38 +49,10 @@ struct SimulatorHeader: View {
                     withAnimation(.spring(response: 0.25, dampingFraction: 1)) { flashScreenshot = false }
                 }
             }
-            slimButton
         }
         .padding(.horizontal, 8)
         .frame(height: 40)
         .background(.bar)
-    }
-
-    /// Leaf = slim (simslim). Filled when the selected device is slim, outlined when stock,
-    /// and a download arrow when simslim is not installed yet.
-    private var slimButton: some View {
-        let info = model.selectedSlimInfo
-        let isSlim = info?.isSlim ?? false
-        return Group {
-            if model.isSimslimInstalled {
-                ToolbarIconButton(
-                    systemImage: isSlim ? "leaf.fill" : "leaf",
-                    help: isSlim
-                        ? "Slim: \(info?.managedDisabled ?? 0) of \(info?.managedTotal ?? 0) daemons off. Click to restore stock (reboots)."
-                        : "Stock. Click to slim with simslim (reboots).",
-                    isEnabled: selected != nil && !model.isBusy,
-                    isActive: isSlim,
-                    action: actions.toggleSlim
-                )
-            } else {
-                ToolbarIconButton(
-                    systemImage: "leaf.arrow.trianglehead.clockwise",
-                    help: "Install simslim to boot lighter simulators",
-                    isEnabled: !model.isBusy,
-                    action: actions.installSimslim
-                )
-            }
-        }
     }
 
     private var devicePicker: some View {
@@ -95,6 +73,11 @@ struct SimulatorHeader: View {
                         }
                     }
                 }
+            }
+            // Rarer device actions live here rather than as more header icons.
+            Section {
+                Button("Lock / Wake", action: actions.lock).disabled(!isLive())
+                slimMenuItem
             }
         } label: {
             HStack(spacing: 6) {
@@ -119,6 +102,18 @@ struct SimulatorHeader: View {
         .menuStyle(.borderlessButton)
         .menuIndicator(.visible)
         .fixedSize()
+    }
+
+    @ViewBuilder
+    private var slimMenuItem: some View {
+        if model.isSimslimInstalled {
+            let isSlim = model.selectedSlimInfo?.isSlim ?? false
+            Button(isSlim ? "Restore Stock Simulator (Reboots)" : "Slim This Simulator (Reboots)", action: actions.toggleSlim)
+                .disabled(selected == nil || model.isBusy)
+        } else {
+            Button("Install simslim…", action: actions.installSimslim)
+                .disabled(model.isBusy)
+        }
     }
 
     private var secondaryLabel: String {
@@ -170,23 +165,21 @@ struct SimulatorEmptyState: View {
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
             }
-            if showsButton {
-                Button(action: primaryAction) {
-                    if isBusy || state == .connecting {
-                        HStack(spacing: 8) {
-                            ProgressView().controlSize(.small)
-                            Text(activity ?? "Connecting…").lineLimit(1)
-                        }
-                        .frame(minWidth: 100)
-                    } else {
-                        Text(buttonTitle).frame(minWidth: 100)
+            Button(action: primaryAction) {
+                if isBusy || state == .connecting {
+                    HStack(spacing: 8) {
+                        ProgressView().controlSize(.small)
+                        Text(activity ?? "Connecting…").lineLimit(1)
                     }
+                    .frame(minWidth: 100)
+                } else {
+                    Text(buttonTitle).frame(minWidth: 100)
                 }
-                .font(.vibex(size: 13, weight: .medium))
-                .buttonStyle(.borderedProminent)
-                .controlSize(.regular)
-                .disabled(isBusy || state == .connecting)
             }
+            .font(.vibex(size: 13, weight: .medium))
+            .buttonStyle(.borderedProminent)
+            .controlSize(.regular)
+            .disabled(isBusy || state == .connecting)
             if let errorMessage {
                 Text(errorMessage)
                     .font(.vibex(size: 11))
@@ -198,8 +191,6 @@ struct SimulatorEmptyState: View {
         .padding(24)
         .frame(width: 280)
     }
-
-    private var showsButton: Bool { true }
 
     private var icon: String {
         switch state {
@@ -223,7 +214,7 @@ struct SimulatorEmptyState: View {
 
     private var subtitle: String {
         switch state {
-        case .noDevices: "Create one in Xcode → Devices and Simulators."
+        case .noDevices: "Vibex can make an iPhone on the newest iOS runtime installed."
         case .shutdown: willBootSlim
             ? "Boots slim: simslim trims the daemons this device does not need."
             : "The device is shut down."
@@ -235,8 +226,8 @@ struct SimulatorEmptyState: View {
 
     private var buttonTitle: String {
         switch state {
-        case .noDevices: "Refresh"
-        case .shutdown: willBootSlim ? "Boot slim" : "Boot"
+        case .noDevices: "Create iPhone"
+        case .shutdown: willBootSlim ? "Boot Slim" : "Boot"
         case .connecting: "Connecting…"
         case .failed: "Retry"
         case .live: ""

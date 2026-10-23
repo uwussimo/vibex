@@ -80,6 +80,10 @@ enum MainMenu {
         palette.keyEquivalentModifierMask = [.command, .shift]
         let sourceControl = menu.addItem(withTitle: "Source Control", action: #selector(MainWindowController.toggleSourceControl(_:)), keyEquivalent: "g")
         sourceControl.keyEquivalentModifierMask = [.control, .shift]
+        let nextChange = menu.addItem(withTitle: "Next Change", action: #selector(MainWindowController.nextChange(_:)), keyEquivalent: String(UnicodeScalar(NSDownArrowFunctionKey)!))
+        nextChange.keyEquivalentModifierMask = [.command, .option]
+        let previousChange = menu.addItem(withTitle: "Previous Change", action: #selector(MainWindowController.previousChange(_:)), keyEquivalent: String(UnicodeScalar(NSUpArrowFunctionKey)!))
+        previousChange.keyEquivalentModifierMask = [.command, .option]
         menu.addItem(.separator())
         let build = menu.addItem(withTitle: "Build Mode", action: #selector(WorkspaceSplitViewController.toggleBuildMode(_:)), keyEquivalent: "b")
         build.keyEquivalentModifierMask = [.command, .shift]

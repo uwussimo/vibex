@@ -45,7 +45,7 @@ struct TabStrip: View {
                     .contentShape(Rectangle())
             }
             .buttonStyle(PressFeedbackButtonStyle())
-            .help("New tab (⌘T)")
+            .help("New Tab (⌘T)")
             .padding(.trailing, 6)
         }
         .frame(height: 36)
@@ -94,13 +94,16 @@ private struct TabStripCell: View {
                     .foregroundStyle(textColor)
                     .frame(width: 16, height: 16)
                     .background(Circle().fill((dark ? Color.white : Color.primary).opacity(isHovering ? 0.12 : 0)))
+                    // A 24pt hit area around the 16pt circle.
+                    .frame(width: 24, height: 24)
+                    .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
             .opacity(isHovering || isSelected ? 1 : 0)
-            .help("Close tab (⌘W)")
+            .help("Close Tab (⌘W)")
         }
         .padding(.leading, 12)
-        .padding(.trailing, 6)
+        .padding(.trailing, 3)
         .frame(height: 26)
         .frame(minWidth: 90, maxWidth: 200)
         .background(RoundedRectangle(cornerRadius: 7, style: .continuous).fill(fill))

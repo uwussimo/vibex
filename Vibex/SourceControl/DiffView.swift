@@ -85,20 +85,40 @@ struct DiffView: View {
             .fixedSize()
             .help("Side by side needs at least \(Int(Self.splitMinimumWidth)) points; narrower diffs show inline.")
             }
-            switch change.area {
-            case .unstaged, .conflicted:
-                ToolbarIconButton(systemImage: "plus", help: change.area == .conflicted ? "Mark Resolved" : "Stage Changes") { model.stage([change]) }
-            case .staged:
-                ToolbarIconButton(systemImage: "minus", help: "Unstage Changes") { model.unstage([change]) }
-            }
+            ToolbarIconButton(systemImage: "chevron.up", help: "Previous Change (⌥⌘↑)", isEnabled: neighbor(-1)) { model.selectAdjacent(-1) }
+            ToolbarIconButton(systemImage: "chevron.down", help: "Next Change (⌥⌘↓)", isEnabled: neighbor(1)) { model.selectAdjacent(1) }
             ToolbarIconButton(systemImage: "doc.text", help: "Open File") {
                 NSWorkspace.shared.open(model.folder.appendingPathComponent(change.path))
             }
-            ToolbarIconButton(systemImage: "xmark", help: "Close (Esc)", action: close)
+            stageButton(change)
+                .padding(.leading, 4)
         }
         .padding(.leading, 16)
         .padding(.trailing, 8)
         .frame(height: 52)
+    }
+
+    /// The diff's one main action. It moves on to the next file in the same group afterwards.
+    private func stageButton(_ change: GitChange) -> some View {
+        let title = switch change.area {
+        case .unstaged: "Stage"
+        case .staged: "Unstage"
+        case .conflicted: "Mark Resolved"
+        }
+        return Button { model.toggleStageAndAdvance(change) } label: {
+            Text(title).font(.vibex(size: 12.5, weight: .medium))
+        }
+        .buttonStyle(.borderedProminent)
+        .controlSize(.regular)
+        .disabled(model.busy != nil)
+        .help("\(title) and open the next change")
+        .fixedSize()
+    }
+
+    private func neighbor(_ offset: Int) -> Bool {
+        let all = model.orderedChanges
+        guard let current = model.selection, let index = all.firstIndex(where: { $0.id == current.id }) else { return false }
+        return all.indices.contains(index + offset)
     }
 
     // MARK: - Body

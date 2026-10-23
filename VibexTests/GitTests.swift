@@ -148,7 +148,7 @@ import Testing
         // Commit needs an identity; keep it local to the scratch repository.
         _ = try Shell.run("/usr/bin/git", ["-C", folder.path, "config", "user.email", "test@example.com"])
         _ = try Shell.run("/usr/bin/git", ["-C", folder.path, "config", "user.name", "Test"])
-        try await repo.commit(message: "First")
+        _ = try await repo.commit(message: "First")
         #expect(try await repo.status().isClean)
 
         try "one\n2\n".write(to: folder.appendingPathComponent("notes.txt"), atomically: true, encoding: .utf8)
@@ -157,7 +157,88 @@ import Testing
         #expect(diff.additions == 1)
         #expect(diff.deletions == 1)
 
-        try await repo.discard([modified])
+        _ = try await repo.discard([modified])
         #expect(try await repo.status().isClean)
+    }
+}
+
+@Suite struct GitProblemTests {
+    private func explain(_ stderr: String) -> GitProblem {
+        GitProblem.explain(GitError.failed(stderr))
+    }
+
+    @Test func `a branch without upstream offers to publish`() {
+        let problem = explain("fatal: The current branch feature has no upstream branch.\nTo push the current branch and set the remote as upstream, use")
+        #expect(problem.fix == .publish)
+        #expect(problem.detail?.contains("no upstream branch") == true)
+    }
+
+    @Test func `a rejected push offers to pull`() {
+        let problem = explain(" ! [rejected]        main -> main (fetch first)\nerror: failed to push some refs")
+        #expect(problem.fix == .pull)
+    }
+
+    @Test func `credentials and identity get plain words`() {
+        #expect(explain("fatal: could not read Username for 'https://github.com': terminal prompts disabled").message.contains("sign in"))
+        #expect(explain("Author identity unknown\n*** Please tell me who you are.").message.contains("user.name"))
+    }
+
+    @Test func `anything else keeps git's first line without the prefix`() {
+        let problem = explain("fatal: pathspec 'x' did not match any files\nhint: something")
+        #expect(problem.message == "Pathspec 'x' did not match any files")
+        #expect(problem.fix == nil)
+    }
+}
+
+@Suite(.serialized) struct GitUndoTests {
+    /// A throwaway repository with one committed file.
+    private func makeRepository() throws -> GitRepository {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("vibex-git-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        for arguments in [["init", "-q"], ["config", "user.name", "Test"], ["config", "user.email", "test@example.com"]] {
+            try git(arguments, in: root)
+        }
+        try "one\n".write(to: root.appendingPathComponent("tracked.txt"), atomically: true, encoding: .utf8)
+        try git(["add", "."], in: root)
+        try git(["commit", "-qm", "first"], in: root)
+        return GitRepository(root: root.resolvingSymlinksInPath())
+    }
+
+    private func git(_ arguments: [String], in directory: URL) throws {
+        _ = try Shell.run("/usr/bin/git", ["-C", directory.path] + arguments)
+    }
+
+    @Test func `discard can be undone`() async throws {
+        let repository = try makeRepository()
+        defer { try? FileManager.default.removeItem(at: repository.root) }
+        let tracked = repository.root.appendingPathComponent("tracked.txt")
+        let untracked = repository.root.appendingPathComponent("notes/new.txt")
+        try "two\n".write(to: tracked, atomically: true, encoding: .utf8)
+        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: tracked.path)
+        try FileManager.default.createDirectory(at: untracked.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try "draft\n".write(to: untracked, atomically: true, encoding: .utf8)
+
+        let changes = try await repository.status().unstaged
+        #expect(changes.count == 2)
+        let backup = try await repository.discard(changes)
+        #expect(try String(contentsOf: tracked, encoding: .utf8) == "one\n")
+        #expect(!FileManager.default.fileExists(atPath: untracked.path))
+
+        try await repository.restore(backup)
+        #expect(try String(contentsOf: tracked, encoding: .utf8) == "two\n")
+        #expect(try String(contentsOf: untracked, encoding: .utf8) == "draft\n")
+        let permissions = try FileManager.default.attributesOfItem(atPath: tracked.path)[.posixPermissions] as? Int
+        #expect(permissions == 0o755)
+    }
+
+    @Test func `commit returns the short hash and publish needs a remote`() async throws {
+        let repository = try makeRepository()
+        defer { try? FileManager.default.removeItem(at: repository.root) }
+        try "two\n".write(to: repository.root.appendingPathComponent("tracked.txt"), atomically: true, encoding: .utf8)
+        try await repository.stage(["tracked.txt"])
+        let hash = try await repository.commit(message: "second")
+        #expect(hash.count >= 7)
+        #expect(await repository.remotes().isEmpty)
+        await #expect(throws: GitError.self) { try await repository.publish() }
     }
 }

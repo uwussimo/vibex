@@ -329,13 +329,16 @@ private struct EditorTabCell: View {
                     .foregroundStyle(Color.primary.opacity(0.6))
                     .frame(width: 16, height: 16)
                     .background(Circle().fill(Color.primary.opacity(isHovering ? 0.1 : 0)))
+                    // A 24pt hit area around the 16pt circle.
+                    .frame(width: 24, height: 24)
+                    .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
             .opacity(isHovering || isSelected ? 1 : 0)
             .help("Close Tab (⌘W)")
         }
         .padding(.leading, 10)
-        .padding(.trailing, 6)
+        .padding(.trailing, 3)
         .frame(height: 26)
         .frame(minWidth: 90, maxWidth: 210)
         .background(

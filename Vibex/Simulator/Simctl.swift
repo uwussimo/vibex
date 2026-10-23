@@ -15,6 +15,16 @@ struct SimDevice: Identifiable, Hashable, Sendable {
     var windowTitle: String { "\(name) – \(runtime)" }
 }
 
+nonisolated enum SimctlError: Error, LocalizedError {
+    case noRuntime
+
+    var errorDescription: String? {
+        switch self {
+        case .noRuntime: "No iOS simulator runtime is installed. Download one from Vibex → Setup & Permissions."
+        }
+    }
+}
+
 /// Thin wrapper around `xcrun simctl`. Everything runs on the concurrent pool and returns values.
 nonisolated struct Simctl: Sendable {
     @concurrent
@@ -31,6 +41,24 @@ nonisolated struct Simctl: Sendable {
                 if lhs.runtime != rhs.runtime { return lhs.runtime.localizedStandardCompare(rhs.runtime) == .orderedDescending }
                 return lhs.name.localizedStandardCompare(rhs.name) == .orderedAscending
             }
+    }
+
+    /// Creates an iPhone on the newest installed iOS runtime and returns its UDID. Picks the newest
+    /// "iPhone N Pro" that runtime supports, or else the last iPhone it lists.
+    @concurrent
+    func createDefaultiPhone() async throws -> String {
+        let data = try run("/usr/bin/xcrun", ["simctl", "list", "-j", "runtimes", "available"])
+        let runtimes = try JSONDecoder().decode(RuntimeList.self, from: data).runtimes
+            .filter { $0.platform == "iOS" && ($0.isAvailable ?? true) }
+            .sorted { $0.version.localizedStandardCompare($1.version) == .orderedDescending }
+        guard let runtime = runtimes.first else { throw SimctlError.noRuntime }
+        let iPhones = (runtime.supportedDeviceTypes ?? []).filter { $0.productFamily == "iPhone" }
+        let pro = iPhones
+            .filter { $0.name.range(of: #"^iPhone \d+ Pro$"#, options: .regularExpression) != nil }
+            .max { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
+        guard let type = pro ?? iPhones.last else { throw SimctlError.noRuntime }
+        let output = try run("/usr/bin/xcrun", ["simctl", "create", type.name, type.identifier, runtime.identifier])
+        return String(decoding: output, as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     @concurrent
@@ -121,6 +149,24 @@ nonisolated struct Simctl: Sendable {
 
     private func run(_ executable: String, _ arguments: [String]) throws -> Data {
         try Shell.run(executable, arguments)
+    }
+
+    private struct RuntimeList: Decodable {
+        let runtimes: [Runtime]
+    }
+
+    private struct Runtime: Decodable {
+        let identifier: String
+        let version: String
+        let platform: String?
+        let isAvailable: Bool?
+        let supportedDeviceTypes: [DeviceType]?
+    }
+
+    private struct DeviceType: Decodable {
+        let identifier: String
+        let name: String
+        let productFamily: String?
     }
 
     private struct DeviceList: Decodable {

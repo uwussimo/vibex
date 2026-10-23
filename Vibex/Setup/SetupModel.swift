@@ -44,6 +44,15 @@ final class SetupModel {
         items.first { $0.id == id }?.status ?? .checking
     }
 
+    /// How many rows are done, counting folders as done once Full Disk Access covers them.
+    var readyCount: Int {
+        items.filter { item in
+            item.status == .ready || (item.id == .folders && status(.fullDiskAccess) == .ready)
+        }.count
+    }
+
+    var totalCount: Int { items.count }
+
     /// Everything that matters for the core workflow is ready.
     var isComplete: Bool {
         [.xcode, .claude].allSatisfy { status($0) == .ready }

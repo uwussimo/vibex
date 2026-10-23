@@ -148,6 +148,71 @@ nonisolated enum GitError: Error, LocalizedError {
     }
 }
 
+/// What a discard threw away, so it can be put back.
+nonisolated struct DiscardBackup: Sendable {
+    enum Entry: Sendable {
+        /// A tracked file's contents before the discard, saved as a blob.
+        case saved(path: String, blob: String, permissions: Int?)
+        /// A tracked file that was already deleted; the discard brought it back.
+        case missing(path: String)
+        /// An untracked file, now in the Trash.
+        case trashed(path: String, location: URL)
+    }
+
+    var entries: [Entry] = []
+}
+
+/// A git failure in words people can act on, with the one action that usually fixes it.
+nonisolated struct GitProblem: Equatable, Sendable {
+    enum Fix: Sendable { case pull, publish }
+
+    var message: String
+    /// git's own output, when `message` rephrases it.
+    var detail: String?
+    var fix: Fix?
+
+    static func explain(_ error: Error) -> GitProblem {
+        let raw = error.localizedDescription.trimmingCharacters(in: .whitespacesAndNewlines)
+        let text = raw.lowercased()
+        func problem(_ message: String, _ fix: Fix? = nil) -> GitProblem {
+            GitProblem(message: message, detail: raw, fix: fix)
+        }
+        if text.contains("has no upstream branch") {
+            return problem("This branch isn't on the remote yet.", .publish)
+        }
+        if text.contains("[rejected]") || text.contains("fetch first") || text.contains("non-fast-forward") {
+            return problem("The remote has commits you don't have yet. Pull, then push again.", .pull)
+        }
+        if text.contains("not possible to fast-forward") || text.contains("divergent branches") || text.contains("diverging branches") {
+            return problem("Your branch and the remote have both moved on. Merge or rebase in the terminal.")
+        }
+        if text.contains("would be overwritten by merge") {
+            return problem("Pulling would overwrite files you've changed. Commit or discard them first.")
+        }
+        if text.contains("could not read username") || text.contains("authentication failed")
+            || text.contains("permission denied (publickey)") || text.contains("terminal prompts disabled") {
+            return problem("Git couldn't sign in to the remote. Run git push once in the terminal to save your credentials.")
+        }
+        if text.contains("please tell me who you are") || text.contains("unable to auto-detect email") {
+            return problem("Git doesn't know your name yet. Set user.name and user.email with git config --global.")
+        }
+        if text.contains("could not resolve host") || text.contains("could not connect") || text.contains("network is unreachable") {
+            return problem("Can't reach the remote. Check your connection and try again.")
+        }
+        if text.contains("index.lock") {
+            return problem("Another git command is running in this repository. Try again when it finishes.")
+        }
+        // Anything else: git's first real line, without its "fatal:" or "error:" prefix.
+        let lines = raw.split(separator: "\n").map { $0.trimmingCharacters(in: .whitespaces) }
+        var message = lines.first { !$0.isEmpty && !$0.hasPrefix("hint:") } ?? raw
+        for prefix in ["fatal: ", "error: "] where message.hasPrefix(prefix) {
+            message = String(message.dropFirst(prefix.count))
+        }
+        message = message.prefix(1).uppercased() + message.dropFirst()
+        return GitProblem(message: message, detail: message == raw ? nil : raw, fix: nil)
+    }
+}
+
 /// The `git` command line for one working tree. Every call runs off the main actor.
 nonisolated struct GitRepository: Sendable {
     let root: URL
@@ -203,20 +268,77 @@ nonisolated struct GitRepository: Sendable {
         if result.status != 0 { try run(["rm", "--cached", "-r", "--quiet", "--"] + paths).check() }
     }
 
-    /// Throws away working-tree changes. Untracked files are deleted.
-    @concurrent func discard(_ changes: [GitChange]) async throws {
-        let untracked = changes.filter { $0.kind == .untracked }.map(\.path)
+    /// Throws away working-tree changes, keeping enough to undo it: tracked files' current contents
+    /// go into git's object store first, and untracked files move to the Trash instead of being deleted.
+    @concurrent func discard(_ changes: [GitChange]) async throws -> DiscardBackup {
+        let fileManager = FileManager.default
+        var backup = DiscardBackup()
         let tracked = changes.filter { $0.kind != .untracked }.map(\.path)
+        for path in tracked {
+            let url = root.appendingPathComponent(path)
+            if fileManager.fileExists(atPath: url.path) {
+                let blob = try run(["hash-object", "-w", "--no-filters", "--", path]).checkedOutput()
+                let permissions = (try? fileManager.attributesOfItem(atPath: url.path))?[.posixPermissions] as? Int
+                backup.entries.append(.saved(path: path, blob: blob, permissions: permissions))
+            } else {
+                backup.entries.append(.missing(path: path))
+            }
+        }
         if !tracked.isEmpty { try run(["restore", "--worktree", "--"] + tracked).check() }
-        if !untracked.isEmpty { try run(["clean", "-f", "-q", "--"] + untracked).check() }
+        for change in changes where change.kind == .untracked {
+            var trashed: NSURL?
+            try fileManager.trashItem(at: root.appendingPathComponent(change.path), resultingItemURL: &trashed)
+            if let trashed { backup.entries.append(.trashed(path: change.path, location: trashed as URL)) }
+        }
+        return backup
     }
 
-    @concurrent func commit(message: String) async throws {
+    /// Puts back what `discard` threw away. A file recreated since then is left alone.
+    @concurrent func restore(_ backup: DiscardBackup) async throws {
+        let fileManager = FileManager.default
+        for entry in backup.entries {
+            switch entry {
+            case let .saved(path, blob, permissions):
+                let url = root.appendingPathComponent(path)
+                let contents = try run(["cat-file", "blob", blob])
+                try contents.check()
+                try fileManager.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+                try contents.data.write(to: url, options: .atomic)
+                if let permissions { try? fileManager.setAttributes([.posixPermissions: permissions], ofItemAtPath: url.path) }
+            case let .missing(path):
+                try? fileManager.removeItem(at: root.appendingPathComponent(path))
+            case let .trashed(path, location):
+                let url = root.appendingPathComponent(path)
+                guard !fileManager.fileExists(atPath: url.path) else { continue }
+                try fileManager.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+                try fileManager.moveItem(at: location, to: url)
+            }
+        }
+    }
+
+    /// Commits what is staged and returns the new commit's short hash.
+    @concurrent func commit(message: String) async throws -> String {
         try run(["commit", "--quiet", "-m", message]).check()
+        return (try? run(["rev-parse", "--short", "HEAD"]).checkedOutput()) ?? ""
     }
 
     @concurrent func push() async throws {
         try run(["push", "--quiet"]).check()
+    }
+
+    /// Pushes a branch that has no upstream yet and tracks it (origin when there is one). Returns the remote.
+    @concurrent func publish() async throws -> String {
+        let remotes = await remotes()
+        guard let remote = remotes.contains("origin") ? "origin" : remotes.first else {
+            throw GitError.failed("This repository has no remote to push to.")
+        }
+        try run(["push", "--quiet", "--set-upstream", remote, "HEAD"]).check()
+        return remote
+    }
+
+    @concurrent func remotes() async -> [String] {
+        guard let output = try? run(["remote"]).checkedOutput() else { return [] }
+        return output.split(separator: "\n").map(String.init)
     }
 
     @concurrent func pull() async throws {
@@ -226,7 +348,7 @@ nonisolated struct GitRepository: Sendable {
     // MARK: - Running git
 
     struct Result: Sendable {
-        var output: String
+        var data: Data
         var errors: String
         var status: Int32
         var truncated: Bool
@@ -236,6 +358,14 @@ nonisolated struct GitRepository: Sendable {
                 let message = errors.trimmingCharacters(in: .whitespacesAndNewlines)
                 throw GitError.failed(message.isEmpty ? "git exited with \(status)" : message)
             }
+        }
+
+        var output: String { String(decoding: data, as: UTF8.self) }
+
+        /// The output without its trailing newline, after checking the command succeeded.
+        func checkedOutput() throws -> String {
+            try check()
+            return output.trimmingCharacters(in: .whitespacesAndNewlines)
         }
     }
 
@@ -285,7 +415,7 @@ nonisolated struct GitRepository: Sendable {
         process.waitUntilExit()
         errorData.wait()
         return Result(
-            output: String(decoding: data, as: UTF8.self),
+            data: data,
             errors: String(decoding: errorData.data, as: UTF8.self),
             status: truncated ? 0 : process.terminationStatus,
             truncated: truncated
