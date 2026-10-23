@@ -43,6 +43,8 @@ enum MainMenu {
         recentMenu.delegate = NSApp.delegate as? NSMenuDelegate
         recent.submenu = recentMenu
         menu.addItem(withTitle: "New Window in Home Folder", action: #selector(AppDelegate.newHomeWindow(_:)), keyEquivalent: "n")
+        let newAgent = menu.addItem(withTitle: "New Agent…", action: #selector(MainWindowController.newAgent(_:)), keyEquivalent: "n")
+        newAgent.keyEquivalentModifierMask = [.command, .option]
         menu.addItem(withTitle: "Welcome", action: #selector(AppDelegate.showWelcome(_:)), keyEquivalent: "")
         menu.addItem(.separator())
         menu.addItem(withTitle: "New Tab", action: #selector(TerminalPaneViewController.newTab(_:)), keyEquivalent: "t")
@@ -79,6 +81,8 @@ enum MainMenu {
         palette.keyEquivalentModifierMask = [.command, .shift]
         let sourceControl = menu.addItem(withTitle: "Source Control", action: #selector(MainWindowController.toggleSourceControl(_:)), keyEquivalent: "g")
         sourceControl.keyEquivalentModifierMask = [.control, .shift]
+        let agentsPanel = menu.addItem(withTitle: "Agents", action: #selector(MainWindowController.toggleAgents(_:)), keyEquivalent: "n")
+        agentsPanel.keyEquivalentModifierMask = [.control, .shift]
         let skills = menu.addItem(withTitle: "Skills", action: #selector(MainWindowController.toggleSkills(_:)), keyEquivalent: "k")
         skills.keyEquivalentModifierMask = [.control, .shift]
         menu.addItem(withTitle: "Browse Skills…", action: #selector(MainWindowController.browseSkills(_:)), keyEquivalent: "")

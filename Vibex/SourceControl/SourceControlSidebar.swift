@@ -14,6 +14,7 @@ struct SourceControlSidebar: View {
     var body: some View {
         VStack(spacing: 0) {
             header
+            if let agent = model.reviewingAgent { reviewingBar(agent) }
             switch model.state {
             case .loading:
                 placeholder { ProgressView().controlSize(.small) }
@@ -81,6 +82,26 @@ struct SourceControlSidebar: View {
         .padding(.leading, 14)
         .padding(.trailing, 8)
         .frame(height: 38)
+    }
+
+    /// Shown while Source Control shows a parallel agent's worktree instead of the project.
+    private func reviewingBar(_ agent: String) -> some View {
+        HStack(spacing: 8) {
+            IconView(.dataflow, size: 14).foregroundStyle(Theme.accent)
+            VStack(alignment: .leading, spacing: 0) {
+                Text("Reviewing \(agent)").font(.vibex(size: 12, weight: .semibold)).foregroundStyle(Theme.text)
+                Text("Its own branch and folder").font(.vibex(size: 11)).foregroundStyle(Theme.muted)
+            }
+            Spacer()
+            Button("Back") { model.show(checkout: nil) }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+                .help("Show this project's own changes")
+        }
+        .padding(10)
+        .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Theme.accent.opacity(0.12)))
+        .padding(.horizontal, 12)
+        .padding(.bottom, 10)
     }
 
     // MARK: - Commit

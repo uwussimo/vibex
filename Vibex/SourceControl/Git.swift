@@ -148,6 +148,50 @@ nonisolated enum GitError: Error, LocalizedError {
     }
 }
 
+/// One checkout from `git worktree list --porcelain`.
+nonisolated struct GitWorktree: Equatable, Sendable {
+    var path: URL
+    var head: String
+    /// Short branch name, nil when detached.
+    var branch: String?
+
+    static func parse(_ output: String) -> [GitWorktree] {
+        output.components(separatedBy: "\n\n").compactMap { block in
+            var path: String?, head = "", branch: String?
+            for line in block.split(separator: "\n") {
+                if line.hasPrefix("worktree ") { path = String(line.dropFirst(9)) }
+                if line.hasPrefix("HEAD ") { head = String(line.dropFirst(5)) }
+                if line.hasPrefix("branch ") { branch = String(line.dropFirst(7)).replacingOccurrences(of: "refs/heads/", with: "") }
+            }
+            return path.map { GitWorktree(path: URL(fileURLWithPath: $0), head: head, branch: branch) }
+        }
+    }
+}
+
+/// `git diff --shortstat` plus what that leaves out.
+nonisolated struct GitChangeStats: Equatable, Sendable {
+    var files = 0
+    var insertions = 0
+    var deletions = 0
+    var commits = 0
+    var uncommitted = false
+
+    var isEmpty: Bool { files == 0 && commits == 0 }
+
+    /// " 3 files changed, 120 insertions(+), 14 deletions(-)"
+    static func parse(shortstat: String) -> GitChangeStats {
+        var stats = GitChangeStats()
+        for part in shortstat.split(separator: ",") {
+            let words = part.split(separator: " ")
+            guard let number = words.first.flatMap({ Int($0) }) else { continue }
+            if part.contains("file") { stats.files = number }
+            if part.contains("insertion") { stats.insertions = number }
+            if part.contains("deletion") { stats.deletions = number }
+        }
+        return stats
+    }
+}
+
 /// What a discard threw away, so it can be put back.
 nonisolated struct DiscardBackup: Sendable {
     enum Entry: Sendable {
@@ -343,6 +387,61 @@ nonisolated struct GitRepository: Sendable {
 
     @concurrent func pull() async throws {
         try run(["pull", "--ff-only", "--quiet"]).check()
+    }
+
+    // MARK: - Worktrees (parallel agents)
+
+    @concurrent func worktrees() async throws -> [GitWorktree] {
+        GitWorktree.parse(try run(["worktree", "list", "--porcelain"]).checkedOutput())
+    }
+
+    /// A new checkout of `base` in `path`, on a new branch.
+    @concurrent func addWorktree(path: URL, branch: String, base: String = "HEAD") async throws {
+        try run(["worktree", "add", "-b", branch, path.path, base]).check()
+    }
+
+    @concurrent func removeWorktree(path: URL) async throws {
+        try run(["worktree", "remove", "--force", path.path]).check()
+    }
+
+    /// Deletes a branch only if it is merged; returns whether it was deleted.
+    @concurrent func deleteBranchIfMerged(_ branch: String) async -> Bool {
+        (try? run(["branch", "-d", branch]).check()) != nil
+    }
+
+    @concurrent func merge(_ branch: String) async throws {
+        try run(["merge", "--no-ff", "--no-edit", branch]).check()
+    }
+
+    @concurrent func currentBranch() async -> String? {
+        try? run(["symbolic-ref", "--short", "HEAD"]).checkedOutput()
+    }
+
+    /// Commits everything in this checkout (agents finish with uncommitted work).
+    @concurrent func commitAll(message: String) async throws {
+        try run(["add", "--all"]).check()
+        try run(["commit", "--quiet", "-m", message]).check()
+    }
+
+    /// What this checkout changed since it left `base`: committed and uncommitted, untracked files counted.
+    @concurrent func changes(since base: String) async -> GitChangeStats {
+        var stats = GitChangeStats()
+        if let mergeBase = try? run(["merge-base", base, "HEAD"]).checkedOutput(),
+           let line = try? run(["diff", "--shortstat", mergeBase]).checkedOutput() {
+            stats = GitChangeStats.parse(shortstat: line)
+            stats.commits = Int((try? run(["rev-list", "--count", "\(mergeBase)..HEAD"]).checkedOutput()) ?? "") ?? 0
+        }
+        // New files aren't in git's diff yet; count their lines as insertions (small text files only).
+        let untracked = ((try? run(["ls-files", "--others", "--exclude-standard"]).checkedOutput()) ?? "").split(separator: "\n")
+        stats.files += untracked.count
+        for path in untracked.prefix(200) {
+            let url = root.appendingPathComponent(String(path))
+            guard let size = (try? url.resourceValues(forKeys: [.fileSizeKey]))?.fileSize, size < 1_000_000,
+                  let data = try? Data(contentsOf: url), !data.contains(0) else { continue }
+            stats.insertions += data.reduce(0) { $0 + ($1 == 0x0A ? 1 : 0) }
+        }
+        stats.uncommitted = !((try? run(["status", "--porcelain"]).checkedOutput()) ?? "").isEmpty
+        return stats
     }
 
     // MARK: - Running git

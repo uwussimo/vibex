@@ -38,7 +38,12 @@ final class SourceControlModel {
     /// Remotes, looked up only while the branch has no upstream (to offer Publish Branch).
     private(set) var remotes: [String] = []
 
-    let folder: URL
+    /// The project's own folder.
+    let projectFolder: URL
+    /// The checkout shown: the project, or a parallel agent's worktree being reviewed.
+    private(set) var folder: URL
+    /// The agent being reviewed, by name; nil for the project's own checkout.
+    private(set) var reviewingAgent: String?
     private var repository: GitRepository?
     private var watcher: FileWatcher?
     private var refreshTask: Task<Void, Never>?
@@ -48,7 +53,28 @@ final class SourceControlModel {
     private var expiringNoticeToken: Int?
 
     init(folder: URL) {
+        projectFolder = folder
         self.folder = folder
+    }
+
+    /// Switches every list, diff and the commit box to another checkout (an agent's worktree), or
+    /// back to the project when `folder` is nil.
+    func show(checkout: URL?, agent: String? = nil) {
+        let target = checkout ?? projectFolder
+        guard target.standardizedFileURL != folder.standardizedFileURL else { return }
+        stop()
+        folder = target
+        reviewingAgent = checkout == nil ? nil : agent
+        repository = nil
+        status = GitStatus()
+        selection = nil
+        diff = nil
+        highlights = [:]
+        problem = nil
+        commitMessage = ""
+        dismissNotice()
+        state = .loading
+        start()
     }
 
     var branchLabel: String { status.branch ?? "Detached HEAD" }

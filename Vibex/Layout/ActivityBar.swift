@@ -10,6 +10,7 @@ struct ActivityBar: View {
     let panes: PaneVisibility
     let simulator: SimulatorModel
     let attention: AttentionCenter
+    let agents: AgentsModel
     let windowID: String
     let actions: ActivityBarActions
 
@@ -46,6 +47,13 @@ struct ActivityBar: View {
                 isSelected: sidebar.isShowing(.sourceControl),
                 badge: sourceControl.status.changeCount,
                 action: actions.toggleSourceControl
+            )
+            ActivityButton(
+                icon: .dataflow,
+                help: "Agents: parallel Claude attempts in their own branches (⌃⇧N)",
+                isSelected: sidebar.isShowing(.agents),
+                badge: agents.agents.count,
+                action: actions.toggleAgents
             )
             ActivityButton(
                 icon: .sparkles,
@@ -97,6 +105,7 @@ struct ActivityBarActions {
     var showSimulator: () -> Void
     var showBrowser: () -> Void
     var toggleSourceControl: () -> Void
+    var toggleAgents: () -> Void
     var toggleSkills: () -> Void
     var showAgents: () -> Void
     var showSetup: () -> Void

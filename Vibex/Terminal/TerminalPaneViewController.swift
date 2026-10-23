@@ -266,6 +266,27 @@ final class TerminalPaneViewController: NSViewController {
     }
 
     func selectTab(_ id: UUID) { select(id) }
+
+    /// A shell in `directory` (an agent's worktree), optionally typing `command` once it's ready.
+    @discardableResult
+    func openTab(in directory: URL, command: String? = nil) -> UUID {
+        guard let command else { return openTab(directory: directory.path).id }
+        return runCommandInNewTab(command, directory: directory.path)
+    }
+
+    /// Tabs whose shell is inside `folder`, for an agent's status and for closing them with it.
+    func tabIDs(inside folder: URL) -> [UUID] {
+        let prefix = folder.standardizedFileURL.path
+        return tabs.filter { tab in
+            guard let directory = tab.directory else { return false }
+            let path = URL(fileURLWithPath: directory).standardizedFileURL.path
+            return path == prefix || path.hasPrefix(prefix + "/")
+        }.map(\.id)
+    }
+
+    func closeTabs(inside folder: URL) {
+        for id in tabIDs(inside: folder) { close(id) }
+    }
     func hasTab(_ id: UUID) -> Bool { tabs.contains { $0.id == id } }
 
     /// Shell process ids of every tab, for finding which window an MCP caller runs in.

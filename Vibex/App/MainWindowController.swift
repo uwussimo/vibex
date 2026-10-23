@@ -9,6 +9,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
     let toast = ToastModel()
     let sourceControl: SourceControlModel
     let skills: SkillsModel
+    let agents: AgentsModel
     let sidebar = SidebarModel()
     private let columns = NSSplitViewController()
     private var sidebarItem: NSSplitViewItem { columns.splitViewItems[0] }
@@ -25,6 +26,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
         self.session = session
         sourceControl = SourceControlModel(folder: session.project.url)
         skills = SkillsModel(folder: session.project.url)
+        agents = AgentsModel(project: session.project)
         workspace = WorkspaceSplitViewController(session: session, sourceControl: sourceControl, skills: skills)
         let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 1880, height: 1040),
@@ -36,7 +38,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
         window.title = session.project.name
         window.representedURL = session.project.url
         window.minSize = NSSize(width: 960, height: 600)
-        window.backgroundColor = .windowBackgroundColor
+        window.backgroundColor = Theme.NS.background
         window.tabbingMode = .automatic // follows System Settings › Desktop & Dock › Prefer tabs
         window.tabbingIdentifier = "Vibex.Project"
         window.collectionBehavior = [.fullScreenPrimary, .managed]
@@ -53,6 +55,8 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
             sidebar: sidebar,
             sourceControl: sourceControl,
             skills: skills,
+            agents: agents,
+            agentActions: agentActions(),
             window: { [weak window] in window },
             browseSkills: { [weak workspace] in workspace?.editor.openSkillsMarketplace() }
         )))
@@ -92,6 +96,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
         installActivityBar(in: activityBar)
         sidebar.isVisible = !sidebarItem.isCollapsed
         sourceControl.start()
+        agents.refresh()
     }
 
     private func installActivityBar(in container: NSView) {
@@ -102,12 +107,14 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
             panes: workspace.panes,
             simulator: workspace.simulatorPane.model,
             attention: .shared,
+            agents: agents,
             windowID: session.windowID,
             actions: ActivityBarActions(
                 showTerminal: { [weak self] in self?.showTerminalOrWaiting() },
                 showSimulator: { [weak self] in self?.workspace.focusSimulator(nil) },
                 showBrowser: { [weak self] in self?.workspace.focusBrowser(nil) },
                 toggleSourceControl: { [weak self] in self?.toggleSourceControl(nil) },
+                toggleAgents: { [weak self] in self?.toggleAgents(nil) },
                 toggleSkills: { [weak self] in self?.toggleSkills(nil) },
                 showAgents: { [weak self] in self?.showAgents(nil) },
                 showSetup: { NSApp.sendAction(#selector(AppDelegate.showSetup(_:)), to: nil, from: nil) }
@@ -172,6 +179,85 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
     }
 
     @objc func toggleSourceControl(_ sender: Any?) { toggleSidebar(.sourceControl) }
+    @objc func toggleAgents(_ sender: Any?) { toggleSidebar(.agents) }
+
+    /// File › New Agent: the Agents sidebar with its form open.
+    @objc func newAgent(_ sender: Any?) {
+        showSidebar(.agents)
+        agents.isComposing = true
+    }
+
+    // MARK: - Agents
+
+    private func agentActions() -> AgentActions {
+        AgentActions(
+            create: { [weak self] name, task in
+                guard let self else { return }
+                Task {
+                    guard let folder = await self.agents.create(name: name, task: task) else { return }
+                    let id = self.workspace.terminalPane.openTab(in: folder, command: task.map { AgentsModel.claudeCommand(task: $0) })
+                    self.workspace.showTerminalTab(id)
+                }
+            },
+            open: { [weak self] agent in
+                guard let self else { return }
+                if let id = workspace.terminalPane.tabIDs(inside: agent.path).first {
+                    workspace.showTerminalTab(id)
+                } else {
+                    workspace.showTerminalTab(workspace.terminalPane.openTab(in: agent.path, command: "claude --continue"))
+                }
+            },
+            review: { [weak self] agent in
+                guard let self else { return }
+                sourceControl.show(checkout: agent.path, agent: agent.name)
+                showSidebar(.sourceControl)
+            },
+            merge: { [weak self] agent in self?.confirmMerge(agent) },
+            remove: { [weak self] agent in self?.confirmRemove(agent) },
+            reveal: { agent in NSWorkspace.shared.activateFileViewerSelecting([agent.path]) },
+            waiting: { [weak self] agent in
+                guard let self else { return nil }
+                let tabs = workspace.terminalPane.tabIDs(inside: agent.path)
+                return tabs.lazy.compactMap { AttentionCenter.shared.waiting[$0]?.message }.first
+            },
+            isOpen: { [weak self] agent in !(self?.workspace.terminalPane.tabIDs(inside: agent.path).isEmpty ?? true) }
+        )
+    }
+
+    private func confirmMerge(_ agent: AgentsModel.Agent) {
+        guard let window else { return }
+        let alert = NSAlert()
+        let base = agents.baseBranch ?? "the current branch"
+        alert.messageText = "Merge \(agent.name) into \(base)?"
+        alert.informativeText = agent.stats.uncommitted
+            ? "Its uncommitted changes are committed first, then \(agent.branch) is merged into \(base) in this project."
+            : "\(agent.branch) is merged into \(base) in this project."
+        alert.addButton(withTitle: "Merge")
+        alert.addButton(withTitle: "Cancel")
+        alert.beginSheetModal(for: window) { [weak self] response in
+            guard response == .alertFirstButtonReturn, let self else { return }
+            Task {
+                await self.agents.merge(agent)
+                self.sourceControl.refresh()
+            }
+        }
+    }
+
+    private func confirmRemove(_ agent: AgentsModel.Agent) {
+        guard let window else { return }
+        let alert = NSAlert()
+        alert.messageText = "Remove \(agent.name)?"
+        alert.informativeText = "Its folder and terminal tabs close. The branch \(agent.branch) is deleted only if it was merged; otherwise Vibex keeps it."
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: "Remove").hasDestructiveAction = true
+        alert.addButton(withTitle: "Cancel")
+        alert.beginSheetModal(for: window) { [weak self] response in
+            guard response == .alertFirstButtonReturn, let self else { return }
+            workspace.terminalPane.closeTabs(inside: agent.path)
+            if sourceControl.folder.standardizedFileURL == agent.path.standardizedFileURL { sourceControl.show(checkout: nil) }
+            Task { await self.agents.remove(agent) }
+        }
+    }
     @objc func toggleSkills(_ sender: Any?) { toggleSidebar(.skills) }
     @objc func showAgents(_ sender: Any?) { workspace.editor.openAgents() }
     @objc func browseSkills(_ sender: Any?) {
