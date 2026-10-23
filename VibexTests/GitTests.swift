@@ -95,6 +95,11 @@ import Testing
         #expect(rows[2].right?.text == "let c = 4")
     }
 
+    @Test func `split rows are unique across hunks`() {
+        let ids = DiffParser.parse(Self.sample).hunks.flatMap(\.splitRows).map(\.id)
+        #expect(Set(ids).count == ids.count)
+    }
+
     @Test func `word highlight covers only what changed`() throws {
         let ranges = try #require(DiffParser.changedRanges("let b = 2", "let b = 3"))
         #expect("let b = 2"[ranges.left] == "2")

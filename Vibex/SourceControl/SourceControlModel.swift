@@ -19,6 +19,8 @@ final class SourceControlModel {
     private(set) var status = GitStatus()
     private(set) var selection: GitChange?
     private(set) var diff: FileDiff?
+    /// Syntax colours for the open diff, by line id.
+    private(set) var highlights: [Int: [SyntaxSpan]] = [:]
     private(set) var isDiffLoading = false
     private(set) var busy: String?
     var commitMessage = ""
@@ -110,6 +112,7 @@ final class SourceControlModel {
         guard change != selection else { return }
         selection = change
         diff = nil
+        highlights = [:]
         loadDiff()
     }
 
@@ -124,10 +127,18 @@ final class SourceControlModel {
                 self.error = error.localizedDescription
                 result = FileDiff()
             }
+            let spans = await Self.highlight(result, path: change.path)
             guard selection?.id == change.id else { return }
-            if result != diff { diff = result }
+            if result != diff {
+                diff = result
+                highlights = spans
+            }
             isDiffLoading = false
         }
+    }
+
+    @concurrent private static func highlight(_ diff: FileDiff, path: String) async -> [Int: [SyntaxSpan]] {
+        DiffHighlighter.highlight(diff, path: path)
     }
 
     // MARK: - Actions

@@ -25,7 +25,7 @@ nonisolated struct DiffHunk: Equatable, Sendable, Identifiable {
         func flush() {
             for index in 0..<max(removed.count, added.count) {
                 rows.append(SplitRow(
-                    id: rows.count,
+                    id: id << 20 | rows.count,
                     left: index < removed.count ? removed[index] : nil,
                     right: index < added.count ? added[index] : nil
                 ))
@@ -39,7 +39,7 @@ nonisolated struct DiffHunk: Equatable, Sendable, Identifiable {
             case .added: added.append(line)
             case .context:
                 flush()
-                rows.append(SplitRow(id: rows.count, left: line, right: line))
+                rows.append(SplitRow(id: id << 20 | rows.count, left: line, right: line))
             }
         }
         flush()

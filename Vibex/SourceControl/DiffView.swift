@@ -107,9 +107,9 @@ struct DiffView: View {
                             HunkHeader(hunk: hunk)
                             switch model.diffStyle {
                             case .split:
-                                ForEach(hunk.splitRows) { SplitRowView(row: $0) }
+                                ForEach(hunk.splitRows) { SplitRowView(row: $0, spans: model.highlights) }
                             case .unified:
-                                ForEach(hunk.lines) { UnifiedRowView(line: $0) }
+                                ForEach(hunk.lines) { UnifiedRowView(line: $0, spans: model.highlights[$0.id] ?? []) }
                             }
                         }
                         if !showEverything, rowCount(diff) > Self.rowBudget {
@@ -200,6 +200,7 @@ private struct HunkHeader: View {
 
 private struct SplitRowView: View {
     let row: SplitRow
+    let spans: [Int: [SyntaxSpan]]
 
     var body: some View {
         let ranges = row.changedRanges
@@ -216,7 +217,7 @@ private struct SplitRowView: View {
         HStack(alignment: .top, spacing: 0) {
             LineNumber(number: number)
             if let line {
-                CodeText(line: line, highlight: highlight)
+                CodeText(line: line, highlight: highlight, spans: spans[line.id] ?? [])
                     .frame(maxWidth: .infinity, alignment: .leading)
             } else {
                 Spacer()
@@ -238,6 +239,7 @@ private struct SplitRowView: View {
 
 private struct UnifiedRowView: View {
     let line: DiffLine
+    let spans: [SyntaxSpan]
 
     var body: some View {
         HStack(alignment: .top, spacing: 0) {
@@ -248,7 +250,7 @@ private struct UnifiedRowView: View {
                 .foregroundStyle(markerColor)
                 .frame(width: 16)
                 .padding(.vertical, 1.5)
-            CodeText(line: line, highlight: nil)
+            CodeText(line: line, highlight: nil, spans: spans)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
         .background(background)
@@ -293,6 +295,7 @@ private struct LineNumber: View {
 private struct CodeText: View {
     let line: DiffLine
     let highlight: Range<String.Index>?
+    let spans: [SyntaxSpan]
 
     var body: some View {
         Text(attributed)
@@ -305,12 +308,34 @@ private struct CodeText: View {
     }
 
     private var attributed: AttributedString {
-        let text = line.text.replacingOccurrences(of: "\t", with: "    ")
-        var string = AttributedString(text.isEmpty ? " " : text)
-        // Tabs were expanded, which shifts indices; skip the word highlight on those rare lines.
-        if let highlight, !highlight.isEmpty, !line.text.contains("\t"),
-           let range = Range(highlight, in: string) {
-            string[range].backgroundColor = line.kind == .added ? DiffPalette.addedWord : DiffPalette.removedWord
+        let raw = line.text
+        guard !raw.isEmpty else { return AttributedString(" ") }
+        // Tabs display as four spaces; every UTF-16 offset into the raw line moves by 3 per tab before it.
+        let units = Array(raw.utf16)
+        var shift = [Int](repeating: 0, count: units.count + 1)
+        for index in units.indices { shift[index + 1] = shift[index] + (units[index] == 0x09 ? 3 : 0) }
+        let text = raw.replacingOccurrences(of: "\t", with: "    ")
+        var string = AttributedString(text)
+
+        func range(_ start: Int, _ end: Int) -> Range<AttributedString.Index>? {
+            let start = min(start, units.count), end = min(end, units.count)
+            guard end > start else { return nil }
+            let lower = String.Index(utf16Offset: start + shift[start], in: text)
+            let upper = String.Index(utf16Offset: end + shift[end], in: text)
+            return Range(lower..<upper, in: string)
+        }
+
+        for span in spans {
+            if let range = range(span.start, span.start + span.length) {
+                string[range].foregroundColor = SyntaxPalette.color(span.token)
+            }
+        }
+        if let highlight, !highlight.isEmpty {
+            let start = highlight.lowerBound.utf16Offset(in: raw)
+            let end = highlight.upperBound.utf16Offset(in: raw)
+            if let range = range(start, end) {
+                string[range].backgroundColor = line.kind == .added ? DiffPalette.addedWord : DiffPalette.removedWord
+            }
         }
         if line.missingNewline {
             var marker = AttributedString("  no newline at end of file")
