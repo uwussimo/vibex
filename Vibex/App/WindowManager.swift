@@ -1,8 +1,10 @@
 import AppKit
+import Observation
 import os
 import SwiftUI
 
 /// Opens, tracks and restores project windows, and tells MCP tools which window a call is for.
+@Observable
 final class WindowManager {
     static let shared = WindowManager()
 

@@ -8,6 +8,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// Folders macOS hands over before launch finishes (`vibex .` on a cold start); opened once MCP is up.
     private var pendingURLs: [URL] = []
     private var setup: SetupWindowController?
+    private var menuBar: MenuBarController?
 
     func applicationWillFinishLaunching(_ notification: Notification) {
         NSApp.mainMenu = MainMenu.build()
@@ -26,6 +27,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         mcp.registry.register(BrowserTools.make())
         mcp.registry.register(SimulatorTools.make())
         mcp.start()
+        menuBar = MenuBarController(mcp: mcp)
         hasLaunched = true
         if pendingURLs.isEmpty {
             windows.restoreOrWelcome()
