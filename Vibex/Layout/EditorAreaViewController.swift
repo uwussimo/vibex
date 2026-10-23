@@ -13,6 +13,7 @@ final class EditorTabsModel {
         case diff
         case agents
         case skills
+        case compare
 
         var kind: String {
             switch self {
@@ -21,6 +22,7 @@ final class EditorTabsModel {
             case .diff: "diff"
             case .agents: "agents"
             case .skills: "skills"
+            case .compare: "compare"
             }
         }
     }
@@ -64,6 +66,7 @@ final class EditorAreaViewController: NSViewController {
     /// Created when opened and removed when closed, so their views stop updating with the tab.
     private var agentsHost: NSView?
     private var skillsHost: NSView?
+    private var compareHost: NSView?
 
     private let container = NSView()
     private lazy var diffHost: NSHostingView<DiffView> = {
@@ -123,6 +126,7 @@ final class EditorAreaViewController: NSViewController {
 
         browserPane.onTabsChange = { [weak self] in self?.rebuildItems() }
         browserPane.onSelect = { [weak self] id in self?.select(.browser(id)) }
+        simulatorPane.openCompare = { [weak self] in self?.openCompare() }
         simulatorPane.onPreferredWidthChange = { [weak self] width in
             self?.simulatorPreferredWidth = width
             self?.reportPreferredWidth()
@@ -172,6 +176,7 @@ final class EditorAreaViewController: NSViewController {
         diffHost.isHidden = tab != .diff
         agentsHost?.isHidden = tab != .agents
         skillsHost?.isHidden = tab != .skills
+        compareHost?.isHidden = tab != .compare
         session.update { $0.editorTab = tab.kind }
         reportPreferredWidth()
     }
@@ -187,7 +192,7 @@ final class EditorAreaViewController: NSViewController {
 
     private func showNothing() {
         tabs.selected = nil
-        for view in [browserPane.view, simulatorPane.view, diffHost, agentsHost, skillsHost] { view?.isHidden = true }
+        for view in [browserPane.view, simulatorPane.view, diffHost, agentsHost, skillsHost, compareHost] { view?.isHidden = true }
         simulatorPane.setVisible(false)
         reportPreferredWidth()
     }
@@ -222,6 +227,15 @@ final class EditorAreaViewController: NSViewController {
         select(.agents)
     }
 
+    /// Before and after: the simulator's screenshot history.
+    func openCompare() {
+        if compareHost == nil {
+            compareHost = host(CompareView(history: simulatorPane.snapshots))
+            rebuildItems()
+        }
+        select(.compare)
+    }
+
     func openSkillsMarketplace() {
         if skillsHost == nil {
             skillsHost = host(SkillsMarketplaceView(model: skills))
@@ -254,6 +268,10 @@ final class EditorAreaViewController: NSViewController {
             skillsHost?.removeFromSuperview()
             skillsHost = nil
             rebuildItems()
+        case .compare:
+            compareHost?.removeFromSuperview()
+            compareHost = nil
+            rebuildItems()
         }
     }
 
@@ -284,6 +302,9 @@ final class EditorAreaViewController: NSViewController {
         }
         if skillsHost != nil {
             items.append(EditorTabsModel.Item(tab: .skills, title: "Skills", icon: .sparkles))
+        }
+        if compareHost != nil {
+            items.append(EditorTabsModel.Item(tab: .compare, title: "Compare", icon: .compare))
         }
         if let change = sourceControl.selection {
             items.append(EditorTabsModel.Item(tab: .diff, title: change.fileName, icon: .fileCode, tint: change.kind.color, isPreview: true))

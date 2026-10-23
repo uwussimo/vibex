@@ -16,6 +16,10 @@ final class SimulatorPaneViewController: NSViewController, NSMenuItemValidation 
 
     let model = SimulatorModel()
     let session: ProjectSession
+    /// Screenshots kept for before/after comparisons.
+    let snapshots: SnapshotHistory
+    /// Opens the Compare tab.
+    var openCompare: () -> Void = {}
 
     var onPreferredWidthChange: (CGFloat) -> Void = { _ in }
     /// Runs a shell command in a new terminal tab (used to install simslim in plain sight).
@@ -41,6 +45,7 @@ final class SimulatorPaneViewController: NSViewController, NSMenuItemValidation 
 
     init(session: ProjectSession) {
         self.session = session
+        snapshots = SnapshotHistory(projectID: session.project.id)
         super.init(nibName: nil, bundle: nil)
         model.selectedUDID = session.state.deviceUDID
         model.onSelectionChange = { [weak session] udid in session?.update { $0.deviceUDID = udid } }
@@ -59,9 +64,10 @@ final class SimulatorPaneViewController: NSViewController, NSMenuItemValidation 
             home: { [weak self] in self?.input?.press(.home) },
             lock: { [weak self] in self?.input?.press(.lock) },
             toggleSlim: { [weak self] in self?.toggleSlim() },
-            installSimslim: { [weak self] in self?.installSimslim(nil) }
+            installSimslim: { [weak self] in self?.installSimslim(nil) },
+            compare: { [weak self] in self?.openCompare() }
         )
-        let header = NSHostingView(rootView: SimulatorHeader(model: model, isLive: { [weak self] in self?.displayState == .live }, actions: actions))
+        let header = NSHostingView(rootView: SimulatorHeader(model: model, snapshots: snapshots, isLive: { [weak self] in self?.displayState == .live }, actions: actions))
         header.sizingOptions = []
         header.translatesAutoresizingMaskIntoConstraints = false
         displayView.translatesAutoresizingMaskIntoConstraints = false
@@ -306,8 +312,19 @@ final class SimulatorPaneViewController: NSViewController, NSMenuItemValidation 
         }
     }
 
+    /// Copies the screen and keeps it in the history for Compare.
     private func screenshot() {
-        Task { _ = await model.copyScreenshot() }
+        Task {
+            guard let png = await model.copyScreenshot() else { return }
+            snapshots.add(png: png, label: "Screenshot", device: model.bootedDevice?.name ?? "Simulator")
+        }
+    }
+
+    /// For Run and `simulator_snapshot`: saves the current screen with a label, without copying it.
+    @discardableResult
+    func captureSnapshot(label: String) async -> SnapshotHistory.Snapshot? {
+        guard let png = await model.screenshotPNG() else { return nil }
+        return snapshots.add(png: png, label: label, device: model.bootedDevice?.name ?? "Simulator")
     }
 
     private func toggleSlim() {

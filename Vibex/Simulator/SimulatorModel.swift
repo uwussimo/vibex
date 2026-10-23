@@ -103,21 +103,28 @@ final class SimulatorModel {
         }
     }
 
-    /// Copies a PNG of the booted device to the pasteboard. Returns true on success.
-    func copyScreenshot() async -> Bool {
-        guard let device = bootedDevice ?? selectedDevice, !isBusy else { return false }
+    /// Copies a PNG of the booted device to the pasteboard and returns it.
+    @discardableResult
+    func copyScreenshot() async -> Data? {
+        guard let data = await screenshotPNG() else { return nil }
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        pasteboard.setData(data, forType: .png)
+        return data
+    }
+
+    /// A PNG of the booted (or selected) device.
+    func screenshotPNG() async -> Data? {
+        guard let device = bootedDevice ?? selectedDevice, !isBusy else { return nil }
         isBusy = true
         defer { isBusy = false }
         do {
             let data = try await simctl.screenshot(device.udid)
-            let pasteboard = NSPasteboard.general
-            pasteboard.clearContents()
-            pasteboard.setData(data, forType: .png)
             errorMessage = nil
-            return true
+            return data
         } catch {
             errorMessage = error.localizedDescription
-            return false
+            return nil
         }
     }
 

@@ -43,8 +43,10 @@ user to open Vibex, or to choose **Vibex › Re-register MCP with Claude Code**.
    with point coordinates only when there is no accessible element (`simulator_info` gives the screen size).
 4. Type with `simulator_type` after tapping a field; `simulator_press_key` for return, tab and arrows;
    `simulator_button` for home and lock.
-5. Read the app's logs with `simulator_logs` (filter by bundle id). Deep links: `simulator_open_url`.
-6. Manage apps with `simulator_install_app`, `simulator_launch_app`, `simulator_terminate_app`,
+5. Before a UI change, call `simulator_snapshot` with label "before"; after it, "after". The user compares
+   them in Vibex's Compare tab by dragging a divider across.
+6. Read the app's logs with `simulator_logs` (filter by bundle id). Deep links: `simulator_open_url`.
+7. Manage apps with `simulator_install_app`, `simulator_launch_app`, `simulator_terminate_app`,
    `simulator_list_apps`; devices with `simulator_list`, `simulator_boot`, `simulator_shutdown`.
 
 Add accessibility labels and identifiers to views you build; they make the app testable this way.

@@ -8,10 +8,12 @@ struct SimulatorHeaderActions {
     var lock: () -> Void
     var toggleSlim: () -> Void
     var installSimslim: () -> Void
+    var compare: () -> Void
 }
 
 struct SimulatorHeader: View {
     let model: SimulatorModel
+    let snapshots: SnapshotHistory
     let isLive: () -> Bool
     let actions: SimulatorHeaderActions
     @State private var flashScreenshot = false
@@ -48,6 +50,11 @@ struct SimulatorHeader: View {
                     withAnimation(.spring(response: 0.25, dampingFraction: 1)) { flashScreenshot = false }
                 }
             }
+            ToolbarIconButton(
+                icon: .compare,
+                help: snapshots.snapshots.count >= 2 ? "Compare Before and After" : "Compare Before and After: take two screenshots first",
+                action: actions.compare
+            )
         }
         .padding(.horizontal, 8)
         .frame(height: 40)

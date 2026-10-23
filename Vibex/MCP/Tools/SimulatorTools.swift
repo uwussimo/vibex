@@ -34,6 +34,15 @@ enum SimulatorTools {
                 let png = try auto().screenshot(maxWidth: args.int("maxWidth") ?? 600)
                 return .image(png, caption: try auto().describeInfo().split(separator: "\n").dropFirst().first.map(String.init))
             },
+            Tool(name: "simulator_snapshot", description: "Save the current simulator screen in Vibex's screenshot history under a label (e.g. \"before\" and \"after\" a UI change), and open the Compare tab so the user can drag between them. Returns the image too.", inputSchema: Schema.object(["label": Schema.string("Short label, e.g. before or after")], required: ["label"])) { args in
+                let window = try WindowManager.shared.toolTarget()
+                guard let snapshot = await window.workspace.simulatorPane.captureSnapshot(label: try args.requireString("label")) else {
+                    throw ToolError("Couldn't take a screenshot. Is a simulator booted?")
+                }
+                if window.workspace.simulatorPane.snapshots.snapshots.count >= 2 { window.workspace.editor.openCompare() }
+                let png = try Data(contentsOf: window.workspace.simulatorPane.snapshots.url(of: snapshot))
+                return .image(png, caption: "Saved \"\(snapshot.label)\". \(window.workspace.simulatorPane.snapshots.snapshots.count) screenshots in Compare.")
+            },
             Tool(name: "simulator_tap", description: "Tap at a point (screen points, origin top-left).", inputSchema: Schema.object(["x": Schema.number("X in points"), "y": Schema.number("Y in points")], required: ["x", "y"])) { args in
                 try await auto().tap(x: try args.requireDouble("x"), y: try args.requireDouble("y"))
                 return .text("Tapped.")

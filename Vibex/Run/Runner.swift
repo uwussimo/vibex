@@ -51,6 +51,10 @@ final class Runner {
     private(set) var config: RunConfig?
     private(set) var lastExitCode: Int32?
 
+    /// The app the last iOS run installed, so it can go on more devices (the Devices tab).
+    struct Launch: Equatable { var app: URL; var bundleID: String }
+    private(set) var lastLaunch: Launch?
+
     private unowned let window: MainWindowController
     private var tabID: UUID?
     private var pollTask: Task<Void, Never>?
@@ -175,7 +179,13 @@ final class Runner {
         do {
             try await simctl.install(udid, appPath: app.path)
             _ = try await simctl.launch(udid, bundleID: bundleID, arguments: [])
+            lastLaunch = Launch(app: app, bundleID: bundleID)
             succeed("Launched \(app.deletingPathExtension().lastPathComponent)")
+            // An "after" for Compare once the first screen has had a moment to settle.
+            Task { [weak self] in
+                try? await Task.sleep(for: .seconds(3))
+                await self?.window.workspace.simulatorPane.captureSnapshot(label: "After run")
+            }
         } catch {
             fail("Launch failed", detail: error.localizedDescription)
         }
