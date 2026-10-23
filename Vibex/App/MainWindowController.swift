@@ -1,13 +1,15 @@
 import AppKit
 import SwiftUI
 
-/// One project window for a single folder, laid out like VS Code: activity bar | Source Control
-/// sidebar | terminal | tabbed editor area (browser tabs, simulator, diff).
+/// One project window for a single folder, laid out like VS Code: activity bar | sidebar (Source
+/// Control or Skills) | terminal | tabbed editor area (browser tabs, simulator, diff, AI Agents, Skills).
 final class MainWindowController: NSWindowController, NSWindowDelegate {
     let session: ProjectSession
     let workspace: WorkspaceSplitViewController
     let toast = ToastModel()
     let sourceControl: SourceControlModel
+    let skills: SkillsModel
+    let sidebar = SidebarModel()
     private let columns = NSSplitViewController()
     private var sidebarItem: NSSplitViewItem { columns.splitViewItems[0] }
     /// Per-window automation state (element refs survive between tool calls).
@@ -22,7 +24,8 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
     init(session: ProjectSession) {
         self.session = session
         sourceControl = SourceControlModel(folder: session.project.url)
-        workspace = WorkspaceSplitViewController(session: session, sourceControl: sourceControl)
+        skills = SkillsModel(folder: session.project.url)
+        workspace = WorkspaceSplitViewController(session: session, sourceControl: sourceControl, skills: skills)
         let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 1880, height: 1040),
             styleMask: [.titled, .closable, .miniaturizable, .resizable],
@@ -44,17 +47,22 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
         // float above them instead of becoming extra split panes.
         let root = NSViewController()
         root.view = NSView()
-        let sidebar = NSSplitViewItem(sidebarWithViewController: NSHostingController(rootView: SourceControlSidebar(
-            model: sourceControl,
-            window: { [weak window] in window }
+        let workspace = workspace
+        let sidebarItem = NSSplitViewItem(sidebarWithViewController: NSHostingController(rootView: SidebarView(
+            sidebar: sidebar,
+            sourceControl: sourceControl,
+            skills: skills,
+            window: { [weak window] in window },
+            browseSkills: { [weak workspace] in workspace?.editor.openSkillsMarketplace() }
         )))
-        sidebar.minimumThickness = 240
-        sidebar.maximumThickness = 440
-        sidebar.canCollapse = true
-        sidebar.isCollapsed = session.state.sourceControlVisible != true
-        sidebar.holdingPriority = NSLayoutConstraint.Priority(260)
+        sidebarItem.minimumThickness = 240
+        sidebarItem.maximumThickness = 440
+        sidebarItem.canCollapse = true
+        sidebarItem.isCollapsed = session.state.sourceControlVisible != true
+        sidebarItem.holdingPriority = NSLayoutConstraint.Priority(260)
+        sidebar.panel = session.state.sidebarPanel.flatMap(SidebarModel.Panel.init(rawValue:)) ?? .sourceControl
         columns.splitView.autosaveName = "Vibex.SourceControl.\(session.project.id)"
-        columns.addSplitViewItem(sidebar)
+        columns.addSplitViewItem(sidebarItem)
         columns.addSplitViewItem(NSSplitViewItem(viewController: workspace))
         root.addChild(columns)
         columns.view.translatesAutoresizingMaskIntoConstraints = false
@@ -82,18 +90,21 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
         installToastOverlay()
         installTitlebarAccessory(RunButton(runner: runner), width: 220)
         installActivityBar(in: activityBar)
-        sourceControl.isSidebarVisible = !sidebar.isCollapsed
+        sidebar.isVisible = !sidebarItem.isCollapsed
         sourceControl.start()
     }
 
     private func installActivityBar(in container: NSView) {
         let bar = NSHostingView(rootView: ActivityBar(
+            sidebar: sidebar,
             sourceControl: sourceControl,
             tabs: workspace.editor.tabs,
             simulator: workspace.simulatorPane.model,
             runner: runner,
             actions: ActivityBarActions(
                 toggleSourceControl: { [weak self] in self?.toggleSourceControl(nil) },
+                toggleSkills: { [weak self] in self?.toggleSkills(nil) },
+                showAgents: { [weak self] in self?.showAgents(nil) },
                 showBrowser: { [weak self] in self?.workspace.focusBrowser(nil) },
                 showSimulator: { [weak self] in self?.workspace.focusSimulator(nil) },
                 toggleRun: { [weak self] in
@@ -114,9 +125,9 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
         ])
     }
 
-    // MARK: - Source Control
+    // MARK: - Sidebar
 
-    private(set) var isSourceControlVisible: Bool {
+    private var isSidebarVisible: Bool {
         get { !sidebarItem.isCollapsed }
         set {
             NSAnimationContext.runAnimationGroup { context in
@@ -125,13 +136,33 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
                 sidebarItem.animator().isCollapsed = !newValue
             }
             session.update { $0.sourceControlVisible = newValue }
-            sourceControl.isSidebarVisible = newValue
+            sidebar.isVisible = newValue
         }
     }
 
-    @objc func toggleSourceControl(_ sender: Any?) {
-        isSourceControlVisible.toggle()
-        if !isSourceControlVisible { sourceControl.select(nil) }
+    /// Opens `panel` in the sidebar, or hides the sidebar when it is already showing it.
+    private func toggleSidebar(_ panel: SidebarModel.Panel) {
+        if sidebar.isShowing(panel) {
+            isSidebarVisible = false
+            // Hiding Source Control closes the diff it opened.
+            if panel == .sourceControl { sourceControl.select(nil) }
+        } else {
+            showSidebar(panel)
+        }
+    }
+
+    private func showSidebar(_ panel: SidebarModel.Panel) {
+        sidebar.panel = panel
+        session.update { $0.sidebarPanel = panel.rawValue }
+        if !isSidebarVisible { isSidebarVisible = true }
+    }
+
+    @objc func toggleSourceControl(_ sender: Any?) { toggleSidebar(.sourceControl) }
+    @objc func toggleSkills(_ sender: Any?) { toggleSidebar(.skills) }
+    @objc func showAgents(_ sender: Any?) { workspace.editor.openAgents() }
+    @objc func browseSkills(_ sender: Any?) {
+        showSidebar(.skills)
+        workspace.editor.openSkillsMarketplace()
     }
 
     /// Steps through the changed files' diffs, opening the sidebar so the list shows where you are.
@@ -140,7 +171,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
 
     private func stepChange(_ offset: Int) {
         guard !sourceControl.orderedChanges.isEmpty else { NSSound.beep(); return }
-        if !isSourceControlVisible { isSourceControlVisible = true }
+        if !sidebar.isShowing(.sourceControl) { showSidebar(.sourceControl) }
         sourceControl.selectAdjacent(offset)
     }
 

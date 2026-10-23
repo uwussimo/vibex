@@ -21,10 +21,10 @@ final class WorkspaceSplitViewController: NSSplitViewController, NSMenuItemValid
     private var terminalItem: NSSplitViewItem { splitViewItems[0] }
     private var editorItem: NSSplitViewItem { splitViewItems[1] }
 
-    init(session: ProjectSession, sourceControl: SourceControlModel) {
+    init(session: ProjectSession, sourceControl: SourceControlModel, skills: SkillsModel) {
         self.session = session
         terminalPane = TerminalPaneViewController(session: session)
-        editor = EditorAreaViewController(session: session, sourceControl: sourceControl)
+        editor = EditorAreaViewController(session: session, sourceControl: sourceControl, skills: skills)
         manualWidths = session.state.columnWidths
         super.init(nibName: nil, bundle: nil)
     }

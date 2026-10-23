@@ -80,6 +80,11 @@ enum MainMenu {
         palette.keyEquivalentModifierMask = [.command, .shift]
         let sourceControl = menu.addItem(withTitle: "Source Control", action: #selector(MainWindowController.toggleSourceControl(_:)), keyEquivalent: "g")
         sourceControl.keyEquivalentModifierMask = [.control, .shift]
+        let skills = menu.addItem(withTitle: "Skills", action: #selector(MainWindowController.toggleSkills(_:)), keyEquivalent: "k")
+        skills.keyEquivalentModifierMask = [.control, .shift]
+        menu.addItem(withTitle: "Browse Skills…", action: #selector(MainWindowController.browseSkills(_:)), keyEquivalent: "")
+        let agents = menu.addItem(withTitle: "AI Agents", action: #selector(MainWindowController.showAgents(_:)), keyEquivalent: "a")
+        agents.keyEquivalentModifierMask = [.control, .shift]
         let nextChange = menu.addItem(withTitle: "Next Change", action: #selector(MainWindowController.nextChange(_:)), keyEquivalent: String(UnicodeScalar(NSDownArrowFunctionKey)!))
         nextChange.keyEquivalentModifierMask = [.command, .option]
         let previousChange = menu.addItem(withTitle: "Previous Change", action: #selector(MainWindowController.previousChange(_:)), keyEquivalent: String(UnicodeScalar(NSUpArrowFunctionKey)!))

@@ -32,8 +32,6 @@ final class SourceControlModel {
     private(set) var busy: String?
     var commitMessage = ""
     var diffStyle: DiffStyle = .split
-    /// Mirrors the window's sidebar so the titlebar button can show it as pressed.
-    var isSidebarVisible = false
     /// Shown in the sidebar until the next action or until dismissed.
     var problem: GitProblem?
     private(set) var notice: Notice?

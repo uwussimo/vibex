@@ -1,9 +1,10 @@
 import SwiftUI
 
-/// The thin icon column on the far left, as in VS Code: Source Control opens the sidebar; Browser
-/// and Simulator bring their editor tab forward; Run starts or stops the project; Setup sits at the
-/// bottom. The selected item gets an accent bar on its leading edge.
+/// The thin icon column on the far left, as in VS Code: Source Control and Skills open the sidebar;
+/// Browser and Simulator bring their editor tab forward; Run starts or stops the project; AI Agents
+/// and Setup sit at the bottom. The selected item gets an accent bar on its leading edge.
 struct ActivityBar: View {
+    let sidebar: SidebarModel
     let sourceControl: SourceControlModel
     let tabs: EditorTabsModel
     let simulator: SimulatorModel
@@ -17,9 +18,15 @@ struct ActivityBar: View {
             ActivityButton(
                 symbol: "arrow.triangle.branch",
                 help: "Source Control (⌃⇧G)",
-                isSelected: sourceControl.isSidebarVisible,
+                isSelected: sidebar.isShowing(.sourceControl),
                 badge: sourceControl.status.changeCount,
                 action: actions.toggleSourceControl
+            )
+            ActivityButton(
+                symbol: "sparkles",
+                help: "Skills (⌃⇧K)",
+                isSelected: sidebar.isShowing(.skills),
+                action: actions.toggleSkills
             )
             ActivityButton(
                 symbol: "globe",
@@ -42,6 +49,12 @@ struct ActivityBar: View {
                 action: actions.toggleRun
             )
             Spacer()
+            ActivityButton(
+                symbol: "gauge.with.dots.needle.67percent",
+                help: "AI Agents: Claude and Codex usage (⌃⇧A)",
+                isSelected: tabs.selected == .agents,
+                action: actions.showAgents
+            )
             ActivityButton(symbol: "gearshape", help: "Setup & Permissions", isSelected: false, action: actions.showSetup)
                 .padding(.bottom, 8)
         }
@@ -62,6 +75,8 @@ struct ActivityBar: View {
 
 struct ActivityBarActions {
     var toggleSourceControl: () -> Void
+    var toggleSkills: () -> Void
+    var showAgents: () -> Void
     var showBrowser: () -> Void
     var showSimulator: () -> Void
     var toggleRun: () -> Void

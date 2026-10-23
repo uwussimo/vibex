@@ -43,6 +43,8 @@ nonisolated struct ProjectState: Codable, Equatable, Sendable {
     var lastOpened = Date()
     /// Optional so state saved by older versions still decodes.
     var sourceControlVisible: Bool?
+    /// Which view the sidebar shows: "sourceControl" or "skills".
+    var sidebarPanel: String?
     var sourceControlWidth: Double?
     /// The selected editor tab: "browser", "simulator" or "diff".
     var editorTab: String?

@@ -18,6 +18,7 @@ enum Defaults {
         static let setupVersion = "setup.version"
         static let foldersRequested = "setup.foldersRequested"
         static let notificationsRequested = "setup.notificationsRequested"
+        static let agentsPeriodDays = "agents.periodDays"
     }
 
     /// Boot simulators through simslim when it is installed. On by default.
@@ -59,4 +60,9 @@ enum Defaults {
         set { store.set(newValue, forKey: Key.notificationsRequested) }
     }
 
+    /// The AI Agents dashboard's spending period: 7, 30 or 90 days.
+    static var agentsPeriodDays: Int {
+        get { [7, 30, 90].contains(store.integer(forKey: Key.agentsPeriodDays)) ? store.integer(forKey: Key.agentsPeriodDays) : 30 }
+        set { store.set(newValue, forKey: Key.agentsPeriodDays) }
+    }
 }

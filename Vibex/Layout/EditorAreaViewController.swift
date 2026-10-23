@@ -3,19 +3,24 @@ import Observation
 import SwiftUI
 
 /// The tabs shown above the editor area, VS Code style: every browser tab, the simulator once a
-/// device is running, and the diff of the file selected in Source Control.
+/// device is running, the diff of the file selected in Source Control, and AI Agents and the skills
+/// marketplace when opened.
 @Observable
 final class EditorTabsModel {
     enum Tab: Hashable {
         case browser(UUID)
         case simulator
         case diff
+        case agents
+        case skills
 
         var kind: String {
             switch self {
             case .browser: "browser"
             case .simulator: "simulator"
             case .diff: "diff"
+            case .agents: "agents"
+            case .skills: "skills"
             }
         }
     }
@@ -35,12 +40,14 @@ final class EditorTabsModel {
     var selected: Tab?
 }
 
-/// Hosts the browser, the simulator and the diff as tabs of one area beside the terminal. Hidden
-/// tabs stay alive: the browser keeps playing and the simulator pauses its display only.
+/// Hosts the browser, the simulator, the diff, AI Agents and the skills marketplace as tabs of one
+/// area beside the terminal. Hidden tabs stay alive: the browser keeps playing and the simulator
+/// pauses its display only.
 final class EditorAreaViewController: NSViewController {
     let browserPane: BrowserPaneViewController
     let simulatorPane: SimulatorPaneViewController
     let sourceControl: SourceControlModel
+    let skills: SkillsModel
     let tabs = EditorTabsModel()
     private let session: ProjectSession
 
@@ -50,6 +57,9 @@ final class EditorAreaViewController: NSViewController {
     var onPreferredWidthChange: (CGFloat) -> Void = { _ in }
     private var simulatorPreferredWidth: CGFloat = 0
     private var lastNonDiffTab: EditorTabsModel.Tab?
+    /// Created when opened and removed when closed, so their views stop updating with the tab.
+    private var agentsHost: NSView?
+    private var skillsHost: NSView?
 
     private let container = NSView()
     private lazy var diffHost: NSHostingView<DiffView> = {
@@ -62,9 +72,10 @@ final class EditorAreaViewController: NSViewController {
         return host
     }()
 
-    init(session: ProjectSession, sourceControl: SourceControlModel) {
+    init(session: ProjectSession, sourceControl: SourceControlModel, skills: SkillsModel) {
         self.session = session
         self.sourceControl = sourceControl
+        self.skills = skills
         browserPane = BrowserPaneViewController(session: session)
         simulatorPane = SimulatorPaneViewController(session: session)
         super.init(nibName: nil, bundle: nil)
@@ -118,6 +129,11 @@ final class EditorAreaViewController: NSViewController {
         observeSimulator()
         observeDiff()
         rebuildItems()
+        switch session.state.editorTab {
+        case "agents": openAgents()
+        case "skills": openSkillsMarketplace()
+        default: break
+        }
         if tabs.selected == nil, let id = browserPane.selectedID ?? browserPane.tabs.first?.id { select(.browser(id)) }
     }
 
@@ -148,6 +164,8 @@ final class EditorAreaViewController: NSViewController {
         simulatorPane.view.isHidden = tab != .simulator
         simulatorPane.setVisible(tab == .simulator)
         diffHost.isHidden = tab != .diff
+        agentsHost?.isHidden = tab != .agents
+        skillsHost?.isHidden = tab != .skills
         session.update { $0.editorTab = tab.kind }
         reportPreferredWidth()
     }
@@ -169,6 +187,29 @@ final class EditorAreaViewController: NSViewController {
         if shouldSelect { select(.simulator) }
     }
 
+    func openAgents() {
+        if agentsHost == nil {
+            agentsHost = host(AgentsDashboard(store: .shared, style: .tab))
+            rebuildItems()
+        }
+        select(.agents)
+    }
+
+    func openSkillsMarketplace() {
+        if skillsHost == nil {
+            skillsHost = host(SkillsMarketplaceView(model: skills))
+            rebuildItems()
+        }
+        select(.skills)
+    }
+
+    private func host(_ content: some View) -> NSView {
+        let host = NSHostingView(rootView: content)
+        host.sizingOptions = []
+        embed(host)
+        return host
+    }
+
     func close(_ tab: EditorTabsModel.Tab) {
         switch tab {
         case let .browser(id):
@@ -179,6 +220,14 @@ final class EditorAreaViewController: NSViewController {
             rebuildItems()
         case .diff:
             sourceControl.select(nil)
+        case .agents:
+            agentsHost?.removeFromSuperview()
+            agentsHost = nil
+            rebuildItems()
+        case .skills:
+            skillsHost?.removeFromSuperview()
+            skillsHost = nil
+            rebuildItems()
         }
     }
 
@@ -203,6 +252,12 @@ final class EditorAreaViewController: NSViewController {
                 symbol: "iphone",
                 tint: model.selectedDevice?.isBooted == true ? Color(nsColor: .systemGreen) : nil
             ))
+        }
+        if agentsHost != nil {
+            items.append(EditorTabsModel.Item(tab: .agents, title: "AI Agents", symbol: "gauge.with.dots.needle.67percent"))
+        }
+        if skillsHost != nil {
+            items.append(EditorTabsModel.Item(tab: .skills, title: "Skills", symbol: "sparkles"))
         }
         if let change = sourceControl.selection {
             items.append(EditorTabsModel.Item(tab: .diff, title: change.fileName, symbol: "plus.forwardslash.minus", tint: change.kind.color, isPreview: true))
