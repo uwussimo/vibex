@@ -44,19 +44,26 @@ nonisolated struct ProjectState: Codable, Equatable, Sendable {
     /// Optional so state saved by older versions still decodes.
     var sourceControlVisible: Bool?
     var sourceControlWidth: Double?
+    /// The selected editor tab: "browser", "simulator" or "diff".
+    var editorTab: String?
 
     var layout: LayoutMode {
         get { LayoutMode(rawValue: layoutMode) ?? .balanced }
         set { layoutMode = newValue.rawValue }
     }
 
+    /// Saved as [terminal, editor]; versions before 1.2 saved [terminal, simulator, browser].
     var columnWidths: ColumnWidths? {
         get {
-            guard let manualWidths, manualWidths.count == 3 else { return nil }
-            return ColumnWidths(terminal: manualWidths[0], simulator: manualWidths[1], browser: manualWidths[2])
+            guard let manualWidths else { return nil }
+            switch manualWidths.count {
+            case 2: return ColumnWidths(terminal: manualWidths[0], editor: manualWidths[1])
+            case 3: return ColumnWidths(terminal: manualWidths[0], editor: manualWidths[1] + manualWidths[2])
+            default: return nil
+            }
         }
         set {
-            manualWidths = newValue.map { [Double($0.terminal), Double($0.simulator), Double($0.browser)] }
+            manualWidths = newValue.map { [Double($0.terminal), Double($0.editor)] }
         }
     }
 }

@@ -9,7 +9,12 @@ struct DiffView: View {
 
     /// Beyond this many rows the diff renders on request, so a huge lockfile can't stall the UI.
     private static let rowBudget = 4000
+    /// Narrower than this, side by side wraps every line; show the diff inline instead, like VS Code.
+    static let splitMinimumWidth: CGFloat = 760
     @State private var showEverything = false
+    @State private var width: CGFloat = 1000
+    /// A narrow area keeps the file name readable by dropping the stats and the layout picker.
+    private var isCompact: Bool { width < 600 }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -25,6 +30,7 @@ struct DiffView: View {
             return .handled
         }
         .onChange(of: model.selection?.path) { showEverything = false }
+        .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
     }
 
     // MARK: - Header
@@ -38,6 +44,7 @@ struct DiffView: View {
                         .lineLimit(1)
                     Text(change.kind.label)
                         .font(.vibex(size: 10.5, weight: .semibold))
+                        .fixedSize()
                         .foregroundStyle(change.kind.color)
                         .padding(.horizontal, 6)
                         .padding(.vertical, 1)
@@ -45,6 +52,7 @@ struct DiffView: View {
                     if change.area == .staged {
                         Text("Staged")
                             .font(.vibex(size: 10.5, weight: .semibold))
+                            .fixedSize()
                             .foregroundStyle(.secondary)
                             .padding(.horizontal, 6)
                             .padding(.vertical, 1)
@@ -53,18 +61,21 @@ struct DiffView: View {
                 }
                 Text(change.originalPath.map { "\($0) → \(change.path)" } ?? change.path)
                     .font(.vibex(size: 11))
+                    .layoutPriority(-1)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
                     .truncationMode(.middle)
             }
+            .layoutPriority(1)
             Spacer(minLength: 8)
-            if let diff = model.diff, !diff.isBinary {
+            if !isCompact, let diff = model.diff, !diff.isBinary {
                 HStack(spacing: 6) {
                     Text("+\(diff.additions)").foregroundStyle(DiffPalette.addedText)
                     Text("−\(diff.deletions)").foregroundStyle(DiffPalette.removedText)
                 }
                 .font(.vibexCode(size: 12, weight: .semibold))
             }
+            if !isCompact {
             Picker("Layout", selection: $model.diffStyle) {
                 Image(systemName: "rectangle.split.2x1").help("Side by Side").tag(SourceControlModel.DiffStyle.split)
                 Image(systemName: "rectangle").help("Unified").tag(SourceControlModel.DiffStyle.unified)
@@ -72,6 +83,8 @@ struct DiffView: View {
             .pickerStyle(.segmented)
             .labelsHidden()
             .fixedSize()
+            .help("Side by side needs at least \(Int(Self.splitMinimumWidth)) points; narrower diffs show inline.")
+            }
             switch change.area {
             case .unstaged, .conflicted:
                 ToolbarIconButton(systemImage: "plus", help: change.area == .conflicted ? "Mark Resolved" : "Stage Changes") { model.stage([change]) }
@@ -98,6 +111,8 @@ struct DiffView: View {
             } else if diff.isEmpty {
                 message("equal.circle", "No text changes", change.kind == .renamed ? "The file was renamed without edits." : "Only the file mode or whitespace changed.")
             } else {
+                GeometryReader { geometry in
+                let style = geometry.size.width < Self.splitMinimumWidth ? .unified : model.diffStyle
                 ScrollView([.vertical]) {
                     LazyVStack(alignment: .leading, spacing: 0) {
                         if diff.isTruncated {
@@ -105,7 +120,7 @@ struct DiffView: View {
                         }
                         ForEach(visibleHunks(diff)) { hunk in
                             HunkHeader(hunk: hunk)
-                            switch model.diffStyle {
+                            switch style {
                             case .split:
                                 ForEach(hunk.splitRows) { SplitRowView(row: $0, spans: model.highlights) }
                             case .unified:
@@ -121,6 +136,7 @@ struct DiffView: View {
                     .padding(.bottom, 24)
                 }
                 .scrollIndicators(.automatic)
+                }
             }
         } else if model.isDiffLoading {
             ProgressView().controlSize(.small).frame(maxWidth: .infinity, maxHeight: .infinity)

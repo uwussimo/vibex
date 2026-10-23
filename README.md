@@ -11,9 +11,13 @@
 
 <p align="center"><a href="https://uwussimo.github.io/vibex/">uwussimo.github.io/vibex</a></p>
 
+Laid out like VS Code: an activity bar on the far left (Source Control, Browser, Simulator, Run, Setup), the
+Source Control sidebar, the terminal as the main column, and one tabbed editor area on the right.
+
 - **Terminal**: real PTY terminals with tabs (SwiftTerm, Metal renderer), fish by default. Run Claude Code here.
-- **Simulator**: the iOS Simulator rendered inside Vibex from CoreSimulator's framebuffer, with touch, keyboard and buttons. No Simulator.app window.
-- **Browser**: a tabbed WebKit browser. Netflix plays here; your localhost previews open in their own tabs.
+- **Simulator**: the iOS Simulator rendered inside Vibex from CoreSimulator's framebuffer, with touch, keyboard and buttons. No Simulator.app window. Its editor tab appears when a device boots (from the header, Run or MCP) or from the activity bar.
+- **Browser**: WebKit tabs in the editor area. Netflix plays here; your localhost previews open in their own tabs.
+- **Source Control**: changed files in the sidebar (⌃⇧G); a file's diff opens as an editor tab, side by side or inline, with syntax highlighting.
 - **MCP**: a built-in server so Claude Code can see and drive the simulator and the browser.
 
 <p align="center">
@@ -162,10 +166,11 @@ The title bar shows `mcp :5150` with a green dot while a client is active. Vibex
 | ⌘T / ⌘W | New / close tab in the focused pane |
 | ⌘⇧[ / ⌘⇧] | Previous / next tab |
 | ⌘K | Clear terminal |
-| ⌘1 / ⌘2 / ⌘3 | Focus terminal / simulator / browser |
-| ⌘⇧B | Build mode: wide terminal, simulator at natural size, Netflix mini player |
-| ⌥⌘W | Watch mode: Netflix wide, simulator hidden |
-| ⌘⇧0 | Back to your own divider positions |
+| ⌘1 / ⌘2 / ⌘3 | Focus terminal / simulator tab / browser tab |
+| ⌃⇧G | Source Control sidebar |
+| ⌘⇧B | Build mode: wide terminal, editor area sized to the simulator (or a mini player) |
+| ⌥⌘W | Watch mode: wide editor area on the browser |
+| ⌘⇧0 | Back to your own divider position |
 | ⌘L / ⌘R / ⌘[ / ⌘] | Browser: open location, reload, back, forward |
 | ⌘⇧N | Browser: go to Netflix |
 | ⌘⇧H / ⌘⇧L | Simulator: Home / Lock |

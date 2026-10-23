@@ -20,7 +20,7 @@ enum WorkspaceTools {
             },
             Tool(
                 name: "vibex_layout",
-                description: "Switch the window layout. build: wide terminal, simulator at natural size, small browser. watch: wide browser, simulator hidden. balanced: the user's own divider positions.",
+                description: "Switch the window layout (terminal on the left, a tabbed editor area with browser tabs, the simulator and diffs on the right). build: wide terminal, the editor only as wide as the simulator (or a mini player) needs. watch: wide editor area showing the browser. balanced: the user's own divider position.",
                 inputSchema: Schema.object(["mode": Schema.string("Layout mode", enum: ["build", "watch", "balanced"])], required: ["mode"])
             ) { args in
                 let raw = try args.requireString("mode")

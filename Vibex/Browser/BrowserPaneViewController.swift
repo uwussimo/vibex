@@ -3,15 +3,18 @@ import os
 import SwiftUI
 import WebKit
 
-/// Netflix-first mini browser with tabs: a tab strip, a slim toolbar and one web view per tab.
-/// Background tabs stay alive (and keep playing) while out of the view hierarchy.
+/// Netflix-first mini browser: a slim toolbar and one web view per tab. Its tabs are shown in the
+/// editor area's tab strip; background tabs stay alive (and keep playing) while out of the view hierarchy.
 final class BrowserPaneViewController: NSViewController, NSMenuItemValidation {
     let session: ProjectSession
     private(set) var tabs: [BrowserTab] = []
     private(set) var selectedID: UUID?
 
     private let toolbarModel = BrowserToolbarModel()
-    private let stripModel = TerminalTabBarModel()
+    /// Tabs were added, removed, retitled or started/stopped loading.
+    var onTabsChange: () -> Void = {}
+    /// A tab became the selected one (by click, by a link opening a new tab, or by Run).
+    var onSelect: (UUID) -> Void = { _ in }
     private let container = NSView()
     private var hasRestored = false
 
@@ -30,15 +33,6 @@ final class BrowserPaneViewController: NSViewController, NSMenuItemValidation {
         let root = NSView()
         root.wantsLayer = true
 
-        let stripActions = TabStripActions(
-            select: { [weak self] id in self?.select(id) },
-            close: { [weak self] id in self?.close(id) },
-            new: { [weak self] in self?.newTab(nil) }
-        )
-        let strip = NSHostingView(rootView: BrowserTabStrip(model: stripModel, actions: stripActions))
-        strip.sizingOptions = []
-        strip.translatesAutoresizingMaskIntoConstraints = false
-
         let toolbarActions = BrowserToolbarActions(
             back: { [weak self] in self?.webView?.goBack() },
             forward: { [weak self] in self?.webView?.goForward() },
@@ -54,15 +48,10 @@ final class BrowserPaneViewController: NSViewController, NSMenuItemValidation {
         container.wantsLayer = true
         container.layer?.backgroundColor = NSColor.black.cgColor
 
-        root.addSubview(strip)
         root.addSubview(toolbar)
         root.addSubview(container)
         NSLayoutConstraint.activate([
-            strip.topAnchor.constraint(equalTo: root.topAnchor),
-            strip.leadingAnchor.constraint(equalTo: root.leadingAnchor),
-            strip.trailingAnchor.constraint(equalTo: root.trailingAnchor),
-            strip.heightAnchor.constraint(equalToConstant: 36),
-            toolbar.topAnchor.constraint(equalTo: strip.bottomAnchor),
+            toolbar.topAnchor.constraint(equalTo: root.topAnchor),
             toolbar.leadingAnchor.constraint(equalTo: root.leadingAnchor),
             toolbar.trailingAnchor.constraint(equalTo: root.trailingAnchor),
             toolbar.heightAnchor.constraint(equalToConstant: 40),
@@ -108,6 +97,7 @@ final class BrowserPaneViewController: NSViewController, NSMenuItemValidation {
         syncStrip()
         syncToolbar()
         persistTabs()
+        onSelect(id)
     }
 
     func close(_ id: UUID) {
@@ -156,8 +146,7 @@ final class BrowserPaneViewController: NSViewController, NSMenuItemValidation {
     }
 
     private func syncStrip() {
-        stripModel.tabs = tabs.map { TabStripItem(id: $0.id, title: $0.title, isLoading: $0.isLoading) }
-        stripModel.selectedID = selectedID
+        onTabsChange()
     }
 
     private func syncToolbar() {
@@ -254,16 +243,6 @@ final class BrowserPaneViewController: NSViewController, NSMenuItemValidation {
 
     func prepareForTermination() {
         persistTabs()
-    }
-}
-
-/// The browser's tab row, following the system appearance.
-struct BrowserTabStrip: View {
-    let model: TerminalTabBarModel
-    let actions: TabStripActions
-
-    var body: some View {
-        TabStrip(items: model.tabs, selectedID: model.selectedID, dark: false, actions: actions)
     }
 }
 

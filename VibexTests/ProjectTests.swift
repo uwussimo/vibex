@@ -24,13 +24,19 @@ import Testing
         state.browserSelectedTab = 1
         state.deviceUDID = "UDID"
         state.layout = .watch
-        state.columnWidths = ColumnWidths(terminal: 900, simulator: 400, browser: 600)
+        state.columnWidths = ColumnWidths(terminal: 900, editor: 600)
         state.lastOpened = Date(timeIntervalSince1970: 1_760_000_000) // ISO 8601 keeps whole seconds
         let data = try JSONEncoder.iso.encode(state)
         let decoded = try JSONDecoder.iso.decode(ProjectState.self, from: data)
         #expect(decoded == state)
         #expect(decoded.layout == .watch)
-        #expect(decoded.columnWidths?.simulator == 400)
+        #expect(decoded.columnWidths?.editor == 600)
+    }
+
+    @Test func `three-column widths from older versions still load`() {
+        var state = ProjectState()
+        state.manualWidths = [900, 400, 600]
+        #expect(state.columnWidths == ColumnWidths(terminal: 900, editor: 1000))
     }
 }
 

@@ -1,7 +1,8 @@
 import AppKit
 import SwiftUI
 
-/// One project window: terminal | simulator | browser for a single folder.
+/// One project window for a single folder, laid out like VS Code: activity bar | Source Control
+/// sidebar | terminal | tabbed editor area (browser tabs, simulator, diff).
 final class MainWindowController: NSWindowController, NSWindowDelegate {
     let session: ProjectSession
     let workspace: WorkspaceSplitViewController
@@ -9,7 +10,6 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
     let sourceControl: SourceControlModel
     private let columns = NSSplitViewController()
     private var sidebarItem: NSSplitViewItem { columns.splitViewItems[0] }
-    private var diffHost: NSView?
     /// Per-window automation state (element refs survive between tool calls).
     private(set) lazy var simulatorAutomation = SimulatorAutomation(pane: workspace.simulatorPane)
     private(set) lazy var browserAutomation = BrowserAutomation(pane: workspace.browserPane)
@@ -21,8 +21,8 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
 
     init(session: ProjectSession) {
         self.session = session
-        workspace = WorkspaceSplitViewController(session: session)
         sourceControl = SourceControlModel(folder: session.project.url)
+        workspace = WorkspaceSplitViewController(session: session, sourceControl: sourceControl)
         let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 1880, height: 1040),
             styleMask: [.titled, .closable, .miniaturizable, .resizable],
@@ -40,9 +40,8 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
         window.isReleasedWhenClosed = false
         super.init(window: window)
         window.delegate = self
-        // A plain container holds the split views, so overlays (toast, palette, diff) float above
-        // them instead of becoming extra split panes. The Source Control sidebar wraps the workspace
-        // rather than joining its three spring-driven columns.
+        // A plain container holds the activity bar and the split views, so overlays (toast, palette)
+        // float above them instead of becoming extra split panes.
         let root = NSViewController()
         root.view = NSView()
         let sidebar = NSSplitViewItem(sidebarWithViewController: NSHostingController(rootView: SourceControlSidebar(
@@ -60,10 +59,17 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
         root.addChild(columns)
         columns.view.translatesAutoresizingMaskIntoConstraints = false
         root.view.addSubview(columns.view)
+        let activityBar = NSView()
+        activityBar.translatesAutoresizingMaskIntoConstraints = false
+        root.view.addSubview(activityBar)
         NSLayoutConstraint.activate([
+            activityBar.topAnchor.constraint(equalTo: root.view.topAnchor),
+            activityBar.bottomAnchor.constraint(equalTo: root.view.bottomAnchor),
+            activityBar.leadingAnchor.constraint(equalTo: root.view.leadingAnchor),
+            activityBar.widthAnchor.constraint(equalToConstant: ActivityBar.width),
             columns.view.topAnchor.constraint(equalTo: root.view.topAnchor),
             columns.view.bottomAnchor.constraint(equalTo: root.view.bottomAnchor),
-            columns.view.leadingAnchor.constraint(equalTo: root.view.leadingAnchor),
+            columns.view.leadingAnchor.constraint(equalTo: activityBar.trailingAnchor),
             columns.view.trailingAnchor.constraint(equalTo: root.view.trailingAnchor),
         ])
         window.contentViewController = root
@@ -75,12 +81,37 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
         window.setFrameAutosaveName(autosave)
         installToastOverlay()
         installTitlebarAccessory(RunButton(runner: runner), width: 220)
-        installTitlebarAccessory(SourceControlButton(model: sourceControl) { [weak self] in
-            self?.toggleSourceControl(nil)
-        }, width: 150)
+        installActivityBar(in: activityBar)
         sourceControl.isSidebarVisible = !sidebar.isCollapsed
         sourceControl.start()
-        observeDiffSelection()
+    }
+
+    private func installActivityBar(in container: NSView) {
+        let bar = NSHostingView(rootView: ActivityBar(
+            sourceControl: sourceControl,
+            tabs: workspace.editor.tabs,
+            simulator: workspace.simulatorPane.model,
+            runner: runner,
+            actions: ActivityBarActions(
+                toggleSourceControl: { [weak self] in self?.toggleSourceControl(nil) },
+                showBrowser: { [weak self] in self?.workspace.focusBrowser(nil) },
+                showSimulator: { [weak self] in self?.workspace.focusSimulator(nil) },
+                toggleRun: { [weak self] in
+                    guard let runner = self?.runner else { return }
+                    runner.phase.isActive ? runner.stop() : runner.run()
+                },
+                showSetup: { NSApp.sendAction(#selector(AppDelegate.showSetup(_:)), to: nil, from: nil) }
+            )
+        ))
+        bar.sizingOptions = []
+        bar.translatesAutoresizingMaskIntoConstraints = false
+        container.addSubview(bar)
+        NSLayoutConstraint.activate([
+            bar.topAnchor.constraint(equalTo: container.topAnchor),
+            bar.bottomAnchor.constraint(equalTo: container.bottomAnchor),
+            bar.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+            bar.trailingAnchor.constraint(equalTo: container.trailingAnchor),
+        ])
     }
 
     // MARK: - Source Control
@@ -101,77 +132,6 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
     @objc func toggleSourceControl(_ sender: Any?) {
         isSourceControlVisible.toggle()
         if !isSourceControlVisible { sourceControl.select(nil) }
-    }
-
-    /// Shows the diff over the simulator and browser while a file is selected.
-    private func observeDiffSelection() {
-        Task { [weak self] in
-            guard let model = self?.sourceControl else { return }
-            for await selected in Observations({ model.selection != nil }) {
-                self?.setDiffVisible(selected)
-            }
-        }
-    }
-
-    private func setDiffVisible(_ visible: Bool) {
-        guard let contentView = window?.contentView else { return }
-        if visible, diffHost == nil {
-            let host = NSHostingView(rootView: DiffView(model: sourceControl) { [weak self] in
-                self?.sourceControl.select(nil)
-            })
-            host.translatesAutoresizingMaskIntoConstraints = false
-            host.wantsLayer = true
-            host.shadow = {
-                let shadow = NSShadow()
-                shadow.shadowColor = NSColor.black.withAlphaComponent(0.18)
-                shadow.shadowBlurRadius = 18
-                shadow.shadowOffset = NSSize(width: -2, height: 0)
-                return shadow
-            }()
-            contentView.addSubview(host, positioned: .below, relativeTo: toastHost)
-            NSLayoutConstraint.activate([
-                host.topAnchor.constraint(equalTo: contentView.topAnchor),
-                host.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
-                host.leadingAnchor.constraint(equalTo: workspace.terminalPane.view.trailingAnchor),
-                host.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
-            ])
-            diffHost = host
-            contentView.layoutSubtreeIfNeeded()
-            Self.slide(host, in: true)
-        } else if !visible, let host = diffHost {
-            diffHost = nil
-            Self.slide(host, in: false) { host.removeFromSuperview() }
-        }
-    }
-
-    /// Enters and leaves along the same path: from and back to the right edge, critically damped.
-    private static func slide(_ view: NSView, in entering: Bool, completion: (() -> Void)? = nil) {
-        guard let layer = view.layer else { completion?(); return }
-        let reduceMotion = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
-        CATransaction.begin()
-        CATransaction.setCompletionBlock(completion)
-        let fade = CABasicAnimation(keyPath: "opacity")
-        fade.fromValue = entering ? 0 : 1
-        fade.toValue = entering ? 1 : 0
-        fade.duration = entering ? 0.18 : 0.14
-        fade.timingFunction = CAMediaTimingFunction(name: .easeOut)
-        fade.fillMode = .forwards
-        fade.isRemovedOnCompletion = false
-        layer.add(fade, forKey: "fade")
-        if !reduceMotion {
-            let slide = CASpringAnimation(keyPath: "transform.translation.x")
-            slide.fromValue = entering ? 48 : 0
-            slide.toValue = entering ? 0 : 48
-            // Response 0.35 s, damping ratio 1 (Apple's default for UI that wasn't flicked).
-            slide.mass = 1
-            slide.stiffness = pow(2 * .pi / 0.35, 2)
-            slide.damping = 2 * sqrt(slide.stiffness)
-            slide.duration = entering ? slide.settlingDuration : 0.16
-            slide.fillMode = .forwards
-            slide.isRemovedOnCompletion = false
-            layer.add(slide, forKey: "slide")
-        }
-        CATransaction.commit()
     }
 
     // MARK: - Command palette
@@ -251,12 +211,9 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
 
     required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
 
-    private weak var toastHost: NSView?
-
     private func installToastOverlay() {
         guard let contentView = window?.contentView else { return }
         let host = NSHostingView(rootView: ToastView(model: toast))
-        toastHost = host
         host.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(host, positioned: .above, relativeTo: nil)
         NSLayoutConstraint.activate([

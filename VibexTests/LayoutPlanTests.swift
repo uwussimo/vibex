@@ -4,42 +4,38 @@ import Testing
 @testable import Vibex
 
 @Suite struct LayoutPlanTests {
-    @Test func `watch mode hides the simulator and favours the browser`() {
-        let widths = LayoutPlan.widths(mode: .watch, available: 1880, simulatorWidth: 400, manual: nil)
-        #expect(widths.simulator == 0)
-        #expect(widths.browser >= LayoutPlan.watchBrowserMin)
+    @Test func `watch mode favours the editor area`() {
+        let widths = LayoutPlan.widths(mode: .watch, available: 1600, editorPreferred: 0, manual: nil)
+        #expect(widths.editor >= LayoutPlan.watchEditorMin)
         #expect(widths.terminal >= LayoutPlan.minTerminal)
-        #expect(widths.total == 1880)
-    }
-
-    @Test func `build mode keeps the simulator at its natural width with a mini player`() {
-        let widths = LayoutPlan.widths(mode: .build, available: 1880, simulatorWidth: 398, manual: nil)
-        #expect(widths.simulator == 398)
-        #expect(widths.browser == LayoutPlan.miniPlayerWidth)
-        #expect(widths.total == 1880)
-    }
-
-    @Test func `balanced mode preserves the user's terminal/browser ratio`() {
-        let manual = ColumnWidths(terminal: 1000, simulator: 400, browser: 500)
-        let widths = LayoutPlan.widths(mode: .balanced, available: 1600, simulatorWidth: 400, manual: manual)
-        #expect(widths.simulator == 400)
-        #expect(abs(widths.terminal / (widths.terminal + widths.browser) - 2.0 / 3.0) < 0.01)
         #expect(widths.total == 1600)
     }
 
-    @Test func `an empty simulator column keeps room for its empty state`() {
-        let widths = LayoutPlan.widths(mode: .balanced, available: 1880, simulatorWidth: 0, manual: nil)
-        #expect(widths.simulator == LayoutPlan.emptyColumnWidth)
-        let watch = LayoutPlan.widths(mode: .watch, available: 1880, simulatorWidth: 0, manual: nil)
-        #expect(watch.simulator == 0)
+    @Test func `build mode sizes the editor to the simulator, or a mini player`() {
+        let simulator = LayoutPlan.widths(mode: .build, available: 1600, editorPreferred: 452, manual: nil)
+        #expect(simulator.editor == 452)
+        #expect(simulator.total == 1600)
+        let mini = LayoutPlan.widths(mode: .build, available: 1600, editorPreferred: 0, manual: nil)
+        #expect(mini.editor == LayoutPlan.miniPlayerWidth)
+    }
+
+    @Test func `balanced mode keeps the user's ratio when the window resizes`() {
+        let manual = ColumnWidths(terminal: 1000, editor: 500)
+        let widths = LayoutPlan.widths(mode: .balanced, available: 1200, editorPreferred: 0, manual: manual)
+        #expect(widths.editor == 400)
+        #expect(widths.total == 1200)
+    }
+
+    @Test func `balanced mode starts at an even split`() {
+        let widths = LayoutPlan.widths(mode: .balanced, available: 1600, editorPreferred: 0, manual: nil)
+        #expect(widths.terminal == 800)
     }
 
     @Test func `narrow windows never push columns below their minimums`() {
         for mode in LayoutMode.allCases {
-            let widths = LayoutPlan.widths(mode: mode, available: 900, simulatorWidth: 500, manual: nil)
+            let widths = LayoutPlan.widths(mode: mode, available: 700, editorPreferred: 900, manual: ColumnWidths(terminal: 10, editor: 990))
             #expect(widths.terminal >= LayoutPlan.minTerminal)
-            #expect(widths.browser >= 0)
-            #expect(widths.total == 900)
+            #expect(widths.editor >= LayoutPlan.minEditor)
         }
     }
 }

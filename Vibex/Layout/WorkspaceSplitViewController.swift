@@ -1,30 +1,30 @@
 import AppKit
 import os
 
-/// Three columns: terminal | simulator slot | browser. Owns layout modes and the spring that moves
-/// the dividers between them.
+/// Two columns: the terminal and the tabbed editor area (browser tabs, simulator, diff). Owns the
+/// layout modes and the spring that moves the divider between them.
 final class WorkspaceSplitViewController: NSSplitViewController, NSMenuItemValidation {
     let session: ProjectSession
     let terminalPane: TerminalPaneViewController
-    let simulatorPane: SimulatorPaneViewController
-    let browserPane: BrowserPaneViewController
+    let editor: EditorAreaViewController
+    var simulatorPane: SimulatorPaneViewController { editor.simulatorPane }
+    var browserPane: BrowserPaneViewController { editor.browserPane }
 
     private(set) var mode: LayoutMode = .balanced
     private var manualWidths: ColumnWidths?
-    private var simulatorWidth: CGFloat = 0
-    private var isSettingPositions = false
+    private var editorPreferredWidth: CGFloat = 0
+    private var isSettingPosition = false
+    private var lastLayoutWidth: CGFloat = 0
     private var hasAppliedInitialLayout = false
     private lazy var animator = SpringAnimator(view: splitView)
 
     private var terminalItem: NSSplitViewItem { splitViewItems[0] }
-    private var simulatorItem: NSSplitViewItem { splitViewItems[1] }
-    private var browserItem: NSSplitViewItem { splitViewItems[2] }
+    private var editorItem: NSSplitViewItem { splitViewItems[1] }
 
-    init(session: ProjectSession) {
+    init(session: ProjectSession, sourceControl: SourceControlModel) {
         self.session = session
         terminalPane = TerminalPaneViewController(session: session)
-        simulatorPane = SimulatorPaneViewController(session: session)
-        browserPane = BrowserPaneViewController(session: session)
+        editor = EditorAreaViewController(session: session, sourceControl: sourceControl)
         manualWidths = session.state.columnWidths
         super.init(nibName: nil, bundle: nil)
     }
@@ -37,7 +37,7 @@ final class WorkspaceSplitViewController: NSSplitViewController, NSMenuItemValid
         split.dividerStyle = .thin
         splitView = split
         super.loadView()
-        view.frame = NSRect(x: 0, y: 0, width: 1880, height: 1000)
+        view.frame = NSRect(x: 0, y: 0, width: 1600, height: 1000)
     }
 
     override func viewDidLoad() {
@@ -47,25 +47,17 @@ final class WorkspaceSplitViewController: NSSplitViewController, NSMenuItemValid
         terminal.minimumThickness = LayoutPlan.minTerminal
         terminal.holdingPriority = NSLayoutConstraint.Priority(250)
 
-        let simulator = NSSplitViewItem(viewController: simulatorPane)
-        simulator.minimumThickness = 0
-        simulator.canCollapse = true
-        simulator.holdingPriority = NSLayoutConstraint.Priority(400)
-
-        let browser = NSSplitViewItem(viewController: browserPane)
-        browser.minimumThickness = LayoutPlan.minBrowser
-        browser.holdingPriority = NSLayoutConstraint.Priority(300)
+        let editorItem = NSSplitViewItem(viewController: editor)
+        editorItem.minimumThickness = LayoutPlan.minEditor
+        editorItem.holdingPriority = NSLayoutConstraint.Priority(300)
 
         addSplitViewItem(terminal)
-        addSplitViewItem(simulator)
-        addSplitViewItem(browser)
+        addSplitViewItem(editorItem)
 
-        animator.onFrame = { [weak self] positions in self?.setDividerPositions(positions) }
-        animator.onSettle = { [weak self] in self?.animationDidSettle() }
+        animator.onFrame = { [weak self] positions in self?.setDividerPosition(positions[0]) }
+        animator.onSettle = { [weak self] in self?.captureManualWidthsIfBalanced() }
 
-        simulatorPane.onPreferredWidthChange = { [weak self] width in
-            self?.simulatorPreferredWidthChanged(width)
-        }
+        editor.onPreferredWidthChange = { [weak self] width in self?.editorPreferredWidthChanged(width) }
         simulatorPane.runInTerminal = { [weak self] command in
             guard let self else { return }
             terminalPane.runCommandInNewTab(command)
@@ -78,8 +70,10 @@ final class WorkspaceSplitViewController: NSSplitViewController, NSMenuItemValid
         guard !hasAppliedInitialLayout else { return }
         hasAppliedInitialLayout = true
         mode = session.state.layout
-        apply(mode: mode, animated: false)
-        simulatorPane.start()
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            apply(mode: mode, animated: false)
+        }
     }
 
     // MARK: - Modes
@@ -97,105 +91,81 @@ final class WorkspaceSplitViewController: NSSplitViewController, NSMenuItemValid
     }
 
     func apply(mode newMode: LayoutMode, animated: Bool) {
-        if mode == .balanced, newMode != .balanced {
+        if mode == .balanced, newMode != .balanced, hasAppliedInitialLayout {
             captureManualWidths()
         }
         mode = newMode
         session.update { $0.layout = newMode }
         Log.layout.info("layout mode → \(newMode.rawValue, privacy: .public)")
-
-        let target = targetWidths()
-        let positions = dividerPositions(for: target)
-        Log.layout.debug("apply \(newMode.rawValue, privacy: .public): terminal \(Int(target.terminal)) sim \(Int(target.simulator)) browser \(Int(target.browser)) from \(self.currentPositions().map { Int($0) }, privacy: .public)")
-
-        if target.simulator > 0, simulatorItem.isCollapsed {
-            simulatorItem.isCollapsed = false
-            setDividerPositions([currentPositions()[0], currentPositions()[0] + splitView.dividerThickness])
+        // Watch is for the browser (Netflix); Build is for the app being built.
+        switch newMode {
+        case .watch: editor.showBrowser()
+        case .build: if editor.isSimulatorOpen { editor.select(.simulator) }
+        case .balanced: break
         }
-        simulatorPane.setVisible(target.simulator > 0)
 
-        let reduceMotion = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
-        if animated, !reduceMotion {
-            animator.animate(from: currentPositions(), to: positions)
+        let target = Double(LayoutPlan.widths(mode: newMode, available: available, editorPreferred: editorPreferredWidth, manual: manualWidths).terminal)
+        if animated, !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion {
+            animator.animate(from: [currentPosition], to: [target])
         } else {
             animator.cancel()
-            setDividerPositions(positions)
-            animationDidSettle()
+            setDividerPosition(target)
         }
     }
 
-    private func targetWidths() -> ColumnWidths {
-        let available = splitView.bounds.width - splitView.dividerThickness * 2
-        return LayoutPlan.widths(mode: mode, available: available, simulatorWidth: simulatorWidth, manual: manualWidths)
-    }
+    private var available: CGFloat { splitView.bounds.width - splitView.dividerThickness }
+    private var currentPosition: Double { Double(terminalItem.viewController.view.frame.width) }
 
-    private func dividerPositions(for widths: ColumnWidths) -> [Double] {
-        let first = Double(widths.terminal)
-        let second = first + Double(splitView.dividerThickness) + Double(widths.simulator)
-        return [first, second]
-    }
-
-    private func currentPositions() -> [Double] {
-        let terminal = terminalItem.viewController.view.frame
-        let simulator = simulatorItem.viewController.view.frame
-        let first = Double(terminal.maxX)
-        let second = simulatorItem.isCollapsed ? first : Double(simulator.maxX)
-        return [first, second]
-    }
-
-    /// The simulator item holds its size harder than the terminal, so a plain `setPosition` on the first
-    /// divider gets absorbed by the terminal. Pinning the simulator's thickness while positioning makes the
-    /// split view honour both dividers; `animationDidSettle` releases the pin.
-    private func setDividerPositions(_ positions: [Double]) {
-        guard positions.count == 2 else { return }
-        isSettingPositions = true
-        let simulatorWidth = max(0, CGFloat(positions[1] - positions[0]) - splitView.dividerThickness)
-        simulatorItem.minimumThickness = simulatorWidth
-        simulatorItem.maximumThickness = simulatorWidth
-        splitView.setPosition(CGFloat(positions[1]), ofDividerAt: 1)
-        splitView.setPosition(CGFloat(positions[0]), ofDividerAt: 0)
-        isSettingPositions = false
-    }
-
-    private func animationDidSettle() {
-        let widths = targetWidths()
-        let actual = splitViewItems.map { Int($0.viewController.view.frame.width) }
-        Log.layout.debug("settled: actual \(actual, privacy: .public) target \(Int(widths.terminal))/\(Int(widths.simulator))/\(Int(widths.browser))")
-        if widths.simulator == 0, !simulatorItem.isCollapsed {
-            simulatorItem.isCollapsed = true
-        }
-        simulatorItem.minimumThickness = widths.simulator > 0 ? LayoutPlan.minSimulator : 0
-        simulatorItem.maximumThickness = NSSplitViewItem.unspecifiedDimension
+    private func setDividerPosition(_ position: Double) {
+        isSettingPosition = true
+        splitView.setPosition(CGFloat(position), ofDividerAt: 0)
+        isSettingPosition = false
     }
 
     private func captureManualWidths() {
-        let widths = ColumnWidths(
-            terminal: terminalItem.viewController.view.frame.width,
-            simulator: simulatorItem.isCollapsed ? 0 : simulatorItem.viewController.view.frame.width,
-            browser: browserItem.viewController.view.frame.width
-        )
+        let widths = ColumnWidths(terminal: terminalItem.viewController.view.frame.width, editor: editorItem.viewController.view.frame.width)
+        guard widths.total > 0 else { return }
         manualWidths = widths
         session.update { $0.columnWidths = widths }
     }
 
-    private func simulatorPreferredWidthChanged(_ width: CGFloat) {
-        guard abs(width - simulatorWidth) > 0.5 else { return }
-        simulatorWidth = width
-        Log.layout.debug("simulator width → \(Int(width)) initial=\(self.hasAppliedInitialLayout) mode=\(self.mode.rawValue, privacy: .public)")
-        guard hasAppliedInitialLayout else { return }
-        if mode == .watch { return }
-        simulatorItem.minimumThickness = 0
-        apply(mode: mode, animated: true)
+    private func captureManualWidthsIfBalanced() {
+        if mode == .balanced { captureManualWidths() }
+    }
+
+    private func editorPreferredWidthChanged(_ width: CGFloat) {
+        guard abs(width - editorPreferredWidth) > 0.5 else { return }
+        editorPreferredWidth = width
+        if hasAppliedInitialLayout, mode == .build { apply(mode: .build, animated: true) }
+    }
+
+    // MARK: - Resizing
+
+    /// When the window (or the sidebar) changes the width, re-apply the mode so Balanced keeps the
+    /// user's ratio, rather than letting the lower holding priority hand every point to the terminal.
+    override func viewDidLayout() {
+        super.viewDidLayout()
+        let width = splitView.bounds.width
+        defer { lastLayoutWidth = width }
+        guard hasAppliedInitialLayout, lastLayoutWidth > 0, abs(width - lastLayoutWidth) > 0.5, !animator.isAnimating else { return }
+        // Positioning inside the split view's own layout pass gets overridden; do it right after.
+        DispatchQueue.main.async { [weak self] in
+            guard let self, !animator.isAnimating else { return }
+            let target = LayoutPlan.widths(mode: mode, available: available, editorPreferred: editorPreferredWidth, manual: manualWidths).terminal
+            setDividerPosition(Double(target))
+        }
     }
 
     // MARK: - NSSplitViewDelegate
 
     override func splitViewDidResizeSubviews(_ notification: Notification) {
         super.splitViewDidResizeSubviews(notification)
-        guard !isSettingPositions, !animator.isAnimating, hasAppliedInitialLayout else { return }
-        if mode == .balanced {
-            captureManualWidths()
-        }
+        // Only the user dragging the divider (mouse down, same overall width) changes the
+        // remembered ratio; layout passes that squeeze a column for a moment must not.
+        guard !isSettingPosition, !animator.isAnimating, hasAppliedInitialLayout,
+              NSEvent.pressedMouseButtons & 1 == 1,
+              abs(splitView.bounds.width - lastLayoutWidth) <= 0.5 else { return }
+        captureManualWidthsIfBalanced()
     }
 
     // MARK: - Focus
@@ -207,11 +177,13 @@ final class WorkspaceSplitViewController: NSSplitViewController, NSMenuItemValid
 
     @objc func focusSimulator(_ sender: Any?) {
         view.window?.makeKeyAndOrderFront(nil)
+        editor.openSimulator(select: true)
         simulatorPane.focus()
     }
 
     @objc func focusBrowser(_ sender: Any?) {
         view.window?.makeKeyAndOrderFront(nil)
+        editor.showBrowser()
         browserPane.focusWebView()
     }
 
@@ -222,10 +194,9 @@ final class WorkspaceSplitViewController: NSSplitViewController, NSMenuItemValid
     }
 
     func prepareForTermination() {
-        if mode == .balanced { captureManualWidths() }
+        captureManualWidthsIfBalanced()
         terminalPane.persistTabs()
-        browserPane.prepareForTermination()
-        simulatorPane.prepareForTermination()
+        editor.prepareForTermination()
         session.saveNow()
     }
 

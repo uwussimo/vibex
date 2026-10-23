@@ -223,7 +223,7 @@ final class SimulatorPaneViewController: NSViewController, NSMenuItemValidation 
         let height = displayView.bounds.height - 16
         let width = displayState == .live
             ? SimulatorDisplayGeometry.preferredWidth(screen: displayView.screenSize, height: height, gutter: Self.gutter, minimum: 280)
-            : LayoutPlan.emptyColumnWidth
+            : 0 // no preference until a device is showing
         guard abs(width - lastPreferredWidth) > 1 else { return }
         lastPreferredWidth = width
         Log.layout.debug("simulator pane prefers width \(Int(width)) (height \(Int(height)), state \(String(describing: self.displayState), privacy: .public))")

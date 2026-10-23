@@ -1,83 +1,54 @@
 import Foundation
 
 enum LayoutMode: String, CaseIterable, Sendable {
-    /// Whatever the user dragged the dividers to.
+    /// Whatever the user dragged the divider to.
     case balanced
-    /// Terminal wide, simulator at its natural width, Netflix as a mini player.
+    /// Terminal wide; the editor area only as wide as the simulator (or a mini player) needs.
     case build
-    /// Netflix wide, simulator hidden, terminal narrow.
+    /// The editor area (Netflix) wide, terminal narrow.
     case watch
 }
 
+/// The two columns beside the sidebar: the terminal and the tabbed editor area.
 struct ColumnWidths: Equatable, Sendable {
     var terminal: CGFloat
-    var simulator: CGFloat
-    var browser: CGFloat
+    var editor: CGFloat
 
-    var total: CGFloat { terminal + simulator + browser }
+    var total: CGFloat { terminal + editor }
 }
 
-/// Pure layout math for the three columns. Kept free of AppKit so it is unit-testable.
+/// Pure layout math for the terminal | editor split. Kept free of AppKit so it is unit-testable.
 enum LayoutPlan {
     static let minTerminal: CGFloat = 420
-    static let minBrowser: CGFloat = 320
-    static let miniPlayerWidth: CGFloat = 380
-    /// Column width while nothing is docked, so the empty state (permission, boot) stays visible.
-    static let emptyColumnWidth: CGFloat = 320
-    static let minSimulator: CGFloat = 240
-    static let watchBrowserShare: CGFloat = 0.58
-    static let watchBrowserMin: CGFloat = 880
+    static let minEditor: CGFloat = 360
+    /// The editor area in Build mode when no simulator needs more: a mini player.
+    static let miniPlayerWidth: CGFloat = 400
+    static let watchEditorShare: CGFloat = 0.58
+    static let watchEditorMin: CGFloat = 880
+    /// Share of the width the terminal gets before the user has dragged the divider.
+    static let defaultTerminalShare: CGFloat = 0.5
 
     /// - Parameters:
-    ///   - available: width available to the three columns (split view width minus divider thickness).
-    ///   - simulatorWidth: the width the simulator column wants (0 when nothing is docked).
+    ///   - available: width of the split (minus the divider).
+    ///   - editorPreferred: what the active editor tab would like in Build mode (the simulator's
+    ///     natural width), or 0 for no preference.
     ///   - manual: the last user-set widths, used as the baseline for `.balanced`.
-    static func widths(
-        mode: LayoutMode,
-        available: CGFloat,
-        simulatorWidth: CGFloat,
-        manual: ColumnWidths?
-    ) -> ColumnWidths {
-        let available = max(available, minTerminal + minBrowser)
-        let simulatorWidth = simulatorWidth > 0 ? simulatorWidth : emptyColumnWidth
+    static func widths(mode: LayoutMode, available: CGFloat, editorPreferred: CGFloat, manual: ColumnWidths?) -> ColumnWidths {
+        let available = max(available, minTerminal + minEditor)
+        func clamped(editor: CGFloat) -> ColumnWidths {
+            let editor = min(max(editor, minEditor), available - minTerminal).rounded()
+            return ColumnWidths(terminal: available - editor, editor: editor)
+        }
         switch mode {
         case .build:
-            let simulator = min(simulatorWidth, available - minTerminal - minBrowser)
-            var browser = miniPlayerWidth
-            var terminal = available - simulator - browser
-            if terminal < minTerminal {
-                terminal = minTerminal
-                browser = available - simulator - terminal
-            }
-            return ColumnWidths(terminal: terminal, simulator: simulator, browser: browser).rounded()
-
+            return clamped(editor: max(editorPreferred, miniPlayerWidth))
         case .watch:
-            var browser = max(watchBrowserMin, (available * watchBrowserShare).rounded())
-            var terminal = available - browser
-            if terminal < minTerminal {
-                terminal = minTerminal
-                browser = available - terminal
-            }
-            return ColumnWidths(terminal: terminal, simulator: 0, browser: browser).rounded()
-
+            return clamped(editor: max(watchEditorMin, available * watchEditorShare))
         case .balanced:
-            let simulator = min(simulatorWidth, available - minTerminal - minBrowser)
-            let rest = available - simulator
-            guard let manual, manual.terminal + manual.browser > 0 else {
-                // Default split: terminal gets ~60% of what is left.
-                let terminal = max(minTerminal, (rest * 0.6).rounded())
-                return ColumnWidths(terminal: terminal, simulator: simulator, browser: rest - terminal).rounded()
+            guard let manual, manual.total > 0 else {
+                return clamped(editor: available * (1 - defaultTerminalShare))
             }
-            let share = manual.terminal / (manual.terminal + manual.browser)
-            var terminal = (rest * share).rounded()
-            terminal = min(max(terminal, minTerminal), rest - minBrowser)
-            return ColumnWidths(terminal: terminal, simulator: simulator, browser: rest - terminal).rounded()
+            return clamped(editor: available * manual.editor / manual.total)
         }
-    }
-}
-
-extension ColumnWidths {
-    func rounded() -> ColumnWidths {
-        ColumnWidths(terminal: terminal.rounded(), simulator: simulator.rounded(), browser: browser.rounded())
     }
 }
