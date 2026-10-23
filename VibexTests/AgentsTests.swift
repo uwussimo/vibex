@@ -121,3 +121,14 @@ import Testing
         #expect(SkillsLibrary.locate("missing", in: root) == nil)
     }
 }
+
+@Suite struct AgentsFocusTests {
+    @Test func `focus reports the current session`() {
+        let now = Date(timeIntervalSince1970: 1_000_000)
+        var summary = AgentUsageSummary(periodDays: 30)
+        summary.currentBlock = .init(cost: 36.43, resetsAt: now.addingTimeInterval(63 * 60))
+        summary.largestBlockCost = 60
+        #expect(WorkspaceTools.sessionSummary(summary, now: now) == "Opened AI Agents. Session $36.43 · resets in 1h 3m · 61% of your largest session.")
+        #expect(WorkspaceTools.sessionSummary(AgentUsageSummary(periodDays: 30), now: now).contains("No Claude session"))
+    }
+}
