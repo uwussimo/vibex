@@ -33,6 +33,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         mcp.registry.register(BrowserTools.make())
         mcp.registry.register(SimulatorTools.make())
         mcp.start()
+        AgentUsageStore.shared.startBackground()
         menuBar = MenuBarController(mcp: mcp, updater: updater)
         updater.start()
         hasLaunched = true

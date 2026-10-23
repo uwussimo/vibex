@@ -118,6 +118,9 @@ nonisolated struct AgentUsageSummary: Equatable, Sendable {
     var projects: [Share] = []
     var currentBlock: Block?
     var largestBlockCost = 0.0
+    /// The largest session before the current one: the automatic limit, so a record session
+    /// in progress isn't always at 100%.
+    var largestPastBlockCost = 0.0
     var active: [Session] = []
     /// 13 weeks of days, oldest first, starting on the first day of a week.
     var activity: [Day] = []
@@ -172,10 +175,15 @@ nonisolated struct AgentUsageSummary: Equatable, Sendable {
                 blockCost = byHour[hour]!
             }
         }
+        summary.largestPastBlockCost = summary.largestBlockCost
         summary.largestBlockCost = max(summary.largestBlockCost, blockCost)
         if let start = blockStart {
             let resets = Date(timeIntervalSince1970: Double(start) * 3600 + blockLength)
-            if resets > now { summary.currentBlock = Block(cost: blockCost, resetsAt: resets) }
+            if resets > now {
+                summary.currentBlock = Block(cost: blockCost, resetsAt: resets)
+            } else {
+                summary.largestPastBlockCost = summary.largestBlockCost
+            }
         }
 
         summary.active = ledger.files.compactMap { path, state in

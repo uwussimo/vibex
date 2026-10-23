@@ -132,3 +132,35 @@ import Testing
         #expect(WorkspaceTools.sessionSummary(AgentUsageSummary(periodDays: 30), now: now).contains("No Claude session"))
     }
 }
+
+@Suite struct SessionBudgetTests {
+    func summary(pastCost: Double, currentCost: Double) -> AgentUsageSummary {
+        var ledger = ClaudeUsageLedger()
+        let hour = Int(Date().timeIntervalSince1970 / 3600)
+        func add(_ hoursAgo: Int, cost: Double) {
+            var usage = TokenUsage()
+            usage.cost = cost
+            ledger.buckets[.init(hour: hour - hoursAgo, model: "claude-opus-5-5", project: "p")] = usage
+        }
+        add(20, cost: pastCost)
+        add(1, cost: currentCost)
+        return AgentUsageSummary.make(from: ledger, periodDays: 30)
+    }
+
+    @Test func `automatic limit is the largest earlier session, not the one running`() {
+        let record = summary(pastCost: 50, currentCost: 80)
+        #expect(record.largestBlockCost == 80)
+        #expect(record.largestPastBlockCost == 50)
+        #expect(SessionBudget(custom: nil).limit(for: record) == 50)
+        #expect(SessionBudget(custom: 200).limit(for: record) == 200)
+    }
+
+    @Test func `warns at 80 and 100 percent, once per session`() {
+        #expect(SessionBudget.crossed(cost: 70, limit: 100) == nil)
+        #expect(SessionBudget.crossed(cost: 85, limit: 100) == 0.8)
+        #expect(SessionBudget.crossed(cost: 130, limit: 100) == 1.0)
+        let resets = Date(timeIntervalSince1970: 1_000_000)
+        #expect(SessionBudget.alertKey(resetsAt: resets, threshold: 0.8) != SessionBudget.alertKey(resetsAt: resets, threshold: 1.0))
+        #expect(SessionBudget.alertKey(resetsAt: resets, threshold: 0.8) == "1000000-80")
+    }
+}

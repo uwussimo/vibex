@@ -21,6 +21,9 @@ enum Defaults {
         static let agentsPeriodDays = "agents.periodDays"
         static let vibexSkillRemoved = "skills.vibexRemoved"
         static let claudeHooksRemoved = "inbox.hooksRemoved"
+        static let sessionLimit = "agents.sessionLimit"
+        static let budgetAlerts = "agents.budgetAlerts"
+        static let budgetAlertsSent = "agents.budgetAlertsSent"
     }
 
     /// Boot simulators through simslim when it is installed. On by default.
@@ -73,6 +76,24 @@ enum Defaults {
     static var claudeHooksRemoved: Bool {
         get { store.bool(forKey: Key.claudeHooksRemoved) }
         set { store.set(newValue, forKey: Key.claudeHooksRemoved) }
+    }
+
+    /// The Claude session limit in dollars; 0 means automatic (the largest earlier session).
+    static var sessionLimit: Double {
+        get { store.double(forKey: Key.sessionLimit) }
+        set { store.set(newValue, forKey: Key.sessionLimit) }
+    }
+
+    /// Warn at 80% and 100% of the session limit. On by default.
+    static var budgetAlerts: Bool {
+        get { store.object(forKey: Key.budgetAlerts) as? Bool ?? true }
+        set { store.set(newValue, forKey: Key.budgetAlerts) }
+    }
+
+    /// Alert keys already sent, so a relaunch doesn't repeat them (the last few only).
+    static var budgetAlertsSent: [String] {
+        get { store.stringArray(forKey: Key.budgetAlertsSent) ?? [] }
+        set { store.set(Array(newValue.suffix(20)), forKey: Key.budgetAlertsSent) }
     }
 
     static var agentsPeriodDays: Int {

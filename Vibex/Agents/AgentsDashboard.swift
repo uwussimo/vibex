@@ -54,7 +54,7 @@ struct AgentsDashboard: View {
         VStack(spacing: 12) {
             Grid(horizontalSpacing: 12, verticalSpacing: 12) {
                 GridRow {
-                    ClaudeCard(summary: summary, plan: store.plan)
+                    ClaudeCard(summary: summary, plan: store.plan, store: store)
                     CodexCard(limits: store.codex, installed: store.codexInstalled)
                 }
                 GridRow {
@@ -197,6 +197,7 @@ private struct ResetLabel: View {
 private struct ClaudeCard: View {
     let summary: AgentUsageSummary
     let plan: ClaudePlan?
+    @Bindable var store: AgentUsageStore
 
     var body: some View {
         Card(title: "Claude", icon: .sparkles, tint: AgentColors.claude) {
@@ -208,23 +209,92 @@ private struct ClaudeCard: View {
             }
         } content: {
             if let block = summary.currentBlock {
+                let limit = store.budget.limit(for: summary)
+                let share = limit.map { block.cost / $0 } ?? 0
                 HStack(alignment: .firstTextBaseline) {
                     ResetLabel(title: "Session", resetsAt: block.resetsAt)
                     Spacer()
                     Text(UsageFormat.money(block.cost)).font(.vibex(size: 15, weight: .semibold)).monospacedDigit()
                 }
-                Meter(value: summary.largestBlockCost > 0 ? block.cost / summary.largestBlockCost : 0, tint: AgentColors.claude.opacity(0.75))
-                Text("Your largest 5-hour session: \(UsageFormat.money(summary.largestBlockCost))")
-                    .font(.vibex(size: 11.5))
-                    .foregroundStyle(.secondary)
+                Meter(value: share, tint: share >= 1 ? Theme.red : (share >= 0.8 ? Theme.orange : AgentColors.claude.opacity(0.75)))
+                LimitMenu(store: store, summary: summary, limit: limit, share: share)
             } else {
                 Text("No session running")
                     .font(.vibex(size: 13, weight: .semibold))
                 Text("A 5-hour window starts with your next message.")
                     .font(.vibex(size: 11.5))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Theme.muted)
+                LimitMenu(store: store, summary: summary, limit: store.budget.limit(for: summary), share: 0)
             }
         }
+    }
+}
+
+/// "62% of your $160 limit ⌄": what the bar measures against, and the menu that changes it.
+private struct LimitMenu: View {
+    @Bindable var store: AgentUsageStore
+    let summary: AgentUsageSummary
+    let limit: Double?
+    let share: Double
+    @State private var isEditing = false
+    @State private var draft = ""
+
+    var body: some View {
+        Menu {
+            Section("Session limit") {
+                Toggle(automaticTitle, isOn: Binding(get: { store.budget.custom == nil }, set: { if $0 { store.budget.custom = nil } }))
+                ForEach(SessionBudget.presets, id: \.self) { amount in
+                    Toggle(UsageFormat.money(amount), isOn: Binding(get: { store.budget.custom == amount }, set: { if $0 { store.budget.custom = amount } }))
+                }
+                Button("Custom…") {
+                    draft = store.budget.custom.map { String(Int($0)) } ?? ""
+                    isEditing = true
+                }
+            }
+            Divider()
+            Toggle("Alert at 80% and 100%", isOn: $store.budgetAlerts)
+        } label: {
+            HStack(spacing: 4) {
+                Text(caption)
+                IconView(.chevronDown, size: 11)
+            }
+            .font(.vibex(size: 11.5))
+            .foregroundStyle(share >= 0.8 ? Theme.orange : Theme.muted)
+        }
+        .menuStyle(.button)
+        .buttonStyle(.plain)
+        .menuIndicator(.hidden)
+        .fixedSize()
+        .help("What the session bar measures against. Claude doesn't publish its limits in dollars.")
+        .popover(isPresented: $isEditing, arrowEdge: .bottom) {
+            HStack(spacing: 8) {
+                Text("$").foregroundStyle(Theme.muted)
+                TextField("Limit", text: $draft)
+                    .textFieldStyle(.roundedBorder)
+                    .frame(width: 90)
+                    .onSubmit(applyDraft)
+                Button("Set", action: applyDraft).keyboardShortcut(.defaultAction)
+            }
+            .font(.vibex(size: 13))
+            .padding(14)
+        }
+    }
+
+    private var automaticTitle: String {
+        summary.largestPastBlockCost > 0 ? "Automatic: largest session (\(UsageFormat.money(summary.largestPastBlockCost)))" : "Automatic: largest session"
+    }
+
+    private var caption: String {
+        guard let limit else { return "Set a session limit" }
+        let name = store.budget.custom == nil ? "your largest session" : "your limit"
+        return summary.currentBlock == nil ? "Limit: \(UsageFormat.money(limit))" : "\(Int((share * 100).rounded()))% of \(name), \(UsageFormat.money(limit))"
+    }
+
+    /// Accepts "160", "$160" or "160.50"; anything else leaves the limit as it was.
+    private func applyDraft() {
+        let digits = draft.filter { $0.isNumber || $0 == "." || $0 == "," }.replacingOccurrences(of: ",", with: ".")
+        if let value = Double(digits), value > 0 { store.budget.custom = value }
+        isEditing = false
     }
 }
 
