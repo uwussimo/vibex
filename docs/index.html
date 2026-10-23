@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Vibex — the free, open-source vibe coding workstation for Mac</title>
 <meta name="description" content="Vibex puts Claude Code's terminal, the iOS Simulator, a browser, Git diffs, AI usage and skills in one native macOS window. Free and open source under the MIT license.">
-<meta name="theme-color" content="#ffffff">
+<meta name="theme-color" content="#0c0c0f">
 <link rel="icon" type="image/png" href="icon.png">
 <link rel="apple-touch-icon" href="icon.png">
 <meta property="og:title" content="Vibex">
@@ -17,76 +17,41 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400..700&family=Google+Sans+Code:wght@400..600&display=swap" rel="stylesheet">
 <style>
+  /* Dark only, like the app. */
   :root {
-    --bg: #ffffff;
-    --surface: #f6f6f8;
-    --surface-2: #eeeef2;
-    --card: #ffffff;
-    --line: rgba(20, 20, 40, 0.09);
-    --line-strong: rgba(20, 20, 40, 0.16);
-    --text: #18181d;
-    --muted: #6a6a76;
-    --faint: #a3a3ad;
-    --accent: #4d63ff;
-    --accent-soft: rgba(77, 99, 255, 0.1);
-    --green: #1f9d55;
-    --green-soft: rgba(31, 157, 85, 0.1);
-    --red: #e5484d;
-    --red-soft: rgba(229, 72, 77, 0.1);
-    --orange: #d9752b;
-    --orange-soft: rgba(217, 117, 43, 0.12);
-    --violet: #8b5cf6;
-    --violet-soft: rgba(139, 92, 246, 0.1);
-    --pink: #db4fa8;
-    --pink-soft: rgba(219, 79, 168, 0.1);
-    --term: #121317;
     --term-text: #e6e6ea;
     --term-dim: #8b8c96;
-    --btn: #18181d;
-    --btn-text: #ffffff;
     --glow-a: #7ea2ff;
     --glow-b: #a98bff;
     --glow-c: #ffa1dc;
-    --shadow: 0 1px 2px rgba(20, 20, 40, 0.05), 0 8px 24px -12px rgba(20, 20, 40, 0.12);
     --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
     --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
-    color-scheme: light;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --bg: #0c0c0f;
-      --surface: #151519;
-      --surface-2: #1d1d22;
-      --card: #17171b;
-      --line: rgba(255, 255, 255, 0.08);
-      --line-strong: rgba(255, 255, 255, 0.15);
-      --text: #f1f1f4;
-      --muted: #9b9ba7;
-      --faint: #62626c;
-      --accent: #8194ff;
-      --accent-soft: rgba(129, 148, 255, 0.14);
-      --green: #3dd68c;
-      --green-soft: rgba(61, 214, 140, 0.12);
-      --red: #ff6369;
-      --red-soft: rgba(255, 99, 105, 0.12);
-      --orange: #f0a05a;
-      --orange-soft: rgba(240, 160, 90, 0.13);
-      --violet: #a78bfa;
-      --violet-soft: rgba(167, 139, 250, 0.13);
-      --pink: #f17cc5;
-      --pink-soft: rgba(241, 124, 197, 0.12);
-      --term: #0a0a0d;
-      --btn: #f1f1f4;
-      --btn-text: #0c0c0f;
-      --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 10px 30px -12px rgba(0, 0, 0, 0.6);
-      color-scheme: dark;
-    }
-  }
-  :root[data-theme="dark"] {
-    --bg: #0c0c0f; --surface: #151519; --surface-2: #1d1d22; --card: #17171b;
-    --line: rgba(255, 255, 255, 0.08); --line-strong: rgba(255, 255, 255, 0.15);
-    --text: #f1f1f4; --muted: #9b9ba7; --faint: #62626c; --accent: #8194ff; --accent-soft: rgba(129, 148, 255, 0.14);
-    --term: #0a0a0d; --btn: #f1f1f4; --btn-text: #0c0c0f; color-scheme: dark;
+    --bg: #0c0c0f;
+    --surface: #151519;
+    --surface-2: #1d1d22;
+    --card: #17171b;
+    --line: rgba(255, 255, 255, 0.08);
+    --line-strong: rgba(255, 255, 255, 0.15);
+    --text: #f1f1f4;
+    --muted: #9b9ba7;
+    --faint: #62626c;
+    --accent: #8194ff;
+    --accent-soft: rgba(129, 148, 255, 0.14);
+    --green: #3dd68c;
+    --green-soft: rgba(61, 214, 140, 0.12);
+    --red: #ff6369;
+    --red-soft: rgba(255, 99, 105, 0.12);
+    --orange: #f0a05a;
+    --orange-soft: rgba(240, 160, 90, 0.13);
+    --violet: #a78bfa;
+    --violet-soft: rgba(167, 139, 250, 0.13);
+    --pink: #f17cc5;
+    --pink-soft: rgba(241, 124, 197, 0.12);
+    --term: #0a0a0d;
+    --btn: #f1f1f4;
+    --btn-text: #0c0c0f;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 10px 30px -12px rgba(0, 0, 0, 0.6);
+    color-scheme: dark;
   }
 
   * { box-sizing: border-box; }
@@ -276,7 +241,7 @@
   .row.del { background: var(--red-soft); } .row.del .n { background: transparent; }
   .row .t { padding-left: 10px; }
   .kw { color: #c1337c; } .ty { color: #2a7f8f; } .st { color: #c23b2a; } .nu { color: #3a4fd8; } .cm { color: var(--faint); }
-  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .kw { color: #ff7ab2; } :root:not([data-theme="light"]) .ty { color: #6bdfff; } :root:not([data-theme="light"]) .st { color: #ff8170; } :root:not([data-theme="light"]) .nu { color: #d9c97c; } }
+  .kw { color: #ff7ab2; } .ty { color: #6bdfff; } .st { color: #ff8170; } .nu { color: #d9c97c; }
   .row.add mark { background: rgba(31,157,85,.28); color: inherit; border-radius: 2px; }
 
   /* Browser */
@@ -323,7 +288,28 @@
   .works p { color: var(--muted); font-size: 15px; }
   .logos { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px 30px; margin-top: 16px; font-size: 17px; font-weight: 500; color: var(--muted); }
   .logos span { display: flex; align-items: center; gap: 8px; }
-  .logos svg { width: 18px; height: 18px; }
+  .logos svg, .logos img { width: 20px; height: 20px; }
+  /* Black marks drawn light on the dark page. */
+  img.mono { filter: invert(1) brightness(0.95); }
+  .v2 .cell { min-height: 300px; }
+  .v2 .row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; background: var(--surface-2); font-size: 14px; }
+  .v2 .row + .row { margin-top: 8px; }
+  .v2 .row .r { margin-left: auto; color: var(--muted); font-size: 13px; }
+  .v2 .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+  .v2 .chip { font-size: 12px; font-weight: 500; padding: 2px 8px; border-radius: 99px; }
+  .v2 .meter { height: 8px; border-radius: 99px; background: var(--surface-2); overflow: hidden; margin-top: 10px; }
+  .v2 .meter i { display: block; height: 100%; width: 84%; background: var(--orange); border-radius: inherit; }
+  .v2 .big { font-size: 34px; font-weight: 600; letter-spacing: -0.02em; }
+  .v2 .phones { display: flex; align-items: flex-end; justify-content: center; gap: 12px; }
+  .v2 .phones i { display: block; border-radius: 12px; border: 2px solid var(--line-strong); background: linear-gradient(160deg, var(--surface-2), var(--card)); }
+  .v2 .split { position: relative; height: 150px; border-radius: 14px; overflow: hidden; background: linear-gradient(90deg, var(--surface-2) 50%, var(--accent-soft) 50%); }
+  .v2 .split::after { content: ""; position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; background: #fff; }
+  .v2 .split span { position: absolute; top: 10px; font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 99px; background: rgba(0,0,0,.5); }
+  .v2 .cell .mcp-vis { display: grid; grid-template-columns: 1fr 1.2fr; gap: 28px; align-items: center; }
+  @media (max-width: 860px) { .v2 .cell .mcp-vis { grid-template-columns: 1fr; } }
+  .v2 .logo-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .v2 .logo-grid span { aspect-ratio: 1; border-radius: 14px; background: var(--surface-2); display: grid; place-items: center; border: 1px solid var(--line); }
+  .v2 .logo-grid img { width: 26px; height: 26px; }
 
   /* Pinned statement */
   .statement { height: 230vh; position: relative; }
@@ -500,6 +486,7 @@
     <a class="brand" href="#"><img src="icon.png" alt="">vibex</a>
     <nav class="nav-links" aria-label="Sections">
       <a href="#features">Features</a>
+      <a href="#new">New in 2.0</a>
       <a href="#how">How it works</a>
       <a href="#open-source">Open source</a>
       <a href="#faq">FAQ</a>
@@ -596,7 +583,7 @@
                   <div class="tscene" data-for="usage">
                     <div class="ln" style="--i:0"><span class="you">&gt; how much of my session is left?</span></div>
                     <div class="ln" style="--i:1"> </div>
-                    <div class="ln" style="--i:2"><span class="dot">●</span> <span class="tool">vibex_focus</span> <span class="dim">AI Agents</span></div>
+                    <div class="ln" style="--i:2"><span class="dot">●</span> <span class="tool">vibex_focus</span> <span class="dim">AI Usage</span></div>
                     <div class="ln" style="--i:3"><span class="dim">  Session $36.43 · resets in 1h 3m</span></div>
                     <div class="ln" style="--i:4"> </div>
                     <div class="ln" style="--i:5">Plenty. You're at 61% of your biggest session.</div>
@@ -609,7 +596,7 @@
                   <button class="etab" data-scene="preview" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3.5 3.5 3.5 14.5 0 18M12 3c-3.5 3.5-3.5 14.5 0 18"/></svg>localhost:5173<i class="bar"></i></button>
                   <button class="etab" data-scene="build" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><rect x="7" y="3" width="10" height="18" rx="2.5"/></svg>iPhone 17 Pro<i class="bar"></i></button>
                   <button class="etab italic" data-scene="review" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="var(--orange)" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v8M8 9h8M8 19h8"/></svg>HabitsView.swift<i class="bar"></i></button>
-                  <button class="etab" data-scene="usage" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 19V11M10 19V6M15 19v-5M20 19V9"/></svg>AI Agents<i class="bar"></i></button>
+                  <button class="etab" data-scene="usage" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 19V11M10 19V6M15 19v-5M20 19V9"/></svg>AI Usage<i class="bar"></i></button>
                 </div>
                 <div class="panes">
                   <div class="pane pane-sim" data-for="build">
@@ -694,7 +681,15 @@
 <div class="works wrap">
   <p>Works with the tools you already use.</p>
   <div class="logos">
-    <span>Claude Code</span><span>Codex</span><span>Xcode</span><span>iOS Simulator</span><span>Git</span><span>skills.sh</span><span>Vite &amp; Next.js</span>
+    <span><img src="logos/claude.svg" alt="">Claude Code</span>
+    <span><img class="mono" src="logos/openai.svg" alt="">Codex</span>
+    <span><img src="logos/xcode.svg" alt="">Xcode</span>
+    <span><img class="mono" src="logos/apple.svg" alt="">iOS Simulator</span>
+    <span><img src="logos/swift.svg" alt="">Swift</span>
+    <span><img src="logos/git.svg" alt="">Git</span>
+    <span><img class="mono" src="logos/github.svg" alt="">GitHub</span>
+    <span><img src="logos/nodejs.svg" alt="">Node</span>
+    <span><img src="logos/vitejs.svg" alt="">Vite &amp; Next.js</span>
   </div>
 </div>
 
@@ -836,7 +831,7 @@
 <section class="feature">
   <div class="wrap">
     <div class="sec-head reveal">
-      <span class="tag" style="background:var(--accent)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 19V11M10 19V6M15 19v-5M20 19V9"/></svg>AI Agents</span>
+      <span class="tag" style="background:var(--accent)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 19V11M10 19V6M15 19v-5M20 19V9"/></svg>AI Usage</span>
       <h2 class="boxed" style="border-color:color-mix(in srgb,var(--accent) 40%,transparent);background:var(--accent-soft)">Know what your agents cost<span class="corner" style="border-color:color-mix(in srgb,var(--accent) 40%,transparent);color:var(--accent)">Local only</span></h2>
     </div>
     <div class="bento">
@@ -911,6 +906,55 @@
   </div>
 </section>
 
+<section class="feature v2" id="new">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="tag" style="background:var(--accent)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z"/></svg>New in 2.0</span>
+      <h2 class="boxed" style="border-color:color-mix(in srgb,var(--accent) 40%,transparent);background:var(--accent-soft)">Run more agents, miss nothing<span class="corner" style="border-color:color-mix(in srgb,var(--accent) 40%,transparent);color:var(--accent)">2.0</span></h2>
+    </div>
+    <div class="bento">
+      <div class="cell c6 reveal">
+        <div class="vis">
+          <div class="row"><span class="dot" style="background:var(--orange)"></span>habits · terminal 2<span class="r">Bash: npm test</span></div>
+          <div class="row"><span class="dot" style="background:var(--orange)"></span>api · terminal 1<span class="r">Claude has a question</span></div>
+          <div class="row"><span class="dot" style="background:var(--green)"></span>site · terminal 1<span class="r">working</span></div>
+        </div>
+        <div class="lbl"><span class="mini-tag"><i class="c-orange">●</i>Approval inbox</span><h3>See which Claude is waiting for you</h3><p class="muted">Every session that needs a yes shows on its tab, in the menu bar and as a notification. One click jumps to it.</p></div>
+      </div>
+      <div class="cell c6 reveal" style="--d:80ms">
+        <div class="vis">
+          <div class="row" style="display:block"><div style="display:flex;align-items:baseline;gap:8px"><span class="big">$42</span><span class="muted">of $50 this session</span><span class="chip" style="margin-left:auto;background:var(--orange-soft);color:var(--orange)">84%</span></div><div class="meter"><i></i></div></div>
+        </div>
+        <div class="lbl"><span class="mini-tag"><i class="c-green">$</i>Budget alerts</span><h3>A limit per session, a nudge at 80%</h3><p class="muted">Pick a limit or let Vibex learn it from your past sessions. You get a notification before you blow through it.</p></div>
+      </div>
+      <div class="cell c4 reveal">
+        <div class="vis">
+          <div class="row"><span class="code">vibex/onboarding</span><span class="r" style="color:var(--green)">+182 −20</span></div>
+          <div class="row"><span class="code">vibex/onboarding-2</span><span class="r" style="color:var(--green)">+96 −4</span></div>
+        </div>
+        <div class="lbl"><span class="mini-tag"><i class="c-violet">⇄</i>Parallel agents</span><h3>Two attempts, two branches</h3><p class="muted">Each agent gets its own git worktree. Review the diff, merge the winner, throw the rest away.</p></div>
+      </div>
+      <div class="cell c4 reveal" style="--d:80ms">
+        <div class="vis"><div class="split"><span style="left:10px">Before</span><span style="right:10px">After</span></div></div>
+        <div class="lbl"><span class="mini-tag"><i class="c-pink">◐</i>Before &amp; after</span><h3>Drag to see what changed</h3><p class="muted">Every run saves a screenshot. Compare any two, then copy them side by side into your PR.</p></div>
+      </div>
+      <div class="cell c4 reveal" style="--d:160ms">
+        <div class="vis"><div class="phones"><i style="width:44px;height:90px"></i><i style="width:52px;height:110px"></i><i style="width:96px;height:128px"></i></div></div>
+        <div class="lbl"><span class="mini-tag"><i class="c-blue">▦</i>Devices</span><h3>Every screen size at once</h3><p class="muted">A small phone, a big phone and an iPad, live and touchable. Run on All installs the app everywhere.</p></div>
+      </div>
+      <div class="cell c12 reveal">
+        <div class="vis mcp-vis">
+          <div class="lbl"><span class="mini-tag"><i class="c-green">⧉</i>MCP servers</span><h3>Give Claude new tools in one click</h3><p class="muted">See the MCP servers Claude Code uses, then browse featured ones or search the official MCP registry. Vibex asks for any API key and installs it for every project or just this one.</p></div>
+          <div class="logo-grid">
+            <span><img src="logos/playwright.svg" alt="Playwright"></span><span><img class="mono" src="logos/github.svg" alt="GitHub"></span><span><img src="logos/figma.svg" alt="Figma"></span><span><img src="logos/supabase.svg" alt="Supabase"></span>
+            <span><img class="mono" src="logos/linear.svg" alt="Linear"></span><span><img class="mono" src="logos/sentry.svg" alt="Sentry"></span><span><img src="logos/notion.svg" alt="Notion"></span><span><img src="logos/chrome.svg" alt="Chrome DevTools"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <section id="open-source">
   <div class="wrap">
     <div class="oss reveal">
@@ -936,7 +980,7 @@
     <div class="faq reveal">
       <details open><summary>Is Vibex really free?</summary><div class="a">Yes. It's open source under the MIT license, with no paid tier, no trial and no account. You only pay for the AI tools you already use, like Claude Code.</div></details>
       <details><summary>What do I need?</summary><div class="a">A Mac on macOS 26 (Apple silicon or Intel), Xcode 26 with an iOS simulator runtime for the simulator pane, and Claude Code. Setup checks each one and installs what it can.</div></details>
-      <details><summary>Does it work with Codex or other agents?</summary><div class="a">The terminal runs anything. The built-in MCP server works with any MCP client, and the AI Agents dashboard reads Codex's usage limits too.</div></details>
+      <details><summary>Does it work with Codex or other agents?</summary><div class="a">The terminal runs anything. The built-in MCP server works with any MCP client, and AI Usage reads Codex's usage limits too.</div></details>
       <details><summary>Is my code or usage sent anywhere?</summary><div class="a">No. Usage numbers come from Claude Code's and Codex's local logs. Vibex only talks to GitHub to check for updates and to skills.sh when you browse skills.</div></details>
       <details><summary>Why does macOS warn me when I first open it?</summary><div class="a">Vibex isn't notarized yet. The install script handles it; with the DMG, open <b>System Settings → Privacy &amp; Security</b> and click <b>Open Anyway</b>.</div></details>
       <details><summary>How do updates work?</summary><div class="a">Vibex checks GitHub releases in the background and installs the new version when you quit, or right away with <b>Restart to Update</b>.</div></details>
