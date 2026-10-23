@@ -30,7 +30,7 @@ The script downloads the latest release, checks its SHA-256, installs Vibex to `
 copy first) and opens it. Downloads made with `curl` are not quarantined, so macOS lets the un-notarized app open.
 Set `VIBEX_VERSION=1.0.0` to pin a version or `VIBEX_INSTALL_DIR` to install elsewhere.
 
-Or download **Vibex-1.0.0.dmg** from [Releases](https://github.com/uwussimo/vibex/releases/latest) and drag Vibex to
+Or download **Vibex-1.1.0.dmg** from [Releases](https://github.com/uwussimo/vibex/releases/latest) and drag Vibex to
 Applications. Vibex is not notarized yet, so macOS blocks a DMG downloaded in a browser: click **Done**, then
 **System Settings → Privacy & Security → Open Anyway** (or `xattr -d com.apple.quarantine ~/Downloads/Vibex-*.dmg`).
 
