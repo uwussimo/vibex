@@ -84,6 +84,8 @@ enum MainMenu {
         menu.addItem(withTitle: "Devices", action: #selector(MainWindowController.showDevices(_:)), keyEquivalent: "")
         let agentsPanel = menu.addItem(withTitle: "Agents", action: #selector(MainWindowController.toggleAgents(_:)), keyEquivalent: "n")
         agentsPanel.keyEquivalentModifierMask = [.control, .shift]
+        let explorer = menu.addItem(withTitle: "Explorer", action: #selector(MainWindowController.toggleExplorer(_:)), keyEquivalent: "e")
+        explorer.keyEquivalentModifierMask = [.command, .shift]
         let skills = menu.addItem(withTitle: "Skills", action: #selector(MainWindowController.toggleSkills(_:)), keyEquivalent: "k")
         skills.keyEquivalentModifierMask = [.control, .shift]
         menu.addItem(withTitle: "Browse Skills…", action: #selector(MainWindowController.browseSkills(_:)), keyEquivalent: "")

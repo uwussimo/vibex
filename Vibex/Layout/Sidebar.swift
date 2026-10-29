@@ -6,7 +6,7 @@ import SwiftUI
 /// clicking it again hides the sidebar.
 @Observable
 final class SidebarModel {
-    enum Panel: String { case sourceControl, agents, skills, mcp }
+    enum Panel: String { case explorer, sourceControl, agents, skills, mcp }
 
     var panel: Panel = .sourceControl
     var isVisible = false
@@ -21,6 +21,9 @@ struct SidebarView: View {
     let agents: AgentsModel
     let agentActions: AgentActions
     let mcpServers: MCPServersModel
+    let explorer: ExplorerModel
+    let openFile: (URL, _ keep: Bool) -> Void
+    let viewSkill: (InstalledSkill) -> Void
     let window: () -> NSWindow?
     let browseSkills: () -> Void
     let browseMCP: () -> Void
@@ -29,12 +32,14 @@ struct SidebarView: View {
     var body: some View {
         Group {
             switch sidebar.panel {
+            case .explorer:
+                ExplorerSidebar(model: explorer, open: openFile)
             case .sourceControl:
                 SourceControlSidebar(model: sourceControl, window: window)
             case .agents:
                 AgentsSidebar(model: agents, attention: .shared, actions: agentActions)
             case .skills:
-                SkillsSidebar(model: skills, browse: browseSkills)
+                SkillsSidebar(model: skills, browse: browseSkills, view: viewSkill)
             case .mcp:
                 MCPServersSidebar(model: mcpServers, browse: browseMCP, openClaude: openClaude)
             }

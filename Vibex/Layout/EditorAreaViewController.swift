@@ -16,6 +16,8 @@ final class EditorTabsModel {
         case compare
         case devices
         case mcp
+        /// A file (or a skill's SKILL.md), by OpenDocument.id.
+        case file(String)
 
         var kind: String {
             switch self {
@@ -27,6 +29,7 @@ final class EditorTabsModel {
             case .compare: "compare"
             case .devices: "devices"
             case .mcp: "mcp"
+            case .file: "file"
             }
         }
     }
@@ -73,6 +76,13 @@ final class EditorAreaViewController: NSViewController {
     private var compareHost: NSView?
     private var devicesController: DeviceMatrixViewController?
     private var mcpHost: NSView?
+    /// File tabs in the order they opened; the preview one is replaced by the next single click.
+    private var fileHosts: [String: NSView] = [:]
+    private var fileDocuments: [String: OpenDocument] = [:]
+    private var fileOrder: [String] = []
+    private var previewFile: String?
+    /// The file in front changed (nil when it's not a file), for the Explorer's highlight.
+    var onFileShown: (URL?) -> Void = { _ in }
 
     private let container = NSView()
     private lazy var diffHost: NSHostingView<DiffView> = {
@@ -185,6 +195,8 @@ final class EditorAreaViewController: NSViewController {
         compareHost?.isHidden = tab != .compare
         devicesController?.view.isHidden = tab != .devices
         mcpHost?.isHidden = tab != .mcp
+        for (id, host) in fileHosts { host.isHidden = tab != .file(id) }
+        if case let .file(id) = tab { onFileShown(fileDocuments[id]?.file) } else { onFileShown(nil) }
         session.update { $0.editorTab = tab.kind }
         reportPreferredWidth()
     }
@@ -200,7 +212,7 @@ final class EditorAreaViewController: NSViewController {
 
     private func showNothing() {
         tabs.selected = nil
-        for view in [browserPane.view, simulatorPane.view, diffHost, agentsHost, skillsHost, compareHost, devicesController?.view, mcpHost] { view?.isHidden = true }
+        for view in [browserPane.view, simulatorPane.view, diffHost, agentsHost, skillsHost, compareHost, devicesController?.view, mcpHost] + fileHosts.values.map(Optional.some) { view?.isHidden = true }
         simulatorPane.setVisible(false)
         reportPreferredWidth()
     }
@@ -235,6 +247,26 @@ final class EditorAreaViewController: NSViewController {
         select(.agents)
     }
 
+    /// Opens a file tab, or brings it forward. `keep: false` is a preview tab: the next preview
+    /// replaces it, like a single click in VS Code's explorer.
+    func openDocument(_ document: OpenDocument, keep: Bool) {
+        if fileHosts[document.id] == nil {
+            if !keep, let preview = previewFile, preview != document.id { close(.file(preview)) }
+            fileDocuments[document.id] = document
+            fileHosts[document.id] = host(FileTabView(
+                document: document,
+                projectRoot: session.project.url,
+                open: { [weak self] url in self?.openDocument(.file(url), keep: true) }
+            ))
+            fileOrder.append(document.id)
+            if !keep { previewFile = document.id }
+        } else if keep, previewFile == document.id {
+            previewFile = nil
+        }
+        rebuildItems()
+        select(.file(document.id))
+    }
+
     /// The MCP server marketplace.
     func openMCPMarketplace(model: MCPServersModel) {
         if mcpHost == nil {
@@ -267,7 +299,9 @@ final class EditorAreaViewController: NSViewController {
 
     func openSkillsMarketplace() {
         if skillsHost == nil {
-            skillsHost = host(SkillsMarketplaceView(model: skills))
+            skillsHost = host(SkillsMarketplaceView(model: skills, preview: { [weak self] skill in
+                self?.openDocument(skill.document, keep: false)
+            }))
             rebuildItems()
         }
         select(.skills)
@@ -300,6 +334,12 @@ final class EditorAreaViewController: NSViewController {
         case .compare:
             compareHost?.removeFromSuperview()
             compareHost = nil
+            rebuildItems()
+        case let .file(id):
+            fileHosts.removeValue(forKey: id)?.removeFromSuperview()
+            fileDocuments[id] = nil
+            fileOrder.removeAll { $0 == id }
+            if previewFile == id { previewFile = nil }
             rebuildItems()
         case .mcp:
             mcpHost?.removeFromSuperview()
@@ -350,6 +390,10 @@ final class EditorAreaViewController: NSViewController {
         }
         if mcpHost != nil {
             items.append(EditorTabsModel.Item(tab: .mcp, title: "MCP Servers", icon: .puzzle))
+        }
+        for id in fileOrder {
+            guard let document = fileDocuments[id] else { continue }
+            items.append(EditorTabsModel.Item(tab: .file(id), title: document.title, icon: .fileCode, isPreview: previewFile == id))
         }
         if let change = sourceControl.selection {
             items.append(EditorTabsModel.Item(tab: .diff, title: change.fileName, icon: .fileCode, tint: change.kind.color, isPreview: true))

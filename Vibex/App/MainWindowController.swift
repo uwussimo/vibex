@@ -19,6 +19,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
     private(set) lazy var runner = Runner(window: self)
     private(set) lazy var deviceMatrix = DeviceMatrixModel(session: session)
     private(set) lazy var mcpServers = MCPServersModel(folder: session.project.url)
+    private(set) lazy var explorer = ExplorerModel(root: session.project.url)
 
     var project: Project { session.project }
     var onClose: (MainWindowController) -> Void = { _ in }
@@ -60,6 +61,9 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
             agents: agents,
             agentActions: agentActions(),
             mcpServers: mcpServers,
+            explorer: explorer,
+            openFile: { [weak self] url, keep in self?.openFile(url, keep: keep) },
+            viewSkill: { [weak self] skill in self?.openFile(skill.skillFile, keep: true) },
             window: { [weak window] in window },
             browseSkills: { [weak workspace] in workspace?.editor.openSkillsMarketplace() },
             browseMCP: { [weak self] in self?.browseMCPServers(nil) },
@@ -103,6 +107,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
         sourceControl.start()
         agents.refresh()
         workspace.simulatorPane.openDevices = { [weak self] in self?.showDevices(nil) }
+        workspace.editor.onFileShown = { [weak self] url in if let url { self?.explorer.selection = url.standardizedFileURL } }
     }
 
     private func installActivityBar(in container: NSView) {
@@ -122,6 +127,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
                 toggleSourceControl: { [weak self] in self?.toggleSourceControl(nil) },
                 toggleAgents: { [weak self] in self?.toggleAgents(nil) },
                 toggleSkills: { [weak self] in self?.toggleSkills(nil) },
+                toggleExplorer: { [weak self] in self?.toggleExplorer(nil) },
                 toggleMCP: { [weak self] in self?.toggleMCPServers(nil) },
                 showAgents: { [weak self] in self?.showAgents(nil) },
                 showSetup: { NSApp.sendAction(#selector(AppDelegate.showSetup(_:)), to: nil, from: nil) }
@@ -267,6 +273,12 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
         }
     }
     @objc func toggleSkills(_ sender: Any?) { toggleSidebar(.skills) }
+    @objc func toggleExplorer(_ sender: Any?) { toggleSidebar(.explorer) }
+
+    /// A file in a tab: a preview tab from a single click, a kept one from a double click.
+    func openFile(_ url: URL, keep: Bool) {
+        workspace.editor.openDocument(.file(url), keep: keep)
+    }
     @objc func toggleMCPServers(_ sender: Any?) { toggleSidebar(.mcp) }
 
     /// A terminal tab running Claude Code in the project, e.g. to sign in to MCP servers with /mcp.

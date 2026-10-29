@@ -42,6 +42,12 @@ struct ActivityBar: View {
             )
             groupDivider
             ActivityButton(
+                icon: .files,
+                help: "Explorer (⇧⌘E)",
+                isSelected: sidebar.isShowing(.explorer),
+                action: actions.toggleExplorer
+            )
+            ActivityButton(
                 icon: .branch,
                 help: "Source Control (⌃⇧G)",
                 isSelected: sidebar.isShowing(.sourceControl),
@@ -113,6 +119,7 @@ struct ActivityBarActions {
     var toggleSourceControl: () -> Void
     var toggleAgents: () -> Void
     var toggleSkills: () -> Void
+    var toggleExplorer: () -> Void
     var toggleMCP: () -> Void
     var showAgents: () -> Void
     var showSetup: () -> Void

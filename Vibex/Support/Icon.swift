@@ -21,6 +21,7 @@ enum Icon: String, CaseIterable, Sendable {
     case check
     case checkCircle
     case folder
+    case files
     case folderPlus
     case refresh
     case search

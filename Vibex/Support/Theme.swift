@@ -37,6 +37,9 @@ enum Theme {
         static let line = NSColor.white.withAlphaComponent(0.08)
         static let green = NSColor(hex: 0x3DD68C)
         static let orange = NSColor(hex: 0xF0A05A)
+        static let accent = NSColor(hex: 0x8194FF)
+        static let text = NSColor(hex: 0xF1F1F4)
+        static let faint = NSColor(hex: 0x62626C)
     }
 }
 
