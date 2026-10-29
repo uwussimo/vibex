@@ -48,23 +48,25 @@ nonisolated struct MCPServerSpec: Equatable, Sendable, Identifiable {
         }
     }
 
-    /// The arguments for `claude mcp add` in the given scope ("user", "project" or "local").
+    /// The arguments for `claude mcp add` in the given scope ("user", "project" or "local"). The name
+    /// (and URL) come first: `--env` and `--header` take several values, so a name after them is
+    /// read as one more value.
     func addArguments(scope: String, values: [String: String]) -> [String] {
         switch kind {
         case let .stdio(command, environment):
-            var arguments = ["mcp", "add", "--scope", scope]
+            var arguments = ["mcp", "add", name, "--scope", scope]
             for field in environment {
                 if let value = values[field.name], !value.isEmpty { arguments += ["--env", "\(field.name)=\(value)"] }
             }
-            return arguments + [name, "--"] + command
+            return arguments + ["--"] + command
         case let .remote(transport, url, headers):
-            var arguments = ["mcp", "add", "--transport", transport, "--scope", scope]
+            var arguments = ["mcp", "add", name, url, "--transport", transport, "--scope", scope]
             for field in headers {
                 guard let value = values[field.name], !value.isEmpty else { continue }
                 let filled = field.template.map { Self.fill($0, with: values) } ?? value
                 arguments += ["--header", "\(field.name): \(filled)"]
             }
-            return arguments + [name, url]
+            return arguments
         }
     }
 

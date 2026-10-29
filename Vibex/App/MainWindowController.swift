@@ -62,7 +62,8 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
             mcpServers: mcpServers,
             window: { [weak window] in window },
             browseSkills: { [weak workspace] in workspace?.editor.openSkillsMarketplace() },
-            browseMCP: { [weak self] in self?.browseMCPServers(nil) }
+            browseMCP: { [weak self] in self?.browseMCPServers(nil) },
+            openClaude: { [weak self] in self?.openClaudeCode() }
         )))
         sidebarItem.minimumThickness = 240
         sidebarItem.maximumThickness = 440
@@ -267,6 +268,12 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
     }
     @objc func toggleSkills(_ sender: Any?) { toggleSidebar(.skills) }
     @objc func toggleMCPServers(_ sender: Any?) { toggleSidebar(.mcp) }
+
+    /// A terminal tab running Claude Code in the project, e.g. to sign in to MCP servers with /mcp.
+    func openClaudeCode() {
+        let id = workspace.terminalPane.runCommandInNewTab("claude", directory: session.project.path)
+        workspace.showTerminalTab(id)
+    }
 
     @objc func browseMCPServers(_ sender: Any?) {
         showSidebar(.mcp)

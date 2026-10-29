@@ -4,13 +4,16 @@ import SwiftUI
 struct MCPServersSidebar: View {
     let model: MCPServersModel
     let browse: () -> Void
+    /// Opens Claude Code in a terminal tab, where `/mcp` signs in and approves servers.
+    let openClaude: () -> Void
 
     var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: 6) {
                 Text("MCP Servers").font(.vibex(size: 12, weight: .semibold)).foregroundStyle(Theme.muted)
                 Spacer()
-                ToolbarIconButton(icon: .refresh, help: "Refresh", action: model.refresh)
+                if model.isCheckingHealth { ProgressView().controlSize(.mini).help("Checking which servers connect…") }
+                ToolbarIconButton(icon: .refresh, help: "Refresh and check connections", action: model.refresh)
             }
             .padding(.leading, 14)
             .padding(.trailing, 8)
@@ -34,14 +37,39 @@ struct MCPServersSidebar: View {
                     if let problem = model.problem {
                         Text(problem).font(.vibex(size: 11.5)).foregroundStyle(Theme.red).fixedSize(horizontal: false, vertical: true)
                     }
+                    if let attention = attentionNote {
+                        HStack(alignment: .top, spacing: 8) {
+                            IconView(.info, size: 13).foregroundStyle(Theme.orange)
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text(attention).font(.vibex(size: 11.5)).foregroundStyle(Theme.muted).fixedSize(horizontal: false, vertical: true)
+                                Button("Open Claude Code", action: openClaude).buttonStyle(.bordered).controlSize(.small)
+                            }
+                        }
+                        .padding(10)
+                        .card(fill: Theme.card, radius: 10)
+                    }
                     section("Every project", servers: model.installed.filter { $0.scope == .user })
                     section("This project", servers: model.installed.filter { $0.scope != .user })
+                    if !model.external.isEmpty {
+                        section("From plugins and claude.ai", servers: model.external)
+                    }
                 }
                 .padding(12)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .onAppear(perform: model.refresh)
+    }
+
+    /// What to do when a server can't start yet: both fixes happen inside Claude Code, in `/mcp`.
+    private var attentionNote: String? {
+        let states = Set((model.installed + model.external).compactMap { model.health[$0.name] })
+        if states.contains(.waitingForApproval), states.contains(.needsSignIn) {
+            return "Some servers need you to sign in or approve them. Open Claude Code here and type /mcp."
+        }
+        if states.contains(.needsSignIn) { return "Some servers need you to sign in. Open Claude Code here and type /mcp." }
+        if states.contains(.waitingForApproval) { return "This project's .mcp.json has servers Claude Code hasn't approved yet. Open Claude Code here to approve them." }
+        return nil
     }
 
     @ViewBuilder
@@ -52,7 +80,7 @@ struct MCPServersSidebar: View {
                 Text("None yet").font(.vibex(size: 12)).foregroundStyle(Theme.faint).padding(.vertical, 4)
             }
             ForEach(servers) { server in
-                InstalledServerRow(server: server, remove: { model.remove(server) })
+                InstalledServerRow(server: server, health: model.health[server.name], remove: { model.remove(server) })
             }
         }
     }
@@ -60,22 +88,35 @@ struct MCPServersSidebar: View {
 
 private struct InstalledServerRow: View {
     let server: InstalledMCPServer
+    let health: MCPHealth?
     let remove: () -> Void
     @State private var isHovering = false
 
     var body: some View {
         HStack(spacing: 10) {
-            ServerLogo(name: server.name, size: 26)
+            ServerLogo(name: server.displayName, size: 26)
+                .overlay(alignment: .bottomTrailing) {
+                    if let health {
+                        Circle().fill(color(health)).frame(width: 8, height: 8)
+                            .overlay(Circle().strokeBorder(Theme.surface, lineWidth: 1.5))
+                            .offset(x: 2, y: 2)
+                    }
+                }
             VStack(alignment: .leading, spacing: 1) {
                 HStack(spacing: 6) {
-                    Text(server.name).font(.vibex(size: 12.5, weight: .medium)).foregroundStyle(Theme.text).lineLimit(1)
+                    Text(server.displayName).font(.vibex(size: 12.5, weight: .medium)).foregroundStyle(Theme.text).lineLimit(1)
                     if server.scope == .project { chip(".mcp.json") }
                     if server.isVibex { chip("Vibex") }
+                    if let origin = server.origin { chip(origin) }
                 }
-                Text(server.detail).font(.vibex(size: 11)).foregroundStyle(Theme.faint).lineLimit(1).truncationMode(.middle)
+                Text(status ?? server.detail)
+                    .font(.vibex(size: 11))
+                    .foregroundStyle(status == nil ? Theme.faint : color(health ?? .failed))
+                    .lineLimit(1)
+                    .truncationMode(.middle)
             }
             Spacer(minLength: 2)
-            if isHovering, !server.isVibex {
+            if isHovering, !server.isVibex, server.origin == nil {
                 RowIconButton(icon: .trash, help: "Remove from Claude Code", action: remove)
             }
         }
@@ -84,6 +125,24 @@ private struct InstalledServerRow: View {
         .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Color.white.opacity(isHovering ? 0.05 : 0)))
         .onHover { isHovering = $0 }
         .help(server.isVibex ? "Vibex's own server; it registers itself" : server.detail)
+    }
+
+    /// Only said when something is wrong; a working server shows its command or URL.
+    private var status: String? {
+        switch health {
+        case .needsSignIn: "Needs sign-in · /mcp in Claude Code"
+        case .waitingForApproval: "Waiting for approval in Claude Code"
+        case .failed: "Couldn't connect"
+        case .connected, nil: nil
+        }
+    }
+
+    private func color(_ health: MCPHealth) -> Color {
+        switch health {
+        case .connected: Theme.green
+        case .needsSignIn, .waitingForApproval: Theme.orange
+        case .failed: Theme.red
+        }
     }
 
     private func chip(_ text: String) -> some View {
@@ -202,7 +261,7 @@ private struct ServerCard: View {
                         .font(.vibex(size: 11)).foregroundStyle(Theme.faint).lineLimit(1)
                 }
                 Spacer(minLength: 4)
-                installButton
+                installStatus
             }
             Text(spec.summary).font(.vibex(size: 12)).foregroundStyle(Theme.muted).lineLimit(3).fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: 0)
@@ -212,37 +271,42 @@ private struct ServerCard: View {
                         .font(.vibex(size: 11.5, weight: .medium)).foregroundStyle(Theme.accent)
                 }
             }
+            if model.installedScope(of: spec) == nil { installButtons }
         }
         .padding(14)
-        .frame(maxWidth: .infinity, minHeight: 150, alignment: .topLeading)
+        .frame(maxWidth: .infinity, minHeight: 170, alignment: .topLeading)
         .card(fill: isHovering ? Theme.raised : Theme.card, radius: 14)
         .onHover { isHovering = $0 }
         .animation(.easeOut(duration: 0.12), value: isHovering)
     }
 
     @ViewBuilder
-    private var installButton: some View {
+    private var installStatus: some View {
         if model.installing.contains(spec.name) {
             ProgressView().controlSize(.small)
-        } else if model.isInstalled(spec) {
-            HStack(spacing: 4) { IconView(.check, size: 12); Text("Installed") }
+        } else if let scope = model.installedScope(of: spec) {
+            HStack(spacing: 4) { IconView(.check, size: 12); Text(scope == .user ? "Global" : "This project") }
                 .font(.vibex(size: 11.5, weight: .medium)).foregroundStyle(Theme.green)
-        } else {
-            Menu {
-                Button("For Every Project") { model.install(spec, scope: .user) }
-                Button("For This Project (.mcp.json)") { model.install(spec, scope: .project) }
-                Button("For This Project, Only on This Mac") { model.install(spec, scope: .local) }
-            } label: {
-                Text("Install").font(.vibex(size: 12, weight: .medium))
-            } primaryAction: {
-                model.install(spec, scope: .user)
-            }
-            .menuStyle(.button)
-            .buttonStyle(.borderedProminent)
-            .controlSize(.small)
-            .fixedSize()
-            .help("Click to install for every project; hold for this project only")
         }
+    }
+
+    /// Project install uses Claude Code's local scope: this project, on this Mac, ready without an
+    /// approval prompt (a shared .mcp.json would wait for one).
+    private var installButtons: some View {
+        HStack(spacing: 6) {
+            Button { model.install(spec, scope: .local) } label: {
+                Text("Project install").font(.vibex(size: 12, weight: .medium)).frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.bordered)
+            .help("Install for this project only")
+            Button { model.install(spec, scope: .user) } label: {
+                Text("Global install").font(.vibex(size: 12, weight: .medium)).frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.borderedProminent)
+            .help("Install for every project")
+        }
+        .controlSize(.small)
+        .disabled(model.installing.contains(spec.name))
     }
 }
 

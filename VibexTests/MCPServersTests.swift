@@ -10,15 +10,15 @@ import Testing
                                      MCPInputField(name: "EMPTY", isSecret: false, isRequired: false),
                                  ]), homepage: nil)
         #expect(spec.addArguments(scope: "user", values: ["DATABASE_URL": "postgres://x", "EMPTY": ""])
-            == ["mcp", "add", "--scope", "user", "--env", "DATABASE_URL=postgres://x", "postgres", "--", "npx", "-y", "pg-mcp@1.0"])
+            == ["mcp", "add", "postgres", "--scope", "user", "--env", "DATABASE_URL=postgres://x", "--", "npx", "-y", "pg-mcp@1.0"])
     }
 
     @Test func `remote servers fill header templates`() {
         let github = MCPFeatured.servers.first { $0.name == "github" }!
         #expect(github.addArguments(scope: "project", values: ["Authorization": "ghp_123"])
-            == ["mcp", "add", "--transport", "http", "--scope", "project", "--header", "Authorization: Bearer ghp_123", "github", "https://api.githubcopilot.com/mcp/"])
+            == ["mcp", "add", "github", "https://api.githubcopilot.com/mcp/", "--transport", "http", "--scope", "project", "--header", "Authorization: Bearer ghp_123"])
         let sentry = MCPFeatured.servers.first { $0.name == "sentry" }!
-        #expect(sentry.addArguments(scope: "user", values: [:]).suffix(2) == ["sentry", "https://mcp.sentry.dev/mcp"])
+        #expect(sentry.addArguments(scope: "user", values: [:]) == ["mcp", "add", "sentry", "https://mcp.sentry.dev/mcp", "--transport", "http", "--scope", "user"])
     }
 
     @Test func `registry entries parse to installable servers`() throws {
@@ -60,6 +60,24 @@ import Testing
         #expect(servers[1].isVibex)
     }
 
+    @Test func `claude mcp list output becomes health`() {
+        let output = """
+        Checking MCP server health…
+
+        claude.ai Claude Docs: https://api.anthropic.com/v1/pages/mcp - ✔ Connected
+        plugin:posthog:posthog: https://mcp.posthog.com/mcp (HTTP) - ! Needs authentication
+        clickup: https://mcp.clickup.com/mcp (HTTP) - ✔ Connected
+        weather: npx -y @acme/weather - ⏸ Pending approval (run `claude` to approve)
+        broken: npx -y nothing-here - ✗ Failed to connect
+        """
+        let rows = MCPHealth.parse(output)
+        #expect(rows.map(\.name) == ["claude.ai Claude Docs", "plugin:posthog:posthog", "clickup", "weather", "broken"])
+        #expect(rows.map(\.health) == [.connected, .needsSignIn, .connected, .waitingForApproval, .failed])
+        #expect(rows[2].target == "https://mcp.clickup.com/mcp")
+        #expect(InstalledMCPServer(name: "plugin:posthog:posthog", scope: .user, detail: "", origin: "Plugin").displayName == "posthog")
+        #expect(InstalledMCPServer(name: "claude.ai Claude Docs", scope: .user, detail: "", origin: "claude.ai").displayName == "Claude Docs")
+    }
+
     @Test func `names and logos`() {
         #expect(MCPServerSpec.shortName("io.github.microsoft/playwright-mcp") == "playwright-mcp")
         #expect(MCPServerSpec.shortName("com.Example/My Server!") == "my-server")
@@ -76,7 +94,18 @@ import Testing
         defer { try? FileManager.default.removeItem(at: folder) }
         let spec = MCPFeatured.servers.first { $0.name == "sentry" }!
         try await MCPServersStore.claude(spec.addArguments(scope: "project", values: [:]), in: folder)
-        #expect(MCPServersStore.installed(project: folder, claudeJSON: folder.appendingPathComponent("none.json")).map(\.id) == ["project|sentry"])
+        // Keys and headers used to swallow the name ("Invalid environment variable format").
+        let keyed = MCPServerSpec(name: "weather", title: "", summary: "", kind: .stdio(command: ["npx", "-y", "weather-mcp"], environment: [
+            MCPInputField(name: "API_KEY", isSecret: true, isRequired: true),
+        ]), homepage: nil)
+        try await MCPServersStore.claude(keyed.addArguments(scope: "project", values: ["API_KEY": "abc"]), in: folder)
+        let github = MCPFeatured.servers.first { $0.name == "github" }!
+        try await MCPServersStore.claude(github.addArguments(scope: "project", values: ["Authorization": "x"]), in: folder)
+        #expect(MCPServersStore.installed(project: folder, claudeJSON: folder.appendingPathComponent("none.json")).map(\.id) == ["project|github", "project|sentry", "project|weather"])
+        let config = try String(contentsOf: folder.appendingPathComponent(".mcp.json"), encoding: .utf8)
+        #expect(config.contains("\"API_KEY\": \"abc\""))
+        #expect(config.contains("Bearer x"))
+        for name in ["github", "weather"] { try await MCPServersStore.claude(["mcp", "remove", name, "--scope", "project"], in: folder) }
         try await MCPServersStore.claude(["mcp", "remove", "sentry", "--scope", "project"], in: folder)
         #expect(MCPServersStore.installed(project: folder, claudeJSON: folder.appendingPathComponent("none.json")).isEmpty)
     }

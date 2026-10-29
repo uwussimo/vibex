@@ -24,6 +24,7 @@ struct SidebarView: View {
     let window: () -> NSWindow?
     let browseSkills: () -> Void
     let browseMCP: () -> Void
+    let openClaude: () -> Void
 
     var body: some View {
         Group {
@@ -35,7 +36,7 @@ struct SidebarView: View {
             case .skills:
                 SkillsSidebar(model: skills, browse: browseSkills)
             case .mcp:
-                MCPServersSidebar(model: mcpServers, browse: browseMCP)
+                MCPServersSidebar(model: mcpServers, browse: browseMCP, openClaude: openClaude)
             }
         }
         // Solid, like the landing page, instead of the translucent sidebar material.

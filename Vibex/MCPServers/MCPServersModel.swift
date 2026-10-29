@@ -12,9 +12,42 @@ nonisolated struct InstalledMCPServer: Identifiable, Equatable, Sendable {
     var scope: Scope
     /// The command or URL, for the row's second line.
     var detail: String
-    var id: String { "\(scope.rawValue)|\(name)" }
+    /// Where Claude Code gets a server that isn't in its config files ("Plugin", "claude.ai"); Vibex can't remove those.
+    var origin: String?
+    var id: String { "\(origin ?? scope.rawValue)|\(name)" }
+    /// "plugin:figma:figma" → "figma"
+    var displayName: String {
+        if name.hasPrefix("plugin:") { return name.split(separator: ":").last.map(String.init) ?? name }
+        if name.hasPrefix("claude.ai ") { return String(name.dropFirst("claude.ai ".count)) }
+        return name
+    }
     /// Vibex's own server, which Vibex manages.
     var isVibex: Bool { name == "vibex" }
+}
+
+/// Whether Claude Code can actually use a server, from `claude mcp list`.
+nonisolated enum MCPHealth: Equatable, Sendable {
+    case connected
+    /// A remote server that signs in with OAuth: `/mcp` in Claude Code does it.
+    case needsSignIn
+    /// A `.mcp.json` server Claude Code hasn't been allowed to start in this project yet.
+    case waitingForApproval
+    case failed
+
+    /// "clickup: https://mcp.clickup.com/mcp (HTTP) - ✔ Connected" → ("clickup", target, .connected)
+    static func parse(_ output: String) -> [(name: String, target: String, health: MCPHealth)] {
+        output.split(separator: "\n").compactMap { line in
+            guard let colon = line.range(of: ": "), let dash = line.range(of: " - ", options: .backwards), colon.upperBound <= dash.lowerBound else { return nil }
+            let name = String(line[..<colon.lowerBound])
+            let target = String(line[colon.upperBound..<dash.lowerBound]).replacingOccurrences(of: " (HTTP)", with: "").replacingOccurrences(of: " (SSE)", with: "")
+            let status = line[dash.upperBound...].lowercased()
+            let health: MCPHealth = status.contains("connected") && !status.contains("failed") ? .connected
+                : status.contains("auth") ? .needsSignIn
+                : status.contains("approval") ? .waitingForApproval
+                : .failed
+            return (name, target, health)
+        }
+    }
 }
 
 /// Reads Claude Code's MCP config and changes it with the `claude` CLI, so installs land exactly
@@ -45,13 +78,24 @@ nonisolated enum MCPServersStore {
                 let arguments = (entry["args"] as? [String] ?? []).joined(separator: " ")
                 detail = [command, arguments].filter { !$0.isEmpty }.joined(separator: " ")
             }
-            return InstalledMCPServer(name: name, scope: scope, detail: detail)
+            return InstalledMCPServer(name: name, scope: scope, detail: detail, origin: nil)
         }
         .sorted { $0.name < $1.name }
     }
 
+    /// `claude mcp list` in the project folder: every server Claude Code would load there, including
+    /// plugins' and claude.ai's, with whether it connects. Takes a few seconds; it starts each one.
+    @concurrent static func health(in folder: URL) async -> [(name: String, target: String, health: MCPHealth)] {
+        guard let output = try? await claudeOutput(["mcp", "list"], in: folder) else { return [] }
+        return MCPHealth.parse(output)
+    }
+
     /// Runs `claude <arguments>` in the project folder (project scope writes `.mcp.json` there).
     @concurrent static func claude(_ arguments: [String], in folder: URL) async throws {
+        _ = try await claudeOutput(arguments, in: folder)
+    }
+
+    @concurrent private static func claudeOutput(_ arguments: [String], in folder: URL) async throws -> String {
         guard let binary = ClaudeCodeRegistrar.findClaude() else {
             throw GitError.failed("Claude Code isn't installed. Install it from Setup & Permissions.")
         }
@@ -61,15 +105,20 @@ nonisolated enum MCPServersStore {
         process.currentDirectoryURL = folder
         process.environment = ClaudeCodeRegistrar.environment(forBinary: binary)
         let errors = Pipe()
+        let output = Pipe()
         process.standardError = errors
-        process.standardOutput = Pipe()
+        process.standardOutput = output
         process.standardInput = FileHandle.nullDevice
         try process.run()
+        // Read before waiting, so a full pipe can't stall the process.
+        let out = output.fileHandleForReading.readDataToEndOfFile()
+        let err = errors.fileHandleForReading.readDataToEndOfFile()
         process.waitUntilExit()
         guard process.terminationStatus == 0 else {
-            let message = String(decoding: errors.fileHandleForReading.readDataToEndOfFile(), as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines)
+            let message = String(decoding: err, as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines)
             throw GitError.failed(message.isEmpty ? "claude exited with \(process.terminationStatus)" : message)
         }
+        return String(decoding: out, as: UTF8.self)
     }
 }
 
@@ -77,6 +126,11 @@ nonisolated enum MCPServersStore {
 @Observable
 final class MCPServersModel {
     private(set) var installed: [InstalledMCPServer] = []
+    /// From `claude mcp list`, by server name; empty until the first check finishes.
+    private(set) var health: [String: MCPHealth] = [:]
+    /// Servers Claude Code gets from plugins and claude.ai rather than its config files.
+    private(set) var external: [InstalledMCPServer] = []
+    private(set) var isCheckingHealth = false
     private(set) var results: [MCPServerSpec] = []
     private(set) var isSearching = false
     private(set) var installing: Set<String> = []
@@ -99,6 +153,20 @@ final class MCPServersModel {
         Task {
             let list = await Self.read(folder)
             if list != installed { installed = list }
+            await checkHealth()
+        }
+    }
+
+    private func checkHealth() async {
+        guard !isCheckingHealth else { return }
+        isCheckingHealth = true
+        defer { isCheckingHealth = false }
+        let results = await MCPServersStore.health(in: folder)
+        guard !results.isEmpty else { return }
+        health = Dictionary(results.map { ($0.name, $0.health) }, uniquingKeysWith: { first, _ in first })
+        let configured = Set(installed.map(\.name))
+        external = results.filter { !configured.contains($0.name) }.map {
+            InstalledMCPServer(name: $0.name, scope: .user, detail: $0.target, origin: $0.name.hasPrefix("plugin:") ? "Plugin" : $0.name.hasPrefix("claude.ai") ? "claude.ai" : "Claude Code")
         }
     }
 
@@ -106,7 +174,13 @@ final class MCPServersModel {
         MCPServersStore.installed(project: folder)
     }
 
-    func isInstalled(_ spec: MCPServerSpec) -> Bool { installed.contains { $0.name == spec.name } }
+    func isInstalled(_ spec: MCPServerSpec) -> Bool { installedScope(of: spec) != nil }
+
+    /// Where it's installed, preferring the global install when it's in both.
+    func installedScope(of spec: MCPServerSpec) -> InstalledMCPServer.Scope? {
+        let scopes = installed.filter { $0.name == spec.name }.map(\.scope)
+        return scopes.contains(.user) ? .user : scopes.first
+    }
 
     /// Installs straight away, or asks for the fields it needs first.
     func install(_ spec: MCPServerSpec, scope: InstalledMCPServer.Scope) {
