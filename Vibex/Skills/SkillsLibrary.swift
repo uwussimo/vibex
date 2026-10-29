@@ -27,6 +27,13 @@ nonisolated struct MarketplaceSkill: Identifiable, Hashable, Sendable, Decodable
 
     var id: String { "\(source)/\(skillId)" }
     var page: URL { URL(string: "https://skills.sh/\(source)/\(skillId)")! }
+
+    /// Its SKILL.md on GitHub, trying the layouts skill repos use.
+    var document: OpenDocument {
+        let base = "https://raw.githubusercontent.com/\(source)/HEAD/"
+        let paths = ["skills/\(skillId)/SKILL.md", "\(skillId)/SKILL.md", ".claude/skills/\(skillId)/SKILL.md", "plugins/\(skillId)/SKILL.md", "SKILL.md"]
+        return OpenDocument(id: "remote:\(id)", title: "\(name) · SKILL.md", file: nil, remote: paths.compactMap { URL(string: base + $0) })
+    }
 }
 
 /// What a removal moved to the Trash, so Undo can put it back.

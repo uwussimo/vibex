@@ -4,6 +4,8 @@ import SwiftUI
 /// installing globally or for this project.
 struct SkillsMarketplaceView: View {
     let model: SkillsModel
+    /// Reads a skill's SKILL.md from GitHub before installing it.
+    let preview: (MarketplaceSkill) -> Void
     @FocusState private var searchFocused: Bool
 
     var body: some View {
@@ -102,7 +104,8 @@ struct SkillsMarketplaceView: View {
                             installed: model.scopes(of: skill),
                             isInstalling: model.isInstalling(skill),
                             projectName: model.projectName,
-                            install: { model.install(skill, scope: $0) }
+                            install: { model.install(skill, scope: $0) },
+                            preview: { preview(skill) }
                         )
                         Divider().padding(.leading, 20)
                     }
@@ -122,6 +125,7 @@ private struct MarketplaceRow: View {
     let isInstalling: Bool
     let projectName: String
     let install: (InstalledSkill.Scope) -> Void
+    let preview: () -> Void
     @State private var isHovering = false
 
     var body: some View {
@@ -147,6 +151,12 @@ private struct MarketplaceRow: View {
                 .lineLimit(1)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
+            Button(action: preview) {
+                IconView(.eye, size: 15).frame(width: 24, height: 24).contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .help("Read SKILL.md")
+            .opacity(isHovering ? 1 : 0.5)
             Link(destination: skill.page) {
                 IconView(.external, size: 15)
                     .frame(width: 24, height: 24)
@@ -154,7 +164,6 @@ private struct MarketplaceRow: View {
             .help("View on skills.sh")
             .opacity(isHovering ? 1 : 0.5)
             action
-                .frame(minWidth: 116, alignment: .trailing)
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 10)
@@ -169,36 +178,36 @@ private struct MarketplaceRow: View {
                 ProgressView().controlSize(.small)
                 Text("Installing…").font(.vibex(size: 12)).foregroundStyle(.secondary)
             }
-        } else if installed.count == 2 {
-            Label("Installed", systemImage: "checkmark.circle.fill")
-                .font(.vibex(size: 12, weight: .medium))
-                .foregroundStyle(Color(nsColor: .systemGreen))
         } else {
-            HStack(spacing: 8) {
-                if let scope = installed.first {
-                    Label(scope == .global ? "Global" : "Project", systemImage: "checkmark.circle.fill")
-                        .font(.vibex(size: 11.5, weight: .medium))
-                        .foregroundStyle(Color(nsColor: .systemGreen))
-                        .help(scope == .global ? "Installed for every project" : "Installed for \(projectName)")
-                }
-                // Click installs for every project; the arrow offers this project only.
-                Menu {
-                    if !installed.contains(.global) {
-                        Button("Install for All Projects") { install(.global) }
-                    }
-                    if !installed.contains(.project) {
-                        Button("Install for \(projectName) Only") { install(.project) }
-                    }
-                } label: {
-                    Text(installed.isEmpty ? "Install" : "Add").font(.vibex(size: 12.5, weight: .medium))
-                } primaryAction: {
-                    install(installed.contains(.global) ? .project : .global)
-                }
-                .menuStyle(.borderedButton)
-                .controlSize(.regular)
-                .fixedSize()
-                .help(installed.contains(.global) ? "Install for \(projectName)" : "Install for all projects (the arrow has more options)")
+            // Two plain buttons rather than a menu: each scope is one click, and an installed one says so.
+            HStack(spacing: 6) {
+                scopeButton(.project, title: "Project install", help: "Install for \(projectName) only")
+                scopeButton(.global, title: "Global install", help: "Install for every project")
             }
+            .controlSize(.small)
+            .fixedSize()
+        }
+    }
+
+    @ViewBuilder
+    private func scopeButton(_ scope: InstalledSkill.Scope, title: String, help: String) -> some View {
+        if installed.contains(scope) {
+            HStack(spacing: 4) {
+                IconView(.check, size: 12)
+                Text(scope == .global ? "Global" : "Project")
+            }
+            .font(.vibex(size: 11.5, weight: .medium))
+            .foregroundStyle(Theme.green)
+            .frame(minWidth: 92)
+            .help(scope == .global ? "Installed for every project" : "Installed for \(projectName)")
+        } else if scope == .global {
+            Button { install(scope) } label: { Text(title).font(.vibex(size: 12, weight: .medium)) }
+                .buttonStyle(.borderedProminent)
+                .help(help)
+        } else {
+            Button { install(scope) } label: { Text(title).font(.vibex(size: 12, weight: .medium)) }
+                .buttonStyle(.bordered)
+                .help(help)
         }
     }
 }

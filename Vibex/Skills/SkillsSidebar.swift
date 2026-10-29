@@ -6,7 +6,8 @@ import SwiftUI
 struct SkillsSidebar: View {
     let model: SkillsModel
     let browse: () -> Void
-    @State private var expanded: String?
+    /// Opens the skill's SKILL.md, rendered, in an editor tab.
+    let view: (InstalledSkill) -> Void
 
     var body: some View {
         VStack(spacing: 0) {
@@ -91,8 +92,7 @@ struct SkillsSidebar: View {
                 ForEach(skills) { skill in
                     SkillRow(
                         skill: skill,
-                        isExpanded: expanded == skill.id,
-                        toggle: { withAnimation(.spring(response: 0.3, dampingFraction: 1)) { expanded = expanded == skill.id ? nil : skill.id } },
+                        view: { view(skill) },
                         open: { model.open(skill) },
                         reveal: { model.reveal(skill) },
                         remove: { model.remove(skill) }
@@ -133,8 +133,7 @@ struct SkillsSidebar: View {
 
 private struct SkillRow: View {
     let skill: InstalledSkill
-    let isExpanded: Bool
-    let toggle: () -> Void
+    let view: () -> Void
     let open: () -> Void
     let reveal: () -> Void
     let remove: () -> Void
@@ -154,19 +153,13 @@ private struct SkillRow: View {
                     Text(skill.summary)
                         .font(.vibex(size: 11.5))
                         .foregroundStyle(.secondary)
-                        .lineLimit(isExpanded ? nil : 1)
-                        .fixedSize(horizontal: false, vertical: isExpanded)
-                }
-                if isExpanded, let source = skill.source {
-                    Text("From \(source)")
-                        .font(.vibex(size: 11))
-                        .foregroundStyle(.tertiary)
+                        .lineLimit(2)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            if isHovering || isExpanded {
+            if isHovering {
                 HStack(spacing: 0) {
-                    RowIconButton(icon: .file, help: "Open SKILL.md", action: open)
+                    RowIconButton(icon: .eye, help: "Read SKILL.md", action: view)
                     RowIconButton(icon: .trash, help: "Remove (Undo is available)", action: remove)
                 }
                 .transition(.opacity)
@@ -177,14 +170,15 @@ private struct SkillRow: View {
         .padding(.vertical, 6)
         .background(
             RoundedRectangle(cornerRadius: 6, style: .continuous)
-                .fill(Color.primary.opacity(isExpanded ? 0.07 : (isHovering ? 0.05 : 0)))
+                .fill(Color.primary.opacity(isHovering ? 0.05 : 0))
                 .padding(.horizontal, 6)
         )
         .contentShape(Rectangle())
-        .onTapGesture(perform: toggle)
+        .onTapGesture(perform: view)
         .onHover { hovering in withAnimation(.easeOut(duration: 0.12)) { isHovering = hovering } }
         .contextMenu {
-            Button("Open SKILL.md", action: open)
+            Button("Read SKILL.md", action: view)
+            Button("Open in Default App", action: open)
             Button("Show in Finder", action: reveal)
             Button("Copy Path") {
                 NSPasteboard.general.clearContents()
@@ -193,7 +187,7 @@ private struct SkillRow: View {
             Divider()
             Button("Remove", action: remove)
         }
-        .help(skill.folder.path)
+        .help(skill.source.map { "From \($0) · \(skill.folder.path)" } ?? skill.folder.path)
     }
 }
 
