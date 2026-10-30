@@ -9,7 +9,19 @@ function focus(x, y, scale) {
 defineTimeline('hero', (t) => {
   t.to('.hero-copy', [0.0, 0.09], { y: [0, -120], opacity: [1, 0] }, 'linear');
   t.to('.glow', [0, 0.25], { '--glow': [0.6, 1] }, 'linear');
-  t.to('.h-win', [0, 0.28], { y: [720, 0], rx: [34, 0], scale: [0.82, 1] }, 'inOut');
+  t.to('.h-rise', [0, 0.28], { '--r': [0, 1] }, 'inOut');
+  t.to('.h-win', [0, 0.28], { rx: [34, 0], scale: [0.82, 1] }, 'inOut');
+  // The window waits just under the buttons, however tall the screen and the words are.
+  const place = () => {
+    const copy = t.root.querySelector('.hero-copy');
+    const narrow = innerWidth < 900;
+    const below = copy.offsetTop + copy.offsetHeight + (narrow ? 20 : 40);
+    const start = (below - t.root.centerY) / t.root.fit + (narrow ? 300 : 282);
+    t.root.querySelector('.h-rise').style.setProperty('--start', `${Math.round(start)}px`);
+  };
+  t.root.addEventListener('vx-measure', place);
+  document.fonts?.ready.then(place);
+  queueMicrotask(place);
 
   t.to('.h1', [0.27, 0.31], { y: [24, 0], opacity: [0, 1] });
   t.to('.cam', [0.29, 0.41], focus(464, 680, 1.5), 'inOut');
@@ -58,7 +70,7 @@ defineTimeline('old', (t) => {
 defineTimeline('loop', (t) => {
   t.fill('.line', [0.0, 0.1]);
   t.to('.statement', [0.12, 0.2], { y: [0, -60], scale: [1, 0.9], opacity: [1, 0] }, 'in');
-  t.to('.l-phone', [0.12, 0.3], { y: [900, 0], ry: [-42, 0], rotate: [7, 0] }, 'out');
+  t.to('.l-phone', [0.12, 0.3], { y: [1150, 0], ry: [-42, 0], rotate: [7, 0] }, 'out');
   t.to('.comet', [0.26, 0.31], { opacity: [0, 1] });
   t.to('.comet rect', [0.26, 0.92], { dash: [1, -3.4] }, 'linear');
   t.to('.comet', [0.9, 0.96], { opacity: 0 });
@@ -66,7 +78,8 @@ defineTimeline('loop', (t) => {
   // Verbs light up one at a time; only the live one is at full strength.
   const beats = [[0.24, 0.42], [0.36, 0.48], [0.46, 0.68], [0.68, 1.1]];
   ['.v1', '.v2', '.v3', '.v4'].forEach((name, index) => {
-    t.to(name, [beats[index][0], beats[index][0] + 0.03], { opacity: [0.14, 1], x: [-14, 0] });
+    t.to(name, [0.18, 0.24], { opacity: [0, 0.16] }, 'linear');
+    t.to(name, [beats[index][0], beats[index][0] + 0.03], { opacity: 1, x: [-14, 0] });
     if (index < 3) t.to(name, [beats[index][1], beats[index][1] + 0.03], { opacity: 0.26, x: 0 });
   });
   t.to('.l1', [0.3, 0.33], { opacity: [0, 1], x: [18, 0] });
@@ -195,7 +208,7 @@ defineTimeline('sim', (t) => {
   t.fill('.line', [0, 0.09]);
   t.to('.statement', [0.1, 0.17], { y: [0, -60], scale: [1, 0.9], opacity: [1, 0] }, 'in');
   // A phone turns into place at the centre; the window then forms around where it lands.
-  t.to('.s-phone', [0.12, 0.28], { x: [-200, -200], y: [960, 0], ry: [-58, 0], rotate: [8, 0] }, 'out');
+  t.to('.s-phone', [0.12, 0.28], { x: [-200, -200], y: [1200, 0], ry: [-58, 0], rotate: [8, 0] }, 'out');
   t.to('.cam', [0, 0.001], focus(1048, 500, 1), 'linear');
   t.to('.s-frame', [0.28, 0.38], { opacity: [0, 1], scale: [1.08, 1] }, 'out');
   t.to('.s-phone', [0.3, 0.4], { scale: [1, 0.92], x: -200 }, 'inOut');

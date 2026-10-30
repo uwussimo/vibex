@@ -66,7 +66,7 @@ vx-install { max-width: 100%; min-width: 0; }
 vx-scene { position: relative; --tint: 129,148,255; }
 .stage { position: sticky; top: 0; height: 100svh; min-height: 520px; overflow: clip; background: #000; isolation: isolate; }
 .glow { position: absolute; inset: -20%; z-index: -1; pointer-events: none; background: radial-gradient(50% 45% at 50% 55%, rgba(var(--tint), .26), rgba(var(--tint), .07) 45%, transparent 72%); opacity: var(--glow, 1); }
-.stage::after { content: ""; position: absolute; z-index: 5; left: 0; right: 0; bottom: 0; height: 24svh; pointer-events: none; background: linear-gradient(transparent, rgba(0,0,0,.82) 70%); }
+.stage::after { content: ""; position: absolute; z-index: 5; left: 0; right: 0; bottom: 0; height: 24svh; pointer-events: none; background: linear-gradient(transparent, rgba(0,0,0,.82) 70%); opacity: var(--scrim, 0); }
 vx-scene[static] .stage::after, html:not(.js) .stage::after { display: none; }
 .world { position: absolute; left: 50%; top: 50%; width: 1600px; height: 1000px; margin: -500px 0 0 -800px; transform: scale(var(--fit, .6)); perspective: 2200px; }
 .cam { position: absolute; inset: 0; transform-style: preserve-3d; will-change: transform; }

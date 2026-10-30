@@ -13,6 +13,8 @@ const range = (text) => text.split('-').map(Number);
 
 // The scroll position is followed by a critically damped spring. Every frame moves from the current
 // value, so reversing mid-scene never jumps and a mouse wheel's steps read as continuous motion.
+const NAV_HEIGHT = 56;
+const CAPTION_ROOM = 118;
 const scenes = new Set();
 let frame = 0;
 let last = 0;
@@ -163,6 +165,7 @@ class VxScene extends HTMLElement {
     this.current = 0;
     this.beats = [...this.querySelectorAll('[data-beat]')].map((el) => ({ el, at: range(el.dataset.beat), o: -1 }));
     this.world = this.querySelector('.world');
+    this.stage = this.querySelector('.stage');
     this.apply = () => this.configure();
     reduceMotion.addEventListener('change', this.apply);
     scenes.add(this);
@@ -200,10 +203,17 @@ class VxScene extends HTMLElement {
     const width = stage.clientWidth;
     const narrow = width < 900;
     // Compositions keep what matters in the middle 900 points, so a phone crops the sides, not the idea.
+    // The product gets what's left between the nav and the captions, so it can never run into either.
+    const room = stage.clientHeight - NAV_HEIGHT - CAPTION_ROOM;
     const fit = this.hasAttribute('static')
       ? Math.min(width / 1600, 1)
-      : Math.min(width / (narrow ? 900 : 1600), innerHeight / 1000);
+      : Math.min(width / (narrow ? 900 : 1600), room / 1000);
+    this.centerY = NAV_HEIGHT + room / 2;
+    if (!this.hasAttribute('static')) this.world.style.top = `${Math.round(this.centerY)}px`;
+    else this.world.style.top = '';
     this.world.style.setProperty('--fit', fit.toFixed(4));
+    this.fit = fit;
+    this.dispatchEvent(new CustomEvent('vx-measure'));
     if (this.hasAttribute('static')) this.world.parentElement.style.height = `${1000 * fit}px`;
   }
 
@@ -220,12 +230,14 @@ class VxScene extends HTMLElement {
 
   render(p) {
     this.timeline?.render(p);
-    this.beats.forEach((beat, index) => {
+    let caption = 0;
+    this.beats.forEach((beat) => {
       const fade = 0.035;
       const [a, b] = beat.at;
       const enter = clamp((p - a) / fade);
       const leave = b >= 1 ? 1 : clamp((b - p) / fade);
       const o = Math.round(Math.min(enter, leave) * 100) / 100;
+      caption = Math.max(caption, o);
       if (o !== beat.o) {
         beat.el.style.opacity = o;
         beat.el.style.transform = `translateY(${Math.round((1 - easings.out(enter)) * 18 - (1 - leave) * 12)}px)`;
@@ -233,6 +245,11 @@ class VxScene extends HTMLElement {
         beat.o = o;
       }
     });
+    // The shade behind captions only exists while there's a caption: it must never dim the product.
+    if (caption !== this.caption) {
+      this.stage?.style.setProperty('--scrim', caption);
+      this.caption = caption;
+    }
   }
 }
 

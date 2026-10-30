@@ -2,10 +2,11 @@
 
 /* Hero */
 .hero-copy { position: absolute; z-index: 6; left: 0; right: 0; top: clamp(84px, 13svh, 130px); text-align: center; padding-inline: 20px; }
-.hero-copy h1 { font-size: clamp(44px, 7.6vw, 112px); line-height: 1; letter-spacing: -.045em; font-weight: 620; }
+.hero-copy h1 { max-width: 1120px; margin-inline: auto; font-size: clamp(44px, 6.4vw, 96px); line-height: 1.02; letter-spacing: -.045em; font-weight: 620; }
 .hero-copy .lede { max-width: 700px; margin: 22px auto 26px; }
 .hero-copy .cta-row { justify-content: center; }
 .eyes { display: inline-block; padding: 0 .2em .04em; border-radius: .2em; background: linear-gradient(115deg, #7ea2ff, #a98bff 55%, #ffa1dc); color: #08080a; }
+.h-rise { position: absolute; inset: 0; transform-style: preserve-3d; transform: translateY(calc(var(--start, 700px) * (1 - var(--r, 1)))); }
 .h-win { left: 140px; top: 85px; width: 1320px; height: 830px; }
 .rail { width: 64px; flex: none; border-right: 1px solid var(--line); display: flex; flex-direction: column; align-items: center; gap: 20px; padding-top: 22px; background: #0c0c0f; }
 .rail i { width: 26px; height: 26px; border-radius: 8px; background: rgba(255,255,255,.1); }
