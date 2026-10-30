@@ -24,16 +24,17 @@
 <link rel="stylesheet" href="/assets/site.css">
 <link rel="stylesheet" href="/assets/scenes.css">
 <script>document.documentElement.classList.add('js')</script>
-<script type="module" src="/assets/components.js"></script>
+<script type="module" src="/assets/home.js"></script>
 </head>
 <body>
 <vx-nav></vx-nav>
 <main>
 
-<!-- Hero -->
-<vx-scene length="220">
-  <div class="pin hero-pin">
-    <div class="hero-copy" data-out="0-.3">
+<!-- Hero: the window rises, then the camera follows Claude's work from the chat to the phone. -->
+<vx-scene length="520" timeline="hero" rest="1" style="--tint:129,148,255">
+  <div class="stage">
+    <div class="glow"></div>
+    <div class="hero-copy">
       <h1 class="load-in">Your coding agent finally has <span class="eyes">eyes</span>.</h1>
       <p class="lede load-in" style="--d:.08s">Claude writes the code, then runs it, taps through it and fixes what it finds. You stop being the one who checks.</p>
       <div class="cta-row load-in" style="--d:.16s">
@@ -42,424 +43,359 @@
       </div>
       <p class="assure load-in" style="--d:.24s">For Mac. About a minute to install. No account.</p>
     </div>
-    <div class="hero-rise keep" data-at="0-.55">
-      <vx-art w="1120" h="650" small-w="340" small-h="590" role="img" aria-label="The Vibex window: a Claude chat beside a live iPhone that Claude is tapping through.">
-        <div class="art"><div class="hero-tilt keep" data-at="0-.55"><vx-window title="habits">
-          <div class="rail"><i class="on"></i><i></i><i></i><i></i><i></i><i></i></div>
-          <div class="pane hero-chat">
-            <div class="bubble" data-at=".36-.44">Run the app and check onboarding works</div>
-            <div class="tool" data-at=".44-.52"><span>▶</span>Build and launch Habits<span class="ok">✓</span></div>
-            <div class="tool" data-at=".52-.6"><span>◎</span>Simulator: find “Get started”<span class="ok">✓</span></div>
-            <div class="tool" data-at=".6-.68"><span>◉</span>Simulator: tap “Get started”<span class="ok">✓</span></div>
-            <div class="say" data-at=".72-.84">Onboarding works. The Continue button sat under the home indicator on small phones, so I moved it up and checked again.</div>
-          </div>
-          <div class="hero-side">
-            <vx-phone>
-              <div class="ph-title">Today</div>
-              <div class="habit"><i class="on"></i>Morning walk</div>
-              <div class="habit"><i></i>Read 20 pages</div>
-              <div class="habit"><i></i>Call Mum</div>
-              <div class="ph-cta">Get started</div>
-              <span class="tap" data-at=".6-.68" data-out=".68-.72" style="left:96px;bottom:18px"></span>
-            </vx-phone>
-          </div>
-        </vx-window></div></div>
-      </vx-art>
-    </div>
+    <div class="world-box"><div class="world"><div class="cam" role="img" aria-label="The Vibex window: a Claude chat beside a live iPhone that Claude is tapping through.">
+      <vx-window class="at h-win" title="habits">
+        <div class="rail"><i class="on"></i><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="h-chat">
+          <div class="bubble h1">Run the app and check onboarding works</div>
+          <div class="tool h2"><span class="ic"></span>Build and launch Habits<span class="ok">✓</span></div>
+          <div class="tool h3"><span class="ic"></span>Simulator: find “Get started”<span class="ok">✓</span></div>
+          <div class="tool h4"><span class="ic"></span>Simulator: tap “Get started”<span class="ok">✓</span></div>
+          <div class="say h5">Onboarding works. The next button sat under the home bar on small phones, so I moved it up and checked again.</div>
+        </div>
+        <div class="h-side">
+          <vx-phone class="h-phone">
+            <div class="ph-page h-first"><div style="flex:1;display:grid;place-items:center"><div style="text-align:center"><div style="width:110px;height:110px;border-radius:28px;background:linear-gradient(135deg,#2f6bff,#8f6bff);margin:0 auto 22px"></div><div class="ph-title">Build better days</div><div class="ph-sub" style="margin-top:8px">Small habits, every morning.</div></div></div><div class="ph-cta h-btn">Get started</div></div>
+            <div class="ph-page h-next"><div class="ph-title">Today</div><div class="habit"><i class="on"></i>Morning walk</div><div class="habit"><i></i>Read 20 pages</div><div class="habit"><i></i>Call Mum</div><div class="ph-cta">Add a habit</div></div>
+            <span class="tap h-tap" style="left:186px;bottom:40px;top:auto;margin-bottom:-3px"></span>
+          </vx-phone>
+        </div>
+      </vx-window>
+    </div></div></div>
+    <ol class="notes">
+      <li data-beat=".3-.52">You ask once. Claude builds it and launches it.</li>
+      <li data-beat=".54-.76">Then it <strong>looks at the real screen</strong> and taps, like you would.</li>
+      <li data-beat=".8-1">And it tells you what it found, <strong>after it’s fixed</strong>.</li>
+    </ol>
   </div>
 </vx-scene>
 
-<!-- The old way: contrast and loss aversion. Windows collapse into one. -->
-<vx-scene length="280" style="--tint:var(--red)">
-  <div class="pin"><div class="scene-grid">
-    <div class="copy">
-      <h2>Right now, you’re your agent’s eyes.</h2>
-      <ol class="beats">
-        <li data-beat="0-.34">It writes blind. So you run it, look at it, screenshot it and explain what broke.</li>
-        <li data-beat=".34-.68">Every check costs you a Command-Tab and your train of thought. Then you do it again.</li>
-        <li data-beat=".68-1"><strong>Vibex puts all of it in one window Claude can see and drive.</strong> You get your attention back.</li>
-      </ol>
-      <span class="scene-progress"><i></i></span>
-    </div>
-    <vx-art w="820" h="560" role="img" aria-label="Scattered windows for a terminal, the simulator, a browser, Git and usage collapse into one Vibex window.">
-      <div class="art">
-        <div class="mess stay" data-at=".36-.68" data-out=".6-.7" style="left:10px;top:30px;--dx:280px;--dy:160px;--r:-5deg"><vx-window title="Terminal"><div class="pane mono">$ claude<br>Done. Please run the app<br>and tell me how it looks.</div></vx-window></div>
-        <div class="mess stay" data-at=".36-.68" data-out=".6-.7" style="left:520px;top:10px;--dx:-230px;--dy:180px;--r:6deg"><vx-window title="Simulator"><div class="pane">Where did this window go?</div></vx-window></div>
-        <div class="mess stay" data-at=".38-.68" data-out=".6-.7" style="left:280px;top:190px;--dx:0px;--dy:0px;--r:2deg"><vx-window title="localhost:5173"><div class="pane mono" style="color:var(--red)">TypeError: undefined…<br><span style="color:var(--muted)">copy, switch, paste</span></div></vx-window></div>
-        <div class="mess stay" data-at=".38-.68" data-out=".6-.7" style="left:30px;top:350px;--dx:250px;--dy:-160px;--r:4deg"><vx-window title="Git"><div class="pane mono">what did it change?<br>git diff | less</div></vx-window></div>
-        <div class="mess stay" data-at=".4-.68" data-out=".6-.7" style="left:540px;top:360px;--dx:-260px;--dy:-170px;--r:-6deg"><vx-window title="Usage"><div class="pane">Limit reached.<br>Resets in 3 hours.</div></vx-window></div>
-        <div class="one" data-at=".62-.78"><vx-window title="Vibex">
-          <div class="rail"><i class="on"></i><i></i><i></i><i></i></div>
-          <div class="mini-col"><div class="bubble" style="font-size:12px">Fix the checkout</div><div class="tool">Simulator: tap “Pay”<span class="ok">✓</span></div><div class="tool">Browser: read console<span class="ok">✓</span></div><div class="say">Fixed. Two files changed.</div></div>
-          <div class="mini-col" style="background:#101014;align-items:center"><vx-phone style="zoom:.76"><div class="ph-title">Checkout</div><div class="habit">Total $24.00</div><div class="ph-cta">Pay</div></vx-phone></div>
-        </vx-window></div>
-      </div>
-    </vx-art>
-  </div></div>
+<!-- The old way: the app switcher everyone knows, then everything collapses into one window. -->
+<vx-scene length="520" timeline="old" rest="1" style="--tint:255,99,105">
+  <div class="stage">
+    <div class="glow"></div>
+    <h2 class="statement"><span class="line">Right now, you’re your agent’s eyes.</span></h2>
+    <div class="world-box"><div class="world"><div class="cam" role="img" aria-label="Windows pile up while you switch between them, then collapse into one Vibex window.">
+      <vx-window class="at mess m1" title="Terminal" style="left:60px;top:60px"><div class="pane mono">$ claude<br><br>Done! Please run the app<br>and tell me how it looks.</div></vx-window>
+      <vx-window class="at mess m2" title="Simulator" style="left:940px;top:40px"><div class="pane" style="color:#fff;font-size:30px;font-weight:600;letter-spacing:-.02em">Where did this window go?</div></vx-window>
+      <vx-window class="at mess m3" title="localhost:5173" style="left:500px;top:150px"><div class="pane mono"><span style="color:var(--red)">TypeError: cannot read 'id'</span><br><br>Copy it. Switch. Paste it.<br>Switch back.</div></vx-window>
+      <vx-window class="at mess m4" title="Git" style="left:120px;top:400px"><div class="pane mono">What did it change?<br><br>$ git diff | less<br>…412 more lines</div></vx-window>
+      <vx-window class="at mess m5" title="Usage" style="left:900px;top:380px"><div class="pane" style="color:#fff;font-size:30px;font-weight:600;letter-spacing:-.02em">Limit reached.<br><span style="color:var(--muted)">Resets in 3 hours.</span></div></vx-window>
+      <div class="at switcher"><span class="sw-ring"></span><b style="background:#111;font-size:30px">&gt;_</b><b style="background:linear-gradient(135deg,#3b82f6,#60a5fa)"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><rect x="7" y="2.5" width="10" height="19" rx="2.4"/><path d="M10.5 18.5h3"/></svg></b><b style="background:#fff"><svg viewBox="0 0 24 24" fill="none" stroke="#0a84ff" stroke-width="1.6"><circle cx="12" cy="12" r="9.5"/><path d="m15.8 8.2-2.4 5.2-5.2 2.4 2.4-5.2z" fill="#ff3b30" stroke="none"/></svg></b><b style="background:#fff"><img src="/logos/git.svg" alt=""></b><b style="background:linear-gradient(135deg,#f59e0b,#ef4444)"><svg viewBox="0 0 24 24" fill="#fff"><rect x="4" y="12" width="3.6" height="8" rx="1"/><rect x="10.2" y="7" width="3.6" height="13" rx="1"/><rect x="16.4" y="3.5" width="3.6" height="16.5" rx="1"/></svg></b></div>
+      <div class="at flash"></div>
+      <vx-window class="at one-win" title="Vibex">
+        <div class="rail"><i class="on"></i><i></i><i></i><i></i></div>
+        <div class="one-chat"><div class="bubble">Fix the checkout</div><div class="tool"><span class="ic"></span>Simulator: tap “Pay”<span class="ok">✓</span></div><div class="tool"><span class="ic"></span>Browser: read the console<span class="ok">✓</span></div><div class="say">Fixed. Two files changed.</div></div>
+        <div class="h-side"><vx-phone class="h-phone"><div class="ph-title">Checkout</div><div class="habit">Trail shoes<span style="margin-left:auto">$84</span></div><div class="habit">Socks<span style="margin-left:auto">$12</span></div><div class="ph-cta">Pay $96</div></vx-phone></div>
+      </vx-window>
+    </div></div></div>
+    <ol class="notes">
+      <li data-beat=".2-.42">It writes blind. So you run it, look at it, screenshot it and explain what broke.</li>
+      <li data-beat=".44-.66">Every check costs a Command-Tab and <strong>your train of thought</strong>. Then you do it again.</li>
+      <li data-beat=".78-1"><strong>Vibex puts it all in one window Claude can see and drive.</strong> You get your attention back.</li>
+    </ol>
+  </div>
 </vx-scene>
 
-<!-- The loop: a ring draws closed around Write, Run, See, Fix. -->
-<vx-scene id="features" length="320" flip style="--tint:var(--green)">
-  <div class="pin"><div class="scene-grid">
-    <div class="copy">
-      <p class="eyebrow">The loop</p>
-      <h2>It checks its own work.</h2>
-      <ol class="beats">
-        <li data-beat="0-.3">Claude builds and launches your app, on its own.</li>
-        <li data-beat=".3-.62">It taps through real screens and reads what’s actually there, like a tester would.</li>
-        <li data-beat=".62-1">It spots what’s wrong and fixes it. <strong>You come back to review, not to debug.</strong></li>
-      </ol>
-      <span class="scene-progress"><i></i></span>
-    </div>
-    <vx-art w="820" h="560" role="img" aria-label="A ring of Write, Run, See and Fix closes while a button that ran off the screen gets fixed on a live iPhone.">
-      <div class="art">
-        <div class="ring-wrap">
-          <svg viewBox="0 0 440 440" aria-hidden="true"><circle cx="220" cy="220" r="170" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="4"/><circle class="draw" data-at="0-.86" style="opacity:1" cx="220" cy="220" r="170" fill="none" stroke="#3dd68c" stroke-width="4" stroke-linecap="round" pathLength="1" transform="rotate(-90 220 220)"/></svg>
-          <div class="ring-mid"><div><b>Claude</b>closes the loop</div></div>
-          <span class="node" data-at="0-.06" style="left:220px;top:50px">✎ Write</span>
-          <span class="node" data-at=".2-.28" style="left:390px;top:220px">▶ Run</span>
-          <span class="node" data-at=".42-.5" style="left:220px;top:390px">◉ See</span>
-          <span class="node" data-at=".64-.72" style="left:50px;top:220px">✓ Fix</span>
-        </div>
-        <vx-phone class="loop-phone">
-          <div class="ph-title">Checkout</div>
-          <div class="habit">Trail shoes<span style="margin-left:auto">$84</span></div>
-          <div class="habit">Socks<span style="margin-left:auto">$12</span></div>
-          <div class="habit" style="font-weight:700">Total<span style="margin-left:auto">$96</span></div>
-          <div class="overflow stay" data-at=".2-.28" data-out=".66-.72">Pay $96</div>
-          <div class="flag" data-at=".44-.5" data-out=".64-.68">Off screen</div>
-          <div class="fixed" data-at=".68-.76">Pay $96</div>
-        </vx-phone>
+<!-- The loop: a light circles the phone while the camera dives onto a real bug. -->
+<vx-scene id="features" length="560" timeline="loop" rest=".99" style="--tint:61,214,140">
+  <div class="stage">
+    <div class="glow"></div>
+    <h2 class="statement"><small>The loop</small><span class="line">It checks its own work.</span></h2>
+    <div class="world-box"><div class="world"><div class="cam" role="img" aria-label="A light circles a live iPhone. The camera dives onto a button that ran off the screen, and it gets fixed.">
+      <div class="at verbs"><span class="v1">Writes.</span><span class="v2">Runs.</span><span class="v3">Sees.</span><span class="v4">Fixes.</span></div>
+      <svg class="at comet" viewBox="0 0 458 916" aria-hidden="true"><rect x="3" y="3" width="452" height="910" rx="84" pathLength="1"/></svg>
+      <vx-phone class="at l-phone">
+        <div class="ph-title">Checkout</div>
+        <div class="habit">Trail shoes<span style="margin-left:auto">$84</span></div>
+        <div class="habit">Socks<span style="margin-left:auto">$12</span></div>
+        <div class="habit" style="font-weight:700">Total<span style="margin-left:auto">$96</span></div>
+        <div class="over">Pay $96 with card</div>
+        <div class="fixed">Pay $96 with card</div>
+        <div class="good">✓</div>
+      </vx-phone>
+      <div class="at reticle"><span>Runs off the screen</span></div>
+      <div class="at log">
+        <div class="l1">vibex_run → launched</div>
+        <div class="l2">simulator_find "Pay"</div>
+        <div class="l3"><i>→ 74 pt off the screen</i></div>
+        <div class="l4">Edit CheckoutView.swift</div>
+        <div class="l5"><b>simulator_screenshot → fixed</b></div>
       </div>
-    </vx-art>
-  </div></div>
+    </div></div></div>
+    <ol class="notes">
+      <li data-beat=".2-.42">Claude builds and launches your app, on its own.</li>
+      <li data-beat=".44-.66">It reads what’s <strong>actually on the screen</strong>, like a tester would.</li>
+      <li data-beat=".7-1">It fixes what’s wrong. <strong>You come back to review, not to debug.</strong></li>
+    </ol>
+  </div>
 </vx-scene>
 
-<!-- Vibex Design: JSON types itself and screens assemble block by block. -->
-<vx-scene id="design" length="360" style="--tint:var(--pink)">
-  <div class="pin"><div class="scene-grid">
-    <div class="copy">
-      <p class="eyebrow">New · Vibex Design</p>
-      <h2>See it before you build it.</h2>
-      <ol class="beats">
-        <li data-beat="0-.36">Describe an app or a site. Claude draws it on a canvas, screen by screen, in real device frames.</li>
-        <li data-beat=".36-.72">Here, a wrong idea costs you a sentence. <strong>Not a week of code.</strong></li>
-        <li data-beat=".72-1">Love it? <strong>Build This</strong> hands the design to Claude. It’s plain JSON in your repo, so nothing gets lost in translation.</li>
-      </ol>
-      <span class="scene-progress"><i></i></span>
-    </div>
-    <vx-art w="820" h="560" role="img" aria-label="JSON appears on the left while phone screens assemble from it, block by block, on a canvas.">
-      <div class="art">
-<pre class="json" data-at="0-.1" aria-hidden="true"><b>"name"</b>: <em>"Plantly"</em>,
-<b>"tokens"</b>: {
-  <b>"primary"</b>: <em>"#2F7D57"</em>,
-  <b>"surface"</b>: <em>"#FFFFFF"</em>
-},
-<b>"screens"</b>: [
-  { <b>"name"</b>: <em>"Today"</em>,
-    <b>"device"</b>: <em>"iphone"</em>,
-    <b>"root"</b>: {
-      <b>"type"</b>: <em>"column"</em>,
-      <b>"gap"</b>: 12,
-      <b>"children"</b>: [ … ]
-    }
-  },
-  { <b>"name"</b>: <em>"Monstera"</em> },
-  { <b>"name"</b>: <em>"Add a plant"</em> }
-]</pre>
-        <div class="d-phone" style="left:290px"><vx-phone data-at=".08-.16" class="grow">
-          <div class="d-big" data-at=".14-.2">Good morning</div>
-          <div class="d-hero" data-at=".2-.26">4 plants need water<small>About 5 minutes</small></div>
-          <div class="d-card" data-at=".26-.32"><i></i>Monstera</div>
-          <div class="d-card" data-at=".3-.36"><i></i>Fiddle Leaf Fig</div>
-          <div class="d-card" data-at=".34-.4"><i></i>Pothos</div>
-          <div class="d-tabs" data-at=".38-.44"><i></i><i></i><i></i></div>
-        </vx-phone></div>
-        <div class="d-phone from-r" style="left:565px" data-at=".46-.56"><vx-phone>
-          <div class="d-photo" data-at=".52-.58"></div>
-          <div class="d-big" data-at=".56-.6">Monstera</div>
-          <div class="d-bars" data-at=".6-.66"><i style="height:60%"></i><i style="height:78%"></i><i style="height:52%"></i><i style="height:92%"></i><i style="height:70%"></i></div>
-          <div class="d-btn" data-at=".64-.7">Water now</div>
-        </vx-phone></div>
-        <a class="btn btn-primary btn-sm build-this rise" data-at=".76-.84" href="#install" tabindex="-1">Build This</a>
-      </div>
-    </vx-art>
-  </div></div>
+<!-- Design: the camera starts inside the JSON, then pulls back as real renders assemble. -->
+<vx-scene id="design" length="620" timeline="design" rest=".97" style="--tint:241,124,197">
+  <div class="stage">
+    <div class="glow"></div>
+    <h2 class="statement"><small>New · Vibex Design</small><span class="line">See it before you build it.</span></h2>
+    <div class="world-box"><div class="world"><div class="cam" role="img" aria-label="JSON types itself, then the camera pulls back as three real rendered phone screens assemble on a canvas.">
+      <div class="grid-plane"></div>
+      <div class="at code"><span class="ln c1"><b>"name"</b>: <em>"Plantly"</em>,</span><span class="ln c2"><b>"font"</b>: <em>"rounded"</em>,</span><span class="ln c3"><b>"tokens"</b>: {</span><span class="ln c4">  <b>"primary"</b>: <em>"#2F7D57"</em>,</span><span class="ln c5">  <b>"surface"</b>: <em>"#FFFFFF"</em></span><span class="ln c6">},</span><span class="ln c7"><b>"device"</b>: <em>"iphone"</em>,</span><span class="ln c8"><b>"root"</b>: {</span><span class="ln c9">  <b>"type"</b>: <em>"column"</em>,</span><span class="ln c10">  <b>"gap"</b>: 14,</span><span class="ln c11">  <b>"children"</b>: [ … ]</span><span class="ln c12">}</span></div>
+      <span class="d-name n0" style="left:500px">Today</span><span class="d-name n1" style="left:860px">Plant Detail</span><span class="d-name n2" style="left:1220px">Add Plant</span>
+      <div class="d-frame f0" style="left:500px"><vx-phone data-slices="0"></vx-phone></div>
+      <div class="d-frame f1" style="left:860px"><vx-phone data-slices="1"></vx-phone></div>
+      <div class="d-frame f2" style="left:1220px"><vx-phone data-slices="2"></vx-phone></div>
+      <div class="at build">Build This</div>
+    </div></div></div>
+    <ol class="notes">
+      <li data-beat=".18-.42">Describe an app or a site. Claude writes the design as plain JSON in your repo.</li>
+      <li data-beat=".44-.68">It appears on a canvas, screen by screen. <strong>These are real Vibex renders.</strong></li>
+      <li data-beat=".7-.86">Here, a wrong idea costs you a sentence. <strong>Not a week of code.</strong></li>
+      <li data-beat=".87-1"><strong>Build This</strong> hands the design to Claude.</li>
+    </ol>
+  </div>
 </vx-scene>
 
-<!-- Chat: the composer types, the menu opens, the mode morphs. -->
-<vx-scene length="340" flip style="--tint:var(--accent)">
-  <div class="pin"><div class="scene-grid">
-    <div class="copy">
-      <p class="eyebrow">Claude, native</p>
-      <h2>All of Claude Code. None of the terminal.</h2>
-      <ol class="beats">
-        <li data-beat="0-.36">Type <code>/</code> for every command and skill, with what each one does. <code>@</code> adds a file. Paste a screenshot.</li>
-        <li data-beat=".36-.7"><strong>Plan</strong> when it matters. <strong>Auto</strong> when it doesn’t. You decide how much Claude does before it asks.</li>
-        <li data-beat=".7-1">It’s the real Claude Code, so your CLAUDE.md, skills, hooks and MCP servers just work. <strong>There’s nothing to migrate.</strong></li>
-      </ol>
-      <span class="scene-progress"><i></i></span>
-    </div>
-    <vx-art w="820" h="560" role="img" aria-label="A native chat composer opens a command menu, then switches from Ask to Plan to Auto mode.">
-      <div class="art"><div class="chat-win"><vx-window title="Claude">
-        <div class="chat-feed">
-          <div class="bubble" data-at=".44-.5">Add Sign in with Apple</div>
-          <div class="say" data-at=".5-.56"><b style="color:var(--violet)">Plan</b>: add the entitlement, a sign-in screen and a session store. Nothing changed yet.</div>
-          <div class="tool" data-at=".72-.78">Edit AuthStore.swift<span class="ok">✓</span></div>
-          <div class="tool" data-at=".76-.82">Simulator: tap “Sign in”<span class="ok">✓</span></div>
-          <div class="say" data-at=".82-.9">Done, and it works on the simulator.</div>
-        </div>
-        <div class="menu rise" data-at=".06-.14" data-out=".32-.38">
-          <div class="hi"><b>/compact</b>Free up context by summarizing</div>
-          <div><b>/context</b>Show what’s using the conversation</div>
-          <div><b>/code-review</b>Review changes since a commit</div>
-          <div><b>/model</b>Opus 5.5, Sonnet 5.5, Fable 5.1</div>
-        </div>
-        <div class="composer">
-          <div class="c-field"><span data-at=".02-.08" data-out=".32-.36" data-type class="mono stay">/co</span></div>
-          <div class="c-tools">
-            <span style="position:relative;width:96px;height:26px">
-              <span class="chip mode" data-out=".38-.42">🔒 Ask</span>
-              <span class="chip mode plan" data-at=".38-.42" data-out=".66-.7">☰ Plan</span>
-              <span class="chip mode auto" data-at=".66-.7">⚡ Auto</span>
-            </span>
-            <span class="chip">Opus 5.5</span>
-            <span class="chip">⑂ Agent</span>
-            <span class="c-send"></span>
+<!-- Chat: the camera sits on the composer; commands open, the mode changes the light itself. -->
+<vx-scene length="600" timeline="chat" rest=".98" style="--tint:129,148,255">
+  <div class="stage">
+    <div class="glow"></div><div class="glow g2"></div><div class="glow g3"></div>
+    <h2 class="statement"><small>Claude, native</small><span class="line">All of Claude Code. None of the terminal.</span></h2>
+    <div class="world-box"><div class="world"><div class="cam" role="img" aria-label="The composer opens a command menu, then the mode switches from Ask to Plan to Auto while Claude works.">
+      <vx-window class="at c-win" title="Claude">
+        <div class="c-col">
+          <div class="bubble c-a">Add Sign in with Apple</div>
+          <div class="plan c-b"><b>Plan</b>Add the entitlement, a sign-in screen and a session store. Nothing has changed yet.</div>
+          <div class="tool c-c"><span class="ic"></span>Edit AuthStore.swift<span class="ok">✓</span></div>
+          <div class="tool c-d"><span class="ic"></span>Edit SignInView.swift<span class="ok">✓</span></div>
+          <div class="tool c-e"><span class="ic"></span>Simulator: tap “Sign in with Apple”<span class="ok">✓</span></div>
+          <div class="say c-f">Done, and it works on the simulator.</div>
+          <div class="menu">
+            <span class="menu-hi"></span>
+            <div><b>/compact</b>Free up context by summarizing</div>
+            <div><b>/context</b>Show what’s using the conversation</div>
+            <div><b>/code-review</b>Review the changes since a commit</div>
+            <div><b>/config</b>Set a setting by key</div>
           </div>
-        </div>
-      </vx-window></div></div>
-    </vx-art>
-  </div></div>
-</vx-scene>
-
-<!-- Agents: branch lines draw out from main; the winner merges home. -->
-<vx-scene id="agents" length="340" style="--tint:var(--violet)">
-  <div class="pin"><div class="scene-grid">
-    <div class="copy">
-      <p class="eyebrow">Parallel agents</p>
-      <h2>Try three ideas. Keep the best one.</h2>
-      <ol class="beats">
-        <li data-beat="0-.36"><code>⌘Return</code> sends a message as its own agent, on its own branch, in its own folder.</li>
-        <li data-beat=".36-.68">They work side by side and can’t touch your project. <strong>A bad attempt costs you nothing.</strong></li>
-        <li data-beat=".68-1">Review each one, merge the winner, throw the rest away.</li>
-      </ol>
-      <span class="scene-progress"><i></i></span>
-    </div>
-    <vx-art w="820" h="560" role="img" aria-label="Three branches leave main, each with a running agent. The best one merges back and the others fade away.">
-      <div class="art">
-        <svg class="tree" viewBox="0 0 820 560" aria-hidden="true">
-          <path class="draw" data-at="0-.08" style="opacity:1" d="M0 280 H150" stroke="#9b9ba7" pathLength="1"/>
-          <path class="draw" data-at=".06-.3" data-out=".72-.82" d="M150 280 C 260 280 260 90 410 90" stroke="#a78bfa" pathLength="1"/>
-          <path class="draw" data-at=".1-.34" d="M150 280 H410" stroke="#3dd68c" pathLength="1"/>
-          <path class="draw" data-at=".14-.38" data-out=".72-.82" d="M150 280 C 260 280 260 470 410 470" stroke="#f17cc5" pathLength="1"/>
-        </svg>
-        <span class="main-label">main</span>
-        <div class="agent from-r" data-at=".22-.34" data-out=".72-.82" style="top:42px"><h3><span class="dot" style="background:var(--violet)"></span>sheet-based-checkout</h3><p><span class="plus" data-at=".34-.6" data-count="212" data-prefix="+"></span> <span class="minus" data-at=".34-.6" data-count="38" data-prefix="−"></span> · 2 failing screens</p></div>
-        <div class="agent from-r" data-at=".26-.38" style="top:232px;border-color:rgba(61,214,140,.6)"><h3><span class="dot"></span>one-page-checkout</h3><p><span class="plus" data-at=".38-.62" data-count="146" data-prefix="+"></span> <span class="minus" data-at=".38-.62" data-count="91" data-prefix="−"></span> · Checked on the simulator</p></div>
-        <div class="agent from-r" data-at=".3-.42" data-out=".72-.82" style="top:422px"><h3><span class="dot" style="background:var(--pink)"></span>apple-pay-first</h3><p><span class="plus" data-at=".42-.64" data-count="87" data-prefix="+"></span> <span class="minus" data-at=".42-.64" data-count="12" data-prefix="−"></span> · Waiting for you</p></div>
-        <span class="chip rise" data-at=".8-.9" style="position:absolute;left:510px;top:345px;background:rgba(61,214,140,.16);color:var(--green)">✓ Merged into main</span>
-      </div>
-    </vx-art>
-  </div></div>
-</vx-scene>
-
-<!-- Simulator: a tap by label, then one device fans out into three. -->
-<vx-scene id="simulator" length="300" flip style="--tint:var(--green)">
-  <div class="pin"><div class="scene-grid">
-    <div class="copy">
-      <p class="eyebrow">Simulator</p>
-      <h2>The iPhone, inside your window.</h2>
-      <ol class="beats">
-        <li data-beat="0-.34">No more Simulator window lost behind everything else. The device lives next to your code.</li>
-        <li data-beat=".34-.66">Claude taps by label, not by guessing pixels, so it hits what it means to.</li>
-        <li data-beat=".66-1">A small phone, a big phone and an iPad, all live. <strong>Run on All</strong> installs everywhere at once.</li>
-      </ol>
-      <span class="scene-progress"><i></i></span>
-    </div>
-    <vx-art w="820" h="560" role="img" aria-label="A live iPhone gets tapped by its label, then a small phone and an iPad fan out beside it.">
-      <div class="art">
-        <div class="sim-l" data-at=".66-.86"><vx-phone style="--ph-bg:#f5f5f7"><div class="ph-title" style="font-size:20px">Today</div><div class="habit">Morning walk</div><div class="habit">Read 20 pages</div><div class="ph-cta">Add habit</div></vx-phone></div>
-        <div class="sim-r" data-at=".66-.86"><div><div class="ph-title">Today</div><div class="habit">Morning walk</div><div class="habit">Read 20 pages</div><div class="habit">Call Mum</div><div class="ph-cta">Add habit</div></div></div>
-        <vx-phone class="sim-c">
-          <div class="ph-title">Today</div>
-          <div class="habit"><i class="on"></i>Morning walk</div>
-          <div class="habit"><i></i>Read 20 pages</div>
-          <div class="habit"><i></i>Call Mum</div>
-          <div class="ph-cta">Add habit</div>
-          <span class="label-tag rise" data-at=".36-.44" data-out=".6-.66" style="left:30px;bottom:74px">tap “Add habit”</span>
-          <span class="tap" data-at=".48-.56" data-out=".58-.62" style="left:90px;bottom:18px"></span>
-        </vx-phone>
-      </div>
-    </vx-art>
-  </div></div>
-</vx-scene>
-
-<!-- Browser: the route types out, a ref locks on, the console slides up. -->
-<vx-scene length="300" style="--tint:var(--accent)">
-  <div class="pin"><div class="scene-grid">
-    <div class="copy">
-      <p class="eyebrow">Browser</p>
-      <h2>It reads the console so you don’t have to.</h2>
-      <ol class="beats">
-        <li data-beat="0-.34">Your dev server opens in a tab next to Claude, and the address bar always shows the route you’re on.</li>
-        <li data-beat=".34-.66">Claude clicks through pages, watches requests and reads every error for itself.</li>
-        <li data-beat=".66-1"><strong>Never paste a stack trace into a chat again.</strong></li>
-      </ol>
-      <span class="scene-progress"><i></i></span>
-    </div>
-    <vx-art w="820" h="560" role="img" aria-label="A browser route types into the address bar, an element is targeted, and the console reports zero errors.">
-      <div class="art"><div class="b-win"><vx-window title="Vibex">
-        <div class="b-col">
-          <div class="addr"><span class="host">localhost:5173</span><span class="route keep" data-at=".04-.26" data-type>/orders/42?tab=items</span></div>
-          <div class="page">
-            <h4 data-at=".22-.3">Order #42</h4>
-            <div class="row-card" data-at=".26-.34"><span>Trail shoes</span><b>$84.00</b></div>
-            <div class="row-card" data-at=".3-.38"><span>Socks</span><b>$12.00</b></div>
-            <div class="row-card" data-at=".34-.42" style="background:#111;color:#fff;border:0;justify-content:center">Refund order</div>
-            <div class="ref grow" data-at=".42-.5" style="left:12px;right:12px;top:167px;height:51px"><span>e12</span></div>
-          </div>
-          <div class="console rise" data-at=".56-.66">
-            <div data-at=".6-.66">browser_click e12 → ok</div>
-            <div data-at=".66-.72">POST /api/refund 200 · 41 ms</div>
-            <div class="g" data-at=".74-.8">browser_console → 0 errors</div>
-          </div>
-        </div>
-      </vx-window></div></div>
-    </vx-art>
-  </div></div>
-</vx-scene>
-
-<!-- Approvals: a banner drops in, a button presses, work resumes. -->
-<vx-scene length="280" flip style="--tint:var(--orange)">
-  <div class="pin"><div class="scene-grid">
-    <div class="copy">
-      <p class="eyebrow">Approvals</p>
-      <h2>Walk away. We’ll get you when it matters.</h2>
-      <ol class="beats">
-        <li data-beat="0-.34">Long job? Go make a coffee. You don’t have to watch Claude work.</li>
-        <li data-beat=".34-.66">When it needs a yes, you get a dot on its tab, a count in the window and a notification.</li>
-        <li data-beat=".66-1">One click takes you there, and one click puts it back to work. <strong>No session sits waiting for hours.</strong></li>
-      </ol>
-      <span class="scene-progress"><i></i></span>
-    </div>
-    <vx-art w="820" h="560" role="img" aria-label="A notification says Claude needs approval. Allow is clicked and the work continues.">
-      <div class="art">
-        <div class="banner" data-at=".3-.42" data-out=".62-.7"><img src="/icon.png" alt=""><div><b>Claude needs you in add-notes</b>Allow Bash: swift test</div></div>
-        <div class="b-win"><vx-window title="habits">
-          <div class="b-col">
-            <div class="tabs"><span>Claude</span><span class="on">add-notes<i class="waiting" data-at=".34-.4" data-out=".6-.64"></i></span><span>Terminal</span></div>
-            <div class="pane" style="flex:1">
-              <div class="bubble">Add notes to each habit</div>
-              <div class="tool" data-at="0-.06">Edit Habit.swift<span class="ok">✓</span></div>
-              <div class="tool" data-at=".08-.14">Edit HabitRow.swift<span class="ok">✓</span></div>
-              <div class="approve" data-at=".36-.44" data-out=".6-.66">
-                <small>Claude wants to run</small><code>swift test</code>
-                <div class="approve-row"><span class="a-btn yes" data-at=".54-.58" style="opacity:1">Allow</span><span class="a-btn">Always Allow</span><span class="a-btn">Don’t Allow</span></div>
-              </div>
-              <div class="tool rise" data-at=".68-.74">Run swift test<span class="ok">✓</span></div>
-              <div class="say" data-at=".78-.86">All 48 tests pass. Notes are in, and they sync.</div>
+          <div class="composer">
+            <div class="c-field"><span class="c-typed">/co</span></div>
+            <div class="c-tools">
+              <span class="mode-slot"><span class="chip mode m-ask">Ask</span><span class="chip mode m-plan">Plan</span><span class="chip mode m-auto">Auto</span></span>
+              <span class="chip">Opus 5.5</span>
+              <span class="chip">⑂ Agent</span>
+              <span class="c-send"></span>
             </div>
           </div>
-        </vx-window></div>
-      </div>
-    </vx-art>
-  </div></div>
+        </div>
+      </vx-window>
+    </div></div></div>
+    <ol class="notes">
+      <li data-beat=".18-.42">Type <code>/</code> for every command and skill, with what each one does.</li>
+      <li data-beat=".44-.62"><strong>Plan</strong> when it matters. Claude proposes, and nothing changes.</li>
+      <li data-beat=".64-.82"><strong>Auto</strong> when it doesn’t. It works on its own and stops only for risky actions.</li>
+      <li data-beat=".84-1">It’s the real Claude Code, with your CLAUDE.md, skills and hooks. <strong>There’s nothing to migrate.</strong></li>
+    </ol>
+  </div>
 </vx-scene>
 
-<!-- Review: diff lines wipe in, then a before/after divider drags across. -->
-<vx-scene length="320" style="--tint:var(--orange)">
-  <div class="pin"><div class="scene-grid">
-    <div class="copy">
-      <p class="eyebrow">Review</p>
-      <h2>Every change, before it counts.</h2>
-      <ol class="beats">
-        <li data-beat="0-.4">Side-by-side diffs with syntax highlighting, right beside the running app. No more guessing what the agent touched.</li>
-        <li data-beat=".4-.74">Every run saves a screenshot. Drag between before and after, and paste both into your PR.</li>
-        <li data-beat=".74-1">Commit and push from the same window. <strong>You stay the one who decides.</strong></li>
-      </ol>
-      <span class="scene-progress"><i></i></span>
-    </div>
-    <vx-art w="820" h="560" role="img" aria-label="Diff lines wipe in on the left while a divider drags across a before and after screenshot.">
-      <div class="art">
-        <div class="diff"><div class="diff-head">CheckoutView.swift <span style="color:var(--green)">+3</span> <span style="color:var(--red)">−2</span></div>
-          <div class="l bar-x keep" data-at=".02-.08">struct CheckoutView: View {</div>
-          <div class="l bar-x keep" data-at=".06-.12">  var body: some View {</div>
-          <div class="l del bar-x keep" data-at=".1-.16">-   Button("Pay") { pay() }</div>
-          <div class="l del bar-x keep" data-at=".14-.2">-     .frame(width: 420)</div>
-          <div class="l add bar-x keep" data-at=".18-.24">+   Button("Pay \(total)") {</div>
-          <div class="l add bar-x keep" data-at=".22-.28">+     pay()</div>
-          <div class="l add bar-x keep" data-at=".26-.32">+   }.frame(maxWidth: .infinity)</div>
-          <div class="l bar-x keep" data-at=".3-.36">  }</div>
-          <div class="l bar-x keep" data-at=".34-.4">}</div>
-        </div>
-        <div class="compare" data-at=".38-.44">
-          <vx-phone><div class="ph-title">Before</div><div class="habit">Total $96</div><div class="overflow">Pay</div></vx-phone>
-          <vx-phone class="after keep" data-at=".46-.74"><div class="ph-title">After</div><div class="habit">Total $96</div><div class="ph-cta">Pay $96</div></vx-phone>
-          <span class="divider keep" data-at=".46-.74"></span>
-        </div>
-      </div>
-    </vx-art>
-  </div></div>
+<!-- Agents: a keypress fires light down main; it splits, and only the winner comes home. -->
+<vx-scene id="agents" length="600" timeline="agents" rest=".98" style="--tint:167,139,250">
+  <div class="stage">
+    <div class="glow"></div>
+    <h2 class="statement"><small>Parallel agents</small><span class="line">Try three ideas. Keep the best one.</span></h2>
+    <div class="world-box"><div class="world"><div class="cam" role="img" aria-label="A keypress sends light along main. It splits into three branches with running agents. The best one merges home and the others fade.">
+      <svg class="tree" viewBox="0 0 1600 1000" aria-hidden="true">
+        <path class="p0" d="M-300 500 H430" stroke="#c9c9d4" pathLength="1"/>
+        <path class="p1 lit" d="M430 500 C 640 500 680 210 985 210" stroke="#a78bfa" style="color:#a78bfa" pathLength="1"/>
+        <path class="p2 lit" d="M430 500 H985" stroke="#3dd68c" style="color:#3dd68c" pathLength="1"/>
+        <path class="p3 lit" d="M430 500 C 640 500 680 790 985 790" stroke="#f17cc5" style="color:#f17cc5" pathLength="1"/>
+        <path class="p4 lit" d="M1470 500 H1900" stroke="#3dd68c" style="color:#3dd68c" pathLength="1"/>
+      </svg>
+      <div class="at keys"><span class="key k1">⌘</span><span class="key wide k2">return</span></div>
+      <span class="at main-label">main</span>
+      <div class="at agent ag1" style="top:130px;color:#a78bfa"><h3 style="color:#fff"><span class="dot" style="color:#a78bfa;background:#a78bfa"></span>sheet-checkout</h3><p><span class="plus x1" data-prefix="+">0</span> <span class="minus x2" data-prefix="−">0</span> · 2 screens still failing</p><div class="a-bar"><i class="b1"></i></div></div>
+      <div class="at agent ag2" style="top:420px;color:#3dd68c"><h3 style="color:#fff"><span class="dot" style="color:#3dd68c"></span>one-page-checkout</h3><p><span class="plus x3" data-prefix="+">0</span> <span class="minus x4" data-prefix="−">0</span> · Checked on the simulator</p><div class="a-bar"><i class="b2"></i></div></div>
+      <div class="at agent ag3" style="top:710px;color:#f17cc5"><h3 style="color:#fff"><span class="dot" style="color:#f17cc5;background:#f17cc5"></span>apple-pay-first</h3><p><span class="plus x5" data-prefix="+">0</span> <span class="minus x6" data-prefix="−">0</span> · Waiting for you</p><div class="a-bar"><i class="b3"></i></div></div>
+      <span class="at merged">✓ Merged into main</span>
+    </div></div></div>
+    <ol class="notes">
+      <li data-beat=".14-.34"><code>⌘Return</code> sends a message as its own agent, on its own branch, in its own folder.</li>
+      <li data-beat=".36-.66">They work side by side and can’t touch your project. <strong>A bad attempt costs you nothing.</strong></li>
+      <li data-beat=".68-1">Review each one, merge the winner, throw the rest away.</li>
+    </ol>
+  </div>
 </vx-scene>
 
-<!-- Skills and MCP: tiles fly home from everywhere and lock in. -->
-<vx-scene length="280" flip style="--tint:var(--violet)">
-  <div class="pin"><div class="scene-grid">
-    <div class="copy">
-      <p class="eyebrow">Skills and MCP</p>
-      <h2>New abilities, one click away.</h2>
-      <ol class="beats">
-        <li data-beat="0-.36">Browse skills and MCP servers from inside Vibex, without leaving your work.</li>
-        <li data-beat=".36-.7">It asks for any API key, then installs for this project or for all of them.</li>
-        <li data-beat=".7-1">You can always see what’s connected, what needs a sign-in and what’s failing.</li>
-      </ol>
-      <span class="scene-progress"><i></i></span>
-    </div>
-    <vx-art w="820" h="500" role="img" aria-label="Tiles for tools like Figma, Linear and Sentry fly into a marketplace grid and get installed.">
-      <div class="art">
-        <div class="market-search"><span>⌕</span><span class="keep" data-at="0-.14" data-type>Search skills and MCP servers</span></div>
-        <div class="tiles">
-          <div class="m-tile" data-at=".08-.3" style="--dx:-260px;--dy:-120px"><img src="/logos/figma.svg" alt="">Figma<small>Designs in context</small></div>
-          <div class="m-tile" data-at=".12-.34" style="--dx:-90px;--dy:-210px;--r:-8deg"><img src="/logos/linear.svg" alt="">Linear<small>Issues, fast</small><span class="installed" data-at=".56-.6">✓</span></div>
-          <div class="m-tile" data-at=".14-.36" style="--dx:100px;--dy:-220px"><img src="/logos/sentry.svg" alt="">Sentry<small>Errors and releases</small></div>
-          <div class="m-tile" data-at=".1-.32" style="--dx:280px;--dy:-120px;--r:-9deg"><img src="/logos/supabase.svg" alt="">Supabase<small>Tables, migrations</small><span class="installed" data-at=".62-.66">✓</span></div>
-          <div class="m-tile" data-at=".16-.38" style="--dx:-280px;--dy:140px;--r:-7deg"><img src="/logos/playwright.svg" alt="">Playwright<small>Drive a browser</small></div>
-          <div class="m-tile" data-at=".2-.42" style="--dx:-100px;--dy:240px"><img src="/logos/github.svg" alt="">GitHub<small>PRs and Actions</small><span class="installed" data-at=".5-.54">✓</span></div>
-          <div class="m-tile" data-at=".22-.44" style="--dx:110px;--dy:230px;--r:-6deg"><img src="/logos/notion.svg" alt="">Notion<small>Docs and databases</small></div>
-          <div class="m-tile" data-at=".18-.4" style="--dx:270px;--dy:140px"><img src="/logos/postgresql.svg" alt="">Postgres<small>Query your data</small></div>
-        </div>
-      </div>
-    </vx-art>
-  </div></div>
+<!-- Simulator: a phone turns into place, the window forms around it, labels light up, it multiplies. -->
+<vx-scene id="simulator" length="600" timeline="sim" rest=".98" style="--tint:61,214,140">
+  <div class="stage">
+    <div class="glow"></div>
+    <h2 class="statement"><small>Simulator</small><span class="line">The iPhone, inside your window.</span></h2>
+    <div class="world-box"><div class="world"><div class="cam" role="img" aria-label="An iPhone turns into place and a window forms around it. Claude sees each element by its label and taps one. Then a small phone and an iPad join it.">
+      <vx-window class="at s-frame" title="habits">
+        <div class="rail"><i class="on"></i><i></i><i></i><i></i><i></i></div>
+        <div class="s-chat"><div class="bubble">Add a habit and make sure it saves</div><div class="tool"><span class="ic"></span>Simulator: describe the screen<span class="ok">✓</span></div><div class="tool sx"><span class="ic"></span>Simulator: tap “Add a habit”<span class="ok">✓</span></div></div>
+        <div class="s-right"></div>
+      </vx-window>
+      <vx-phone class="at s-small"><div class="ph-title">Today</div><div class="habit"><i class="on"></i>Morning walk</div><div class="habit"><i></i>Read 20 pages</div><div class="ph-cta">Add a habit</div></vx-phone>
+      <div class="at s-pad"><div><div class="ph-title" style="font-size:44px">Today</div><div class="habit"><i class="on"></i>Morning walk</div><div class="habit"><i></i>Read 20 pages</div><div class="habit"><i></i>Call Mum</div><div class="ph-cta">Add a habit</div></div></div>
+      <vx-phone class="at s-phone">
+        <div class="ph-title">Today</div>
+        <div class="habit"><i class="on"></i>Morning walk</div>
+        <div class="habit"><i></i>Read 20 pages</div>
+        <div class="habit"><i></i>Call Mum</div>
+        <div class="habit s-new"><i></i>Drink water</div>
+        <div class="ph-cta">Add a habit</div>
+        <div class="ax a1" style="left:16px;right:16px;top:74px;height:66px"><span>Morning walk</span></div>
+        <div class="ax a2" style="left:16px;right:16px;top:154px;height:66px"><span>Read 20 pages</span></div>
+        <div class="ax a3" style="left:16px;right:16px;top:234px;height:66px"><span>Call Mum</span></div>
+        <div class="ax hit a4" style="left:16px;right:16px;bottom:24px;height:70px"><span>Add a habit</span></div>
+        <span class="tap s-tap" style="left:196px;bottom:27px"></span>
+      </vx-phone>
+    </div></div></div>
+    <ol class="notes">
+      <li data-beat=".2-.4">No Simulator window lost behind everything else. <strong>The device lives next to your code.</strong></li>
+      <li data-beat=".42-.68">Claude reads every element by name, so it taps what it means to, not a guess at some pixels.</li>
+      <li data-beat=".7-1">A small phone, a big phone and an iPad, all live. <strong>Run on All</strong> installs everywhere at once.</li>
+    </ol>
+  </div>
 </vx-scene>
 
-<!-- Usage: the gauge sweeps, numbers count, bars grow, the nudge lands. -->
-<vx-scene length="280" style="--tint:var(--yellow)">
-  <div class="pin"><div class="scene-grid">
-    <div class="copy">
-      <p class="eyebrow">AI Usage</p>
-      <h2>Never hit a limit by surprise.</h2>
-      <ol class="beats">
-        <li data-beat="0-.4">Session and plan limits at a glance, for Claude Code and Codex.</li>
-        <li data-beat=".4-.72">A nudge before you run out, not after, so a big refactor doesn’t die halfway.</li>
-        <li data-beat=".72-1">It’s all read from logs on your Mac. <strong>Nothing leaves your machine.</strong></li>
-      </ol>
-      <span class="scene-progress"><i></i></span>
-    </div>
-    <vx-art w="820" h="500" role="img" aria-label="A usage gauge fills to 82 percent, daily bars grow and a notification warns before the limit.">
-      <div class="art">
-        <div class="gauge">
-          <svg viewBox="0 0 330 330" aria-hidden="true"><circle cx="165" cy="165" r="140" stroke="rgba(255,255,255,.07)"/><circle class="fill" data-at="0-.46" style="opacity:1" cx="165" cy="165" r="140" stroke="#f5d76e" pathLength="1"/></svg>
-          <div class="gauge-text"><div><b class="keep" data-at="0-.46" data-count="82" data-suffix="%">82%</b>of this session</div></div>
+<!-- Browser: the address bar fills the screen, then a crosshair works through the page. -->
+<vx-scene length="560" timeline="browser" rest=".98" style="--tint:129,148,255">
+  <div class="stage">
+    <div class="glow"></div>
+    <h2 class="statement"><small>Browser</small><span class="line">It reads the console so you don’t have to.</span></h2>
+    <div class="world-box"><div class="world"><div class="cam" role="img" aria-label="A route types into the address bar. A crosshair finds a button and clicks it, and the console reports zero errors.">
+      <vx-window class="at b-win" title="Vibex">
+        <div class="b-col">
+          <div class="addr"><span class="host">localhost:5173</span><span class="route">/orders/42?tab=items</span></div>
+          <div class="page">
+            <h4 class="b1x">Order #42</h4>
+            <div class="row-card b2x"><span>Trail shoes</span><b>$84.00</b></div>
+            <div class="row-card b3x"><span>Socks</span><b>$12.00</b></div>
+            <div class="row-card refund b4x">Refund order</div>
+          </div>
         </div>
-        <div class="bars"><span>Last 14 days</span>
-          <i class="bar-y keep" data-at=".06-.2" style="--h:32%"></i><i class="bar-y keep" data-at=".08-.22" style="--h:48%"></i><i class="bar-y keep" data-at=".1-.24" style="--h:26%"></i><i class="bar-y keep" data-at=".12-.26" style="--h:58%"></i><i class="bar-y keep" data-at=".14-.28" style="--h:40%"></i><i class="bar-y keep" data-at=".16-.3" style="--h:66%"></i><i class="bar-y keep" data-at=".18-.32" style="--h:36%"></i><i class="bar-y keep" data-at=".2-.34" style="--h:52%"></i><i class="bar-y keep" data-at=".22-.36" style="--h:74%"></i><i class="bar-y keep" data-at=".24-.38" style="--h:44%"></i><i class="bar-y keep" data-at=".26-.4" style="--h:60%"></i><i class="bar-y keep" data-at=".28-.42" style="--h:82%"></i><i class="bar-y keep" data-at=".3-.44" style="--h:54%"></i><i class="bar-y keep" data-at=".32-.46" style="--h:78%"></i>
+      </vx-window>
+      <span class="at cross"></span>
+      <div class="at console"><div class="k1x">browser_click "Refund order" → ok</div><div class="k2x">POST /api/refund 200 · 41 ms</div><div class="k3x" style="color:var(--green)">browser_console → 0 errors</div></div>
+      <span class="at zero">0 errors</span>
+    </div></div></div>
+    <ol class="notes">
+      <li data-beat=".16-.4">Your dev server opens in a tab next to Claude, and the address bar <strong>shows the route you’re on</strong>.</li>
+      <li data-beat=".42-.66">Claude clicks through pages, watches requests and reads every error for itself.</li>
+      <li data-beat=".72-1"><strong>Never paste a stack trace into a chat again.</strong></li>
+    </ol>
+  </div>
+</vx-scene>
+
+<!-- Approvals: the window sinks away, a banner taps your shoulder, the camera dives to the button. -->
+<vx-scene length="540" timeline="approve" rest=".98" style="--tint:240,160,90">
+  <div class="stage">
+    <div class="glow"></div>
+    <h2 class="statement"><small>Approvals</small><span class="line">Walk away. We’ll get you when it matters.</span></h2>
+    <div class="world-box"><div class="world"><div class="cam" role="img" aria-label="The window recedes while Claude works. A notification arrives, and Allow is clicked. The tests pass.">
+      <vx-window class="at b-win r-win" title="habits">
+        <div class="b-col">
+          <div class="tabs"><span>Claude</span><span class="on">add-notes<i class="waiting"></i></span><span>Terminal</span></div>
+          <div class="c-col" style="flex:1">
+            <div class="bubble">Add notes to each habit</div>
+            <div class="tool"><span class="ic"></span>Edit Habit.swift<span class="ok">✓</span></div>
+            <div class="tool"><span class="ic"></span>Edit HabitRow.swift<span class="ok">✓</span></div>
+            <div class="approve r-card"><small>Claude wants to run</small><code>swift test</code><div class="approve-row"><span class="a-btn yes r-yes">Allow</span><span class="a-btn">Always Allow</span><span class="a-btn">Don’t Allow</span></div></div>
+            <div class="tool r-run"><span class="ic"></span>Run swift test<span class="ok">✓</span></div>
+            <div class="say r-say">All <b class="r-count" data-suffix="">0</b> tests pass. Notes are in, and they sync.</div>
+          </div>
         </div>
-        <div class="nudge rise" data-at=".5-.6"><b>You’ve used 82% of this session</b>Wrap up, or plan the big change for after the reset.</div>
+      </vx-window>
+      <div class="at banner"><img src="/icon.png" alt=""><div><b>Claude needs you in add-notes</b>Allow Bash: swift test</div></div>
+    </div></div></div>
+    <ol class="notes">
+      <li data-beat=".18-.38">Long job? Go make a coffee. You don’t have to watch Claude work.</li>
+      <li data-beat=".4-.6">When it needs a yes, you get a dot on its tab, a count in the window and a notification.</li>
+      <li data-beat=".62-1">One click takes you there. One click puts it back to work. <strong>No session sits waiting for hours.</strong></li>
+    </ol>
+  </div>
+</vx-scene>
+
+<!-- Review: code wipes in close up, then a divider drags between before and after. -->
+<vx-scene length="560" timeline="review" rest=".72" style="--tint:240,160,90">
+  <div class="stage">
+    <div class="glow"></div>
+    <h2 class="statement"><small>Review</small><span class="line">Every change, before it counts.</span></h2>
+    <div class="world-box"><div class="world"><div class="cam" role="img" aria-label="Diff lines wipe in red and green, then a divider drags across before and after screenshots of the app.">
+      <div class="at diff"><div class="diff-head">CheckoutView.swift &nbsp;<span style="color:var(--green)">+3</span> <span style="color:var(--red)">−2</span></div>
+        <div class="l"><span>struct CheckoutView: View {</span></div>
+        <div class="l"><span>  var body: some View {</span></div>
+        <div class="l del"><i class="w1"></i><span>-   Button("Pay") { pay() }</span></div>
+        <div class="l del"><i class="w2"></i><span>-     .frame(width: 460)</span></div>
+        <div class="l add"><i class="w3"></i><span>+   Button("Pay \(total)") {</span></div>
+        <div class="l add"><i class="w4"></i><span>+     pay()</span></div>
+        <div class="l add"><i class="w5"></i><span>+   }.frame(maxWidth: .infinity)</span></div>
+        <div class="l"><span>  }</span></div>
+        <div class="l"><span>}</span></div>
       </div>
-    </vx-art>
-  </div></div>
+      <vx-phone class="at cmp">
+        <div class="before"><div class="ph-title">Checkout</div><div class="habit">Trail shoes<span style="margin-left:auto">$84</span></div><div class="habit" style="font-weight:700">Total<span style="margin-left:auto">$96</span></div><div class="over">Pay $96 with card</div></div>
+        <div class="after"><div class="ph-title">Checkout</div><div class="habit">Trail shoes<span style="margin-left:auto">$84</span></div><div class="habit" style="font-weight:700">Total<span style="margin-left:auto">$96</span></div><div class="fixed">Pay $96 with card</div></div>
+        <span class="cmp-tag t-after" style="left:12px">After</span><span class="cmp-tag t-before" style="right:12px">Before</span>
+        <span class="divider"></span>
+      </vx-phone>
+    </div></div></div>
+    <ol class="notes">
+      <li data-beat=".16-.46">Side-by-side diffs, right beside the running app. <strong>No more guessing what the agent touched.</strong></li>
+      <li data-beat=".48-.78">Every run saves a screenshot. Drag between before and after, and paste both into your PR.</li>
+      <li data-beat=".8-1">Commit and push from the same window. <strong>You stay the one who decides.</strong></li>
+    </ol>
+  </div>
+</vx-scene>
+
+<!-- Skills and MCP: tools drift in deep space, then fly forward and lock into a grid. -->
+<vx-scene length="500" timeline="skills" rest=".98" style="--tint:167,139,250">
+  <div class="stage">
+    <div class="glow"></div>
+    <h2 class="statement"><small>Skills and MCP</small><span class="line">New abilities, one click away.</span></h2>
+    <div class="world-box"><div class="world"><div class="cam" role="img" aria-label="Tools like Figma, Linear and Sentry fly forward out of the dark and lock into a marketplace grid, and some get installed.">
+      <div class="at m-search"><span>⌕</span><span class="s-type">Search skills and MCP servers</span></div>
+      <div class="at m-tile t0" style="left:250px;top:210px"><img src="/logos/figma.svg" alt="">Figma<small>Designs in context</small></div>
+      <div class="at m-tile t1" style="left:530px;top:210px"><img src="/logos/linear.svg" alt="">Linear<small>Issues, fast</small><span class="installed i1">✓</span></div>
+      <div class="at m-tile t2" style="left:810px;top:210px"><img src="/logos/sentry.svg" alt="">Sentry<small>Errors and releases</small></div>
+      <div class="at m-tile t3" style="left:1090px;top:210px"><img src="/logos/supabase.svg" alt="">Supabase<small>Tables, migrations</small><span class="installed i2">✓</span></div>
+      <div class="at m-tile t4" style="left:250px;top:420px"><img src="/logos/playwright.svg" alt="">Playwright<small>Drive a browser</small></div>
+      <div class="at m-tile t5" style="left:530px;top:420px"><img src="/logos/github.svg" alt="">GitHub<small>PRs and Actions</small><span class="installed i3">✓</span></div>
+      <div class="at m-tile t6" style="left:810px;top:420px"><img src="/logos/notion.svg" alt="">Notion<small>Docs and databases</small></div>
+      <div class="at m-tile t7" style="left:1090px;top:420px"><img src="/logos/postgresql.svg" alt="">Postgres<small>Query your data</small></div>
+      <div class="at m-tile t8" style="left:250px;top:630px"><img src="/logos/slack.svg" alt="">Slack<small>Channels and threads</small></div>
+      <div class="at m-tile t9" style="left:530px;top:630px"><img src="/logos/react.svg" alt="">React<small>Component skills</small></div>
+      <div class="at m-tile t10" style="left:810px;top:630px"><img src="/logos/swift.svg" alt="">Swift<small>Write modern Swift</small><span class="installed i4">✓</span></div>
+      <div class="at m-tile t11" style="left:1090px;top:630px"><img src="/logos/docker.svg" alt="">Docker<small>Containers and images</small></div>
+    </div></div></div>
+    <ol class="notes">
+      <li data-beat=".3-.54">Browse skills and MCP servers from inside Vibex, without leaving your work.</li>
+      <li data-beat=".56-.78">It asks for any API key, then installs for this project or for all of them.</li>
+      <li data-beat=".8-1">You can always see what’s connected, what needs a sign-in and what’s failing.</li>
+    </ol>
+  </div>
+</vx-scene>
+
+<!-- Usage: a ring fills the whole stage and warms up as you near the limit. -->
+<vx-scene length="500" timeline="usage" rest=".98" style="--tint:245,215,110">
+  <div class="stage">
+    <div class="glow"></div>
+    <h2 class="statement"><small>AI Usage</small><span class="line">Never hit a limit by surprise.</span></h2>
+    <div class="world-box"><div class="world"><div class="cam" role="img" aria-label="A large ring fills to 82 percent and warms to orange while daily bars rise behind it. A notice arrives before the limit.">
+      <div class="at skyline"></div>
+      <div class="at gauge">
+        <svg viewBox="0 0 780 780" aria-hidden="true"><circle cx="390" cy="390" r="360" stroke="rgba(255,255,255,.07)"/><circle class="fill" cx="390" cy="390" r="360" stroke="#f5d76e" pathLength="1"/><circle class="hot" cx="390" cy="390" r="360" stroke="#f0a05a" pathLength="1"/></svg>
+        <div class="gauge-text"><div><b class="g-num" data-suffix="%">0%</b>of this session</div></div>
+      </div>
+      <div class="at nudge"><b>You’ve used 82% of this session</b>Wrap up, or plan the big change for after the reset.</div>
+    </div></div></div>
+    <ol class="notes">
+      <li data-beat=".18-.44">Session and plan limits at a glance, for Claude Code and Codex.</li>
+      <li data-beat=".46-.72">A nudge before you run out, not after, so a big refactor doesn’t die halfway.</li>
+      <li data-beat=".74-1">It’s all read from logs on your Mac. <strong>Nothing leaves your machine.</strong></li>
+    </ol>
+  </div>
 </vx-scene>
 
 <!-- Everything else -->

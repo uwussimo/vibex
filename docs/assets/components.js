@@ -7,14 +7,12 @@ const INSTALL = 'curl -fsSL https://vibex.cc/install.sh | sh';
 const REPO = 'https://github.com/uwussimo/vibex';
 
 const clamp = (value, low = 0, high = 1) => Math.min(high, Math.max(low, value));
-const ease = (t) => t * t * (3 - 2 * t);
-const window01 = (p, [a, b]) => (b === a ? (p >= a ? 1 : 0) : ease(clamp((p - a) / (b - a))));
 const range = (text) => text.split('-').map(Number);
 
 /* ---------- Scroll engine ---------- */
 
-// Critically damped follow of the scroll position. Each frame moves from the current value, so
-// reversing direction mid-scene never jumps, and a mouse wheel's steps read as continuous motion.
+// The scroll position is followed by a critically damped spring. Every frame moves from the current
+// value, so reversing mid-scene never jumps and a mouse wheel's steps read as continuous motion.
 const scenes = new Set();
 let frame = 0;
 let last = 0;
@@ -36,33 +34,141 @@ function schedule() {
 addEventListener('scroll', schedule, { passive: true });
 addEventListener('resize', () => { for (const scene of scenes) scene.measure(); schedule(); });
 
+export const easings = {
+  linear: (t) => t,
+  // Most motion: leaves fast, arrives gently, like something with weight coming to rest.
+  out: (t) => 1 - (1 - t) ** 3.2,
+  in: (t) => t ** 2.6,
+  inOut: (t) => (t < 0.5 ? 4 * t ** 3 : 1 - (-2 * t + 2) ** 3 / 2),
+  // A small overshoot, kept for things that snap into place.
+  snap: (t) => { const c = 1.45; return 1 + (c + 1) * (t - 1) ** 3 + c * (t - 1) ** 2; },
+};
+
+const DEFAULTS = { x: 0, y: 0, z: 0, scale: 1, rotate: 0, rx: 0, ry: 0, opacity: 1, blur: 0 };
+const TRANSFORM = new Set(['x', 'y', 'z', 'scale', 'rotate', 'rx', 'ry']);
+
 /**
- * <vx-scene length="300"> pins its `.pin` child for `length`vh of scrolling and plays a timeline:
- *   data-at="0.2-0.4"   sets --t from 0 to 1 over that part of the scene
- *   data-out="0.8-0.9"  sets --x from 0 to 1, for leaving
- *   data-type           reveals the element's text letter by letter with --t
- *   data-count="1284"   counts up to the number with --t (data-prefix, data-suffix)
- *   data-beat="0-0.33"  a caption that shows during that part
- * Elements read --t and --x in CSS, so every animation stays a transform or opacity.
+ * A scene's choreography. Each call adds segments to an element's properties; a property holds its
+ * last value between segments, and before its first segment it holds that segment's start.
+ *   t.to('.card', [0.2, 0.4], { y: [40, 0], opacity: [0, 1] }, 'out')
+ *   t.to('.row', [0.2, 0.4], { x: [20, 0] }, 'out', { stagger: 0.02 })
+ * Values: x y z (px), scale, rotate rx ry (deg), opacity, blur (px), dash (for pathLength="1"),
+ * wipe (percent hidden from the right), type (fraction of the text), count (number), and any --var.
+ */
+class Timeline {
+  constructor(root) {
+    this.root = root;
+    this.tracks = new Map();
+    this.words = [];
+  }
+
+  all(target) {
+    if (typeof target !== 'string') return Array.isArray(target) ? target : [target];
+    const found = [...this.root.querySelectorAll(target)];
+    if (!found.length) console.warn('No element for', target);
+    return found;
+  }
+
+  to(target, [a, b], props, ease = 'out', { stagger = 0 } = {}) {
+    this.all(target).forEach((el, index) => {
+      const track = this.tracks.get(el) || this.create(el);
+      const start = a + stagger * index;
+      const end = b + stagger * index;
+      for (const [prop, value] of Object.entries(props)) {
+        const list = track.props[prop] ||= [];
+        const previous = list.length ? list[list.length - 1].to : (DEFAULTS[prop] ?? 0);
+        const [from, to] = Array.isArray(value) ? value : [previous, value];
+        list.push({ a: start, b: end, from, to, ease: easings[ease] });
+      }
+    });
+    return this;
+  }
+
+  create(el) {
+    const track = { el, props: {}, text: el.textContent, cache: {} };
+    this.tracks.set(el, track);
+    return track;
+  }
+
+  /** Fills a line of text in word by word as the scene plays. */
+  fill(target, [a, b]) {
+    for (const el of this.all(target)) {
+      const words = el.textContent.trim().split(/\s+/);
+      const keep = el.innerHTML;
+      el.setAttribute('aria-label', el.textContent.trim());
+      el.innerHTML = words.map((word) => `<span class="word" aria-hidden="true">${word}</span>`).join(' ');
+      el.dataset.source = keep;
+      [...el.children].forEach((word, index) => {
+        const start = a + ((b - a) * index) / words.length;
+        const end = start + ((b - a) / words.length) * 2.6;
+        this.to(word, [start, Math.min(end, b + 0.02)], { opacity: [0.14, 1] }, 'linear');
+      });
+    }
+    return this;
+  }
+
+  static value(list, p) {
+    let current = list[0].from;
+    for (const seg of list) {
+      if (p < seg.a) break;
+      current = p >= seg.b ? seg.to : seg.from + (seg.to - seg.from) * seg.ease((p - seg.a) / (seg.b - seg.a));
+    }
+    return current;
+  }
+
+  render(p) {
+    for (const track of this.tracks.values()) {
+      const { el, props, cache } = track;
+      const read = (name) => (props[name] ? Timeline.value(props[name], p) : DEFAULTS[name]);
+      if (Object.keys(props).some((name) => TRANSFORM.has(name))) {
+        const transform = `translate3d(${read('x').toFixed(2)}px,${read('y').toFixed(2)}px,${read('z').toFixed(1)}px) rotate(${read('rotate').toFixed(2)}deg) rotateX(${read('rx').toFixed(2)}deg) rotateY(${read('ry').toFixed(2)}deg) scale(${read('scale').toFixed(4)})`;
+        if (cache.transform !== transform) { el.style.transform = transform; cache.transform = transform; }
+      }
+      for (const [name, list] of Object.entries(props)) {
+        if (TRANSFORM.has(name)) continue;
+        const value = Timeline.value(list, p);
+        if (cache[name] === value) continue;
+        cache[name] = value;
+        if (name === 'opacity') {
+          el.style.opacity = value.toFixed(3);
+          el.style.visibility = value <= 0.001 ? 'hidden' : '';
+        } else if (name === 'blur') el.style.filter = value > 0.05 ? `blur(${value.toFixed(1)}px)` : '';
+        else if (name === 'dash') el.style.strokeDashoffset = value.toFixed(4);
+        else if (name === 'wipe') el.style.clipPath = `inset(0 ${value.toFixed(2)}% 0 0)`;
+        else if (name === 'type') el.textContent = track.text.slice(0, Math.round(track.text.length * value));
+        else if (name === 'count') {
+          const { prefix = '', suffix = '' } = el.dataset;
+          el.textContent = `${prefix}${Math.round(value).toLocaleString('en-US')}${suffix}`;
+        } else el.style.setProperty(name, value.toFixed(3));
+      }
+    }
+  }
+}
+
+const timelines = new Map();
+
+/** Attaches choreography to <vx-scene timeline="name">. */
+export function defineTimeline(name, build) {
+  timelines.set(name, build);
+  for (const scene of scenes) if (scene.getAttribute('timeline') === name) scene.useTimeline(build);
+}
+
+/**
+ * <vx-scene length="400" timeline="hero" rest="0.9"> pins its `.stage` for `length`vh and plays a
+ * timeline with the scroll. `rest` is the moment shown when motion is off: a finished picture.
+ * Captions are <li data-beat="0.2-0.5">.
  */
 class VxScene extends HTMLElement {
   connectedCallback() {
     this.current = 0;
-    this.targets = [...this.querySelectorAll('[data-at],[data-out]')].map((el) => ({
-      el,
-      at: el.dataset.at ? range(el.dataset.at) : null,
-      out: el.dataset.out ? range(el.dataset.out) : null,
-      text: 'type' in el.dataset ? el.textContent : null,
-      count: el.dataset.count ? Number(el.dataset.count) : null,
-      t: -1,
-      x: -1,
-    }));
     this.beats = [...this.querySelectorAll('[data-beat]')].map((el) => ({ el, at: range(el.dataset.beat), o: -1 }));
-    this.bar = this.querySelector('.scene-progress i');
+    this.world = this.querySelector('.world');
     this.apply = () => this.configure();
     reduceMotion.addEventListener('change', this.apply);
-    this.configure();
     scenes.add(this);
+    const build = timelines.get(this.getAttribute('timeline'));
+    if (build) this.useTimeline(build);
+    this.configure();
     schedule();
   }
 
@@ -71,19 +177,35 @@ class VxScene extends HTMLElement {
     reduceMotion.removeEventListener('change', this.apply);
   }
 
-  configure() {
-    this.toggleAttribute('static', reduceMotion.matches);
-    this.style.height = reduceMotion.matches ? '' : `${this.getAttribute('length') || 300}vh`;
-    // Motion off means the finished state, not a blank one.
-    if (reduceMotion.matches) this.render(1);
-    else this.render(this.target());
-    this.current = reduceMotion.matches ? 1 : this.target();
-    this.measure();
+  useTimeline(build) {
+    if (this.timeline) return;
+    this.timeline = new Timeline(this);
+    build(this.timeline);
+    this.configure();
   }
 
-  measure() { this.span = Math.max(this.offsetHeight - innerHeight, 1); }
+  configure() {
+    const still = reduceMotion.matches;
+    this.toggleAttribute('static', still);
+    this.style.height = still ? '' : `${this.getAttribute('length') || 400}vh`;
+    this.measure();
+    this.current = still ? Number(this.getAttribute('rest') || 1) : clamp(-this.getBoundingClientRect().top / this.span);
+    this.render(this.current);
+  }
 
-  target() { return clamp(-this.getBoundingClientRect().top / (this.span || Math.max(this.offsetHeight - innerHeight, 1))); }
+  measure() {
+    this.span = Math.max(this.offsetHeight - innerHeight, 1);
+    if (!this.world) return;
+    const stage = this.querySelector('.stage');
+    const width = stage.clientWidth;
+    const narrow = width < 900;
+    // Compositions keep what matters in the middle 900 points, so a phone crops the sides, not the idea.
+    const fit = this.hasAttribute('static')
+      ? Math.min(width / 1600, 1)
+      : Math.min(width / (narrow ? 900 : 1600), innerHeight / 1000);
+    this.world.style.setProperty('--fit', fit.toFixed(4));
+    if (this.hasAttribute('static')) this.world.parentElement.style.height = `${1000 * fit}px`;
+  }
 
   step(dt) {
     if (reduceMotion.matches) return false;
@@ -91,64 +213,26 @@ class VxScene extends HTMLElement {
     if (box.bottom < -innerHeight || box.top > innerHeight * 2) return false;
     const target = clamp(-box.top / this.span);
     const gap = target - this.current;
-    this.current = Math.abs(gap) < 0.0004 ? target : this.current + gap * (1 - Math.exp(-dt / 0.085));
+    this.current = Math.abs(gap) < 0.0003 ? target : this.current + gap * (1 - Math.exp(-dt / 0.09));
     this.render(this.current);
     return this.current !== target;
   }
 
   render(p) {
-    for (const item of this.targets) {
-      const t = item.at ? Math.round(window01(p, item.at) * 1000) / 1000 : 1;
-      const x = item.out ? Math.round(window01(p, item.out) * 1000) / 1000 : 0;
-      if (t !== item.t) {
-        item.el.style.setProperty('--t', t);
-        item.t = t;
-        if (item.text !== null) item.el.textContent = item.text.slice(0, Math.round(item.text.length * t));
-        if (item.count !== null) {
-          const { prefix = '', suffix = '' } = item.el.dataset;
-          item.el.textContent = `${prefix}${Math.round(item.count * t).toLocaleString('en-US')}${suffix}`;
-        }
-      }
-      if (x !== item.x) { item.el.style.setProperty('--x', x); item.x = x; }
-    }
+    this.timeline?.render(p);
     this.beats.forEach((beat, index) => {
-      const fade = 0.05;
+      const fade = 0.035;
       const [a, b] = beat.at;
-      const enter = index === 0 ? 1 : clamp((p - a) / fade);
-      const leave = index === this.beats.length - 1 ? 1 : clamp((b - p) / fade);
+      const enter = clamp((p - a) / fade);
+      const leave = b >= 1 ? 1 : clamp((b - p) / fade);
       const o = Math.round(Math.min(enter, leave) * 100) / 100;
       if (o !== beat.o) {
-        beat.el.style.setProperty('--o', o);
-        beat.el.style.setProperty('--dy', `${Math.round((1 - enter) * 16 - (1 - leave) * 16)}px`);
-        beat.el.toggleAttribute('inert', o === 0);
+        beat.el.style.opacity = o;
+        beat.el.style.transform = `translateY(${Math.round((1 - easings.out(enter)) * 18 - (1 - leave) * 12)}px)`;
+        beat.el.style.visibility = o === 0 ? 'hidden' : 'visible';
         beat.o = o;
       }
     });
-    if (this.bar) this.bar.style.transform = `scaleX(${p})`;
-  }
-}
-
-/**
- * <vx-art w="820" h="560"> scales a fixed-size drawing to whatever room it has, like a picture.
- * small-w and small-h give it a different shape on phones.
- */
-class VxArt extends HTMLElement {
-  connectedCallback() {
-    this.canvas = this.querySelector(':scope > .art') || this.firstElementChild;
-    this.observer = new ResizeObserver(() => this.fit());
-    this.observer.observe(this);
-    this.fit();
-  }
-  disconnectedCallback() { this.observer?.disconnect(); }
-  fit() {
-    const small = innerWidth <= 900 && this.hasAttribute('small-w');
-    this.w = Number(this.getAttribute(small ? 'small-w' : 'w') || 820);
-    this.h = Number(this.getAttribute(small ? 'small-h' : 'h') || 560);
-    this.style.setProperty('--ratio', `${this.w} / ${this.h}`);
-    this.canvas.style.width = `${this.w}px`;
-    this.canvas.style.height = `${this.h}px`;
-    const scale = Math.min(this.clientWidth / this.w, (this.clientHeight || Infinity) / this.h);
-    if (scale > 0 && scale !== Infinity) this.canvas.style.transform = `translate(-50%, -50%) scale(${scale})`;
   }
 }
 
@@ -170,21 +254,21 @@ class VxWindow extends HTMLElement {
   }
 }
 
-/** An iPhone: bezel, status bar and home indicator around a screen. */
+/** An iPhone, at its real size in points: titanium edge, buttons, island and status bar. */
 class VxPhone extends HTMLElement {
   connectedCallback() {
     if (this.querySelector(':scope > .ph-screen')) return;
-    const screen = document.createElement('div');
-    screen.className = 'ph-screen';
-    const bar = document.createElement('div');
-    bar.className = 'ph-status';
-    bar.innerHTML = '<b>9:41</b><i></i><span class="ph-icons"></span>';
-    const home = document.createElement('div');
-    home.className = 'ph-home';
     const content = document.createElement('div');
     content.className = 'ph-content';
     content.append(...this.childNodes);
-    screen.append(bar, content, home);
+    const screen = document.createElement('div');
+    screen.className = 'ph-screen';
+    screen.innerHTML = `<div class="ph-status"><b>9:41</b><span class="ph-icons"><svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><rect y="8" width="3" height="4" rx=".8"/><rect x="5" y="5.5" width="3" height="6.5" rx=".8"/><rect x="10" y="3" width="3" height="9" rx=".8"/><rect x="15" width="3" height="12" rx=".8"/></svg><svg width="27" height="13" viewBox="0 0 27 13" fill="none"><rect x=".5" y=".5" width="23" height="12" rx="3.6" stroke="currentColor" opacity=".4"/><rect x="2" y="2" width="20" height="9" rx="2.2" fill="currentColor"/><rect x="25" y="4.2" width="1.6" height="4.6" rx=".8" fill="currentColor" opacity=".5"/></svg></span></div><i class="ph-island"></i>`;
+    screen.append(content);
+    const home = document.createElement('div');
+    home.className = 'ph-home';
+    screen.append(home);
+    this.innerHTML = '<i class="ph-btn a"></i><i class="ph-btn b"></i><i class="ph-btn c"></i><i class="ph-btn d"></i>';
     this.append(screen);
   }
 }
@@ -276,7 +360,6 @@ class VxFilm extends HTMLElement {
 }
 
 const define = (name, type) => { if (!customElements.get(name)) customElements.define(name, type); };
-define('vx-art', VxArt);
 define('vx-window', VxWindow);
 define('vx-phone', VxPhone);
 define('vx-install', VxInstall);
@@ -284,4 +367,4 @@ define('vx-nav', VxNav);
 define('vx-footer', VxFooter);
 define('vx-reveal', VxReveal);
 define('vx-film', VxFilm);
-define('vx-scene', VxScene); // Last: it reads what the others built.
+define('vx-scene', VxScene);
