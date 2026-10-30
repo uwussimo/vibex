@@ -1,0 +1,191 @@
+{
+  "name": "Ridge",
+  "font": "sans",
+  "tokens": {
+    "background": "#0C0A09",
+    "surface": "#171412",
+    "raised": "#25201B",
+    "text": "#FFFFFF",
+    "muted": "#A89E91",
+    "border": "#2B2621",
+    "primary": "#F5A83C",
+    "onPrimary": "#1C1204",
+    "primarySoft": "#F5A83C26",
+    "onArt": "#FFFFFFD9",
+    "glass": "#0C0A0966"
+  },
+  "styles": {
+    "display": { "font": "serif", "size": 56, "weight": "bold", "tracking": -1.2, "color": "$text" },
+    "title": { "font": "serif", "size": 34, "weight": "bold", "tracking": -0.6, "color": "$text" },
+    "stat": { "size": 22, "weight": "semibold", "tracking": -0.3, "color": "$text" },
+    "headline": { "size": 16, "weight": "semibold", "color": "$text" },
+    "body": { "size": 16, "color": "$text" },
+    "caption": { "size": 13, "color": "$muted" },
+    "overline": { "size": 11, "weight": "semibold", "tracking": 1.2, "color": "$muted" },
+    "card": { "fill": "$surface", "radius": 20, "border": { "color": "$border", "width": 1 } },
+    "statCard": { "fill": "$surface", "radius": 16, "padding": 12, "border": { "color": "$border", "width": 1 } },
+    "thumb": { "radius": 14, "clip": true, "fit": "fill" },
+    "pill": { "fill": "$glass", "radius": "full", "padding": [6, 12] },
+    "circle": { "width": 44, "height": 44, "radius": "full", "align": "center", "justify": "center" }
+  },
+  "components": {
+    "PrimaryButton": {
+      "type": "button",
+      "variant": "primary",
+      "width": "fill",
+      "height": 54,
+      "radius": 16,
+      "size": 16,
+      "weight": "semibold"
+    },
+    "TabBar": {
+      "type": "column",
+      "width": "fill",
+      "fill": "$background",
+      "children": [
+        { "type": "divider" },
+        {
+          "type": "row",
+          "width": "fill",
+          "padding": [8, 8, 30, 8],
+          "children": [
+            { "type": "column", "width": "fill", "align": "center", "gap": 3, "children": [
+              { "type": "icon", "icon": "sun.horizon.fill", "size": 22, "color": "$primary" },
+              { "type": "text", "text": "Today", "size": 11, "weight": "semibold", "color": "$primary" }
+            ] },
+            { "type": "column", "width": "fill", "align": "center", "gap": 3, "children": [
+              { "type": "icon", "icon": "map", "size": 22, "color": "$muted" },
+              { "type": "text", "text": "Trails", "size": 11, "weight": "medium", "color": "$muted" }
+            ] },
+            { "type": "column", "width": "fill", "align": "center", "gap": 3, "children": [
+              { "type": "icon", "icon": "backpack", "size": 22, "color": "$muted" },
+              { "type": "text", "text": "Plan", "size": 11, "weight": "medium", "color": "$muted" }
+            ] },
+            { "type": "column", "width": "fill", "align": "center", "gap": 3, "children": [
+              { "type": "icon", "icon": "person.crop.circle", "size": 22, "color": "$muted" },
+              { "type": "text", "text": "You", "size": 11, "weight": "medium", "color": "$muted" }
+            ] }
+          ]
+        }
+      ]
+    },
+    "TabBarCompact": {
+      "type": "column",
+      "width": "fill",
+      "fill": "$background",
+      "children": [
+        { "type": "divider" },
+        {
+          "type": "row",
+          "width": "fill",
+          "padding": [8, 8, 6, 8],
+          "children": [
+            { "type": "column", "width": "fill", "align": "center", "gap": 3, "children": [
+              { "type": "icon", "icon": "sun.horizon.fill", "size": 22, "color": "$primary" },
+              { "type": "text", "text": "Today", "size": 11, "weight": "semibold", "color": "$primary" }
+            ] },
+            { "type": "column", "width": "fill", "align": "center", "gap": 3, "children": [
+              { "type": "icon", "icon": "map", "size": 22, "color": "$muted" },
+              { "type": "text", "text": "Trails", "size": 11, "weight": "medium", "color": "$muted" }
+            ] },
+            { "type": "column", "width": "fill", "align": "center", "gap": 3, "children": [
+              { "type": "icon", "icon": "backpack", "size": 22, "color": "$muted" },
+              { "type": "text", "text": "Plan", "size": 11, "weight": "medium", "color": "$muted" }
+            ] },
+            { "type": "column", "width": "fill", "align": "center", "gap": 3, "children": [
+              { "type": "icon", "icon": "person.crop.circle", "size": 22, "color": "$muted" },
+              { "type": "text", "text": "You", "size": 11, "weight": "medium", "color": "$muted" }
+            ] }
+          ]
+        }
+      ]
+    },
+    "Avatar": {
+      "type": "row",
+      "style": "circle",
+      "fill": "$raised",
+      "children": [
+        { "type": "text", "text": "M", "style": "headline", "color": "$primary" }
+      ]
+    },
+    "BackButton": {
+      "type": "row",
+      "style": "circle",
+      "fill": "$glass",
+      "children": [
+        { "type": "icon", "icon": "chevron.left", "size": 17, "color": "$text" }
+      ]
+    },
+    "GoButton": {
+      "type": "row",
+      "style": "circle",
+      "fill": "$primary",
+      "children": [
+        { "type": "icon", "icon": "arrow.right", "size": 17, "color": "$onPrimary" }
+      ]
+    },
+    "Stepper": {
+      "type": "row",
+      "align": "center",
+      "gap": 12,
+      "children": [
+        { "type": "row", "style": "circle", "fill": "$raised", "children": [
+          { "type": "icon", "icon": "minus", "size": 15, "color": "$text" }
+        ] },
+        { "type": "text", "text": "2", "style": "stat", "width": 20, "textAlign": "center" },
+        { "type": "row", "style": "circle", "fill": "$primarySoft", "children": [
+          { "type": "icon", "icon": "plus", "size": 15, "color": "$primary" }
+        ] }
+      ]
+    },
+    "WeekStats": {
+      "type": "row",
+      "width": "fill",
+      "gap": 8,
+      "children": [
+        { "type": "column", "style": "statCard", "width": "fill", "gap": 2, "children": [
+          { "type": "text", "text": "14.2", "style": "stat" },
+          { "type": "text", "text": "Miles", "style": "caption" }
+        ] },
+        { "type": "column", "style": "statCard", "width": "fill", "gap": 2, "children": [
+          { "type": "text", "text": "3,120", "style": "stat" },
+          { "type": "text", "text": "Feet climbed", "style": "caption" }
+        ] },
+        { "type": "column", "style": "statCard", "width": "fill", "gap": 2, "children": [
+          { "type": "text", "text": "5h 48m", "style": "stat" },
+          { "type": "text", "text": "On trail", "style": "caption" }
+        ] }
+      ]
+    },
+    "NearbyAspen": {
+      "type": "row",
+      "width": "fill",
+      "align": "center",
+      "gap": 14,
+      "children": [
+        { "type": "image", "src": "assets/forest.jpg", "width": 60, "height": 60, "style": "thumb" },
+        { "type": "column", "width": "fill", "gap": 2, "children": [
+          { "type": "text", "text": "Aspen Hollow", "style": "headline" },
+          { "type": "text", "text": "3.2 mi · 480 ft · Easy", "style": "caption" }
+        ] },
+        { "type": "text", "text": "38 min", "style": "caption" },
+        { "type": "icon", "icon": "chevron.right", "size": 13, "color": "$muted" }
+      ]
+    },
+    "NearbyEagle": {
+      "type": "row",
+      "width": "fill",
+      "align": "center",
+      "gap": 14,
+      "children": [
+        { "type": "image", "src": "assets/desert.jpg", "width": 60, "height": 60, "style": "thumb" },
+        { "type": "column", "width": "fill", "gap": 2, "children": [
+          { "type": "text", "text": "Eagle Ridge", "style": "headline" },
+          { "type": "text", "text": "6.8 mi · 1,940 ft · Hard", "style": "caption" }
+        ] },
+        { "type": "text", "text": "22 min", "style": "caption" },
+        { "type": "icon", "icon": "chevron.right", "size": 13, "color": "$muted" }
+      ]
+    }
+  }
+}

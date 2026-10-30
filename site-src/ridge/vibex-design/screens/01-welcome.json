@@ -1,0 +1,35 @@
+{
+  "name": "Welcome",
+  "group": "Onboarding",
+  "device": "iphone",
+  "safeArea": false,
+  "background": "$background",
+  "root": {
+    "type": "layer",
+    "width": "fill",
+    "height": "fill",
+    "children": [
+      { "type": "image", "src": "assets/dusk.jpg", "fit": "fill", "width": "fill", "height": "fill" },
+      { "type": "column", "width": "fill", "height": "fill", "fill": { "gradient": ["#0C0A0900", "#0C0A0900", "#0C0A09F0"], "angle": 180 } },
+      {
+        "type": "column",
+        "width": "fill",
+        "height": "fill",
+        "padding": [76, 24, 44, 24],
+        "children": [
+          { "type": "text", "text": "Ridge", "style": "display" },
+          { "type": "spacer" },
+          {
+            "type": "column",
+            "width": "fill",
+            "gap": 28,
+            "children": [
+              { "type": "text", "text": "Go where the map runs out.", "style": "title", "weight": "regular", "tracking": -0.4, "width": "fill" },
+              { "type": "PrimaryButton", "text": "Get Started" }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,105 @@
+{
+  "name": "Book a Permit",
+  "group": "Plan",
+  "device": "iphone",
+  "background": "$background",
+  "root": {
+    "type": "column",
+    "width": "fill",
+    "height": "fill",
+    "padding": [8, 24, 12, 24],
+    "children": [
+      { "type": "BackButton", "fill": "$raised" },
+      { "type": "text", "text": "Book a permit", "style": "title", "padding": [4, 0, 20, 0] },
+      {
+        "type": "column",
+        "width": "fill",
+        "gap": 16,
+        "children": [
+          {
+            "type": "row",
+            "style": "card",
+            "width": "fill",
+            "align": "center",
+            "gap": 14,
+            "padding": 12,
+            "children": [
+              { "type": "image", "src": "assets/dawn.jpg", "width": 76, "height": 76, "style": "thumb" },
+              { "type": "column", "width": "fill", "gap": 2, "children": [
+                { "type": "text", "text": "Eagle Ridge", "font": "serif", "size": 22, "weight": "bold", "color": "$text" },
+                { "type": "text", "text": "Moab, Utah", "style": "caption" },
+                { "type": "text", "text": "6.8 mi · 1,940 ft · Hard", "style": "caption" }
+              ] }
+            ]
+          },
+          {
+            "type": "column",
+            "style": "card",
+            "width": "fill",
+            "children": [
+              { "type": "row", "width": "fill", "align": "center", "gap": 12, "padding": [16, 16], "children": [
+                { "type": "icon", "icon": "calendar", "size": 18, "color": "$primary" },
+                { "type": "text", "text": "Date", "style": "body", "width": "fill" },
+                { "type": "text", "text": "Sat, Nov 7", "style": "headline" },
+                { "type": "icon", "icon": "chevron.right", "size": 13, "color": "$muted" }
+              ] },
+              { "type": "divider" },
+              { "type": "row", "width": "fill", "align": "center", "gap": 12, "padding": [16, 16], "children": [
+                { "type": "icon", "icon": "sunrise.fill", "size": 18, "color": "$primary" },
+                { "type": "text", "text": "Sunrise entry", "style": "body", "width": "fill" },
+                { "type": "text", "text": "6:00 – 8:00 AM", "style": "headline" },
+                { "type": "icon", "icon": "chevron.right", "size": 13, "color": "$muted" }
+              ] },
+              { "type": "divider" },
+              { "type": "row", "width": "fill", "align": "center", "gap": 12, "padding": [10, 16], "children": [
+                { "type": "icon", "icon": "person.2.fill", "size": 18, "color": "$primary" },
+                { "type": "column", "width": "fill", "children": [
+                  { "type": "text", "text": "Hikers", "style": "body" },
+                  { "type": "text", "text": "$18 per person", "style": "caption" }
+                ] },
+                { "type": "Stepper" }
+              ] }
+            ]
+          },
+          {
+            "type": "column",
+            "style": "card",
+            "width": "fill",
+            "padding": 16,
+            "gap": 10,
+            "children": [
+              { "type": "row", "width": "fill", "justify": "between", "children": [
+                { "type": "text", "text": "Permit, 2 × $18", "style": "body", "color": "$muted" },
+                { "type": "text", "text": "$36", "style": "body" }
+              ] },
+              { "type": "row", "width": "fill", "justify": "between", "children": [
+                { "type": "text", "text": "Conservation fee", "style": "body", "color": "$muted" },
+                { "type": "text", "text": "$8", "style": "body" }
+              ] },
+              { "type": "row", "width": "fill", "justify": "between", "children": [
+                { "type": "text", "text": "Booking fee", "style": "body", "color": "$muted" },
+                { "type": "text", "text": "$4", "style": "body" }
+              ] },
+              { "type": "divider" },
+              { "type": "row", "width": "fill", "justify": "between", "align": "center", "children": [
+                { "type": "text", "text": "Total", "style": "headline" },
+                { "type": "text", "text": "$48", "style": "title" }
+              ] }
+            ]
+          }
+        ]
+      },
+      { "type": "spacer" },
+      {
+        "type": "column",
+        "width": "fill",
+        "gap": 12,
+        "align": "center",
+        "children": [
+          { "type": "text", "text": "Free cancellation until November 5", "style": "caption" },
+          { "type": "PrimaryButton", "text": "Pay $48" }
+        ]
+      }
+    ]
+  }
+}

@@ -55,7 +55,7 @@ const TRANSFORM = new Set(['x', 'y', 'z', 'scale', 'rotate', 'rx', 'ry']);
  *   t.to('.card', [0.2, 0.4], { y: [40, 0], opacity: [0, 1] }, 'out')
  *   t.to('.row', [0.2, 0.4], { x: [20, 0] }, 'out', { stagger: 0.02 })
  * Values: x y z (px), scale, rotate rx ry (deg), opacity, blur (px), dash (for pathLength="1"),
- * wipe (percent hidden from the right), type (fraction of the text), count (number), and any --var.
+ * wipe (percent hidden from the right), wipeDown (percent hidden from the bottom), type (fraction of the text), count (number), and any --var.
  */
 class Timeline {
   constructor(root) {
@@ -137,6 +137,7 @@ class Timeline {
         } else if (name === 'blur') el.style.filter = value > 0.05 ? `blur(${value.toFixed(1)}px)` : '';
         else if (name === 'dash') el.style.strokeDashoffset = value.toFixed(4);
         else if (name === 'wipe') el.style.clipPath = `inset(0 ${value.toFixed(2)}% 0 0)`;
+        else if (name === 'wipeDown') el.style.clipPath = `inset(0 0 ${value.toFixed(2)}% 0)`;
         else if (name === 'type') el.textContent = track.text.slice(0, Math.round(track.text.length * value));
         else if (name === 'count') {
           const { prefix = '', suffix = '' } = el.dataset;
@@ -285,6 +286,11 @@ class VxPhone extends HTMLElement {
     const home = document.createElement('div');
     home.className = 'ph-home';
     screen.append(home);
+    if (this.hasAttribute('src') || this.classList.contains('real')) {
+      this.classList.add('real');
+      const src = this.getAttribute('src');
+      if (src) content.insertAdjacentHTML('afterbegin', `<img class="shot" src="${src}" alt="" loading="lazy">`);
+    }
     this.innerHTML = '<i class="ph-btn a"></i><i class="ph-btn b"></i><i class="ph-btn c"></i><i class="ph-btn d"></i>';
     this.append(screen);
   }
@@ -310,7 +316,41 @@ class VxInstall extends HTMLElement {
   }
 }
 
-const GITHUB_ICON = '<svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 .2a8 8 0 0 0-2.53 15.59c.4.07.55-.17.55-.38v-1.33c-2.23.48-2.7-1.07-2.7-1.07-.36-.93-.89-1.17-.89-1.17-.73-.5.05-.49.05-.49.8.06 1.23.83 1.23.83.72 1.22 1.87.87 2.33.66.07-.52.28-.87.5-1.07-1.77-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.11 0 0 .67-.22 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.09.16 1.91.08 2.11.51.56.82 1.28.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48v2.2c0 .21.15.46.55.38A8 8 0 0 0 8 .2Z"/></svg>';
+const STAR_ICON = '<svg class="star-ic" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.6l2.9 5.9 6.5.95-4.7 4.6 1.1 6.5L12 17.5l-5.8 3.05 1.1-6.5-4.7-4.6 6.5-.95z"/></svg>';
+
+/** A star count, shown once it's a number that helps: a small one would only argue against us. */
+function loadStars(apply) {
+  fetch('https://api.github.com/repos/uwussimo/vibex').then((reply) => (reply.ok ? reply.json() : null)).then((repo) => {
+    if (repo?.stargazers_count >= 100) apply(repo.stargazers_count.toLocaleString('en-US'));
+  }).catch(() => {});
+}
+
+/** The way to star the repo. <vx-star big> for the main call. */
+class VxStar extends HTMLElement {
+  connectedCallback() {
+    const big = this.hasAttribute('big');
+    const label = this.getAttribute('label') || 'Star on GitHub';
+    this.innerHTML = `<a class="btn star-btn ${big ? '' : 'btn-sm'}" href="${REPO}">${STAR_ICON}<span>${label}</span><span class="stars" hidden></span></a>`;
+    loadStars((count) => {
+      const stars = this.querySelector('.stars');
+      stars.textContent = count;
+      stars.hidden = false;
+    });
+  }
+}
+
+/** A quiet reminder that follows the story, gone during the hero and at the end, which has its own. */
+class VxStarFloat extends HTMLElement {
+  connectedCallback() {
+    this.innerHTML = `<a class="star-float" href="${REPO}">${STAR_ICON}<span>Star Vibex</span></a>`;
+    const update = () => {
+      const end = document.querySelector('#install')?.getBoundingClientRect().top ?? Infinity;
+      this.classList.toggle('on', scrollY > innerHeight * 3 && end > innerHeight * 0.7);
+    };
+    addEventListener('scroll', update, { passive: true });
+    update();
+  }
+}
 
 /** The site's navigation. Add a page by adding it here. */
 class VxNav extends HTMLElement {
@@ -320,16 +360,9 @@ class VxNav extends HTMLElement {
       <a class="brand" href="/"><img src="/icon.png" alt="" width="24" height="24">vibex</a>
       <nav aria-label="Sections">${links.map(([label, href]) => `<a href="${href}">${label}</a>`).join('')}</nav>
       <div class="nav-cta">
-        <a class="btn btn-quiet btn-sm" href="${REPO}">${GITHUB_ICON}<span>Star</span><span class="stars" hidden></span></a>
+        <vx-star label="Star"></vx-star>
         <a class="btn btn-primary btn-sm" href="/#install">Get Vibex</a>
       </div></div></header>`;
-    // A real count or nothing: the page never shows a number it didn't just read.
-    fetch('https://api.github.com/repos/uwussimo/vibex').then((reply) => (reply.ok ? reply.json() : null)).then((repo) => {
-      if (!repo?.stargazers_count) return;
-      const stars = this.querySelector('.stars');
-      stars.textContent = repo.stargazers_count.toLocaleString('en-US');
-      stars.hidden = false;
-    }).catch(() => {});
   }
 }
 
@@ -361,21 +394,6 @@ class VxReveal extends HTMLElement {
   disconnectedCallback() { this.observer?.disconnect(); }
 }
 
-/** A film that only loads when asked: the page stays light. */
-class VxFilm extends HTMLElement {
-  connectedCallback() {
-    this.querySelector('button')?.addEventListener('click', () => {
-      const video = document.createElement('video');
-      video.src = this.getAttribute('src');
-      video.poster = this.getAttribute('poster');
-      video.controls = true;
-      video.autoplay = true;
-      video.playsInline = true;
-      this.replaceChildren(video);
-    });
-  }
-}
-
 const define = (name, type) => { if (!customElements.get(name)) customElements.define(name, type); };
 define('vx-window', VxWindow);
 define('vx-phone', VxPhone);
@@ -383,5 +401,6 @@ define('vx-install', VxInstall);
 define('vx-nav', VxNav);
 define('vx-footer', VxFooter);
 define('vx-reveal', VxReveal);
-define('vx-film', VxFilm);
+define('vx-star', VxStar);
+define('vx-star-float', VxStarFloat);
 define('vx-scene', VxScene);

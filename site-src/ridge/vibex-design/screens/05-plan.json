@@ -1,0 +1,92 @@
+{
+  "name": "Plan a Hike",
+  "group": "Plan",
+  "device": "iphone",
+  "safeArea": false,
+  "background": "$background",
+  "root": {
+    "type": "layer",
+    "width": "fill",
+    "height": "fill",
+    "children": [
+      { "type": "image", "src": "assets/night.jpg", "fit": "fill", "width": "fill", "height": 420, "place": "top" },
+      { "type": "column", "width": "fill", "height": 420, "place": "top", "fill": { "gradient": ["#0C0A0900", "#0C0A0966", "#0C0A09FF"], "angle": 180 } },
+      {
+        "type": "column",
+        "width": "fill",
+        "height": "fill",
+        "padding": [60, 24, 34, 24],
+        "children": [
+          { "type": "row", "style": "circle", "fill": "$glass", "children": [
+            { "type": "icon", "icon": "xmark", "size": 15, "color": "$text" }
+          ] },
+          { "type": "text", "text": "Plan a hike", "style": "title", "padding": [4, 0, 20, 0] },
+          {
+            "type": "column",
+            "width": "fill",
+            "gap": 12,
+            "children": [
+              { "type": "input", "label": "Trail", "text": "Eagle Ridge", "icon": "mountain.2.fill", "width": "fill" },
+              { "type": "input", "label": "Date", "text": "Saturday, November 7", "icon": "calendar", "width": "fill" },
+              { "type": "row", "style": "card", "width": "fill", "align": "center", "gap": 12, "padding": [10, 16], "children": [
+                { "type": "icon", "icon": "person.2.fill", "size": 18, "color": "$primary" },
+                { "type": "text", "text": "Party size", "style": "body", "width": "fill" },
+                { "type": "Stepper" }
+              ] }
+            ]
+          },
+          {
+            "type": "column",
+            "width": "fill",
+            "padding": [20, 0, 0, 0],
+            "gap": 8,
+            "children": [
+              { "type": "row", "width": "fill", "justify": "between", "align": "center", "children": [
+                { "type": "text", "text": "Pack", "style": "headline" },
+                { "type": "text", "text": "3 of 5 packed", "style": "caption", "color": "$primary" }
+              ] },
+              {
+                "type": "column",
+                "style": "card",
+                "width": "fill",
+                "children": [
+                  { "type": "row", "width": "fill", "align": "center", "gap": 12, "padding": [8, 16], "children": [
+                    { "type": "icon", "icon": "drop.fill", "size": 16, "color": "$muted", "width": 22 },
+                    { "type": "text", "text": "Water, 3 liters", "style": "body", "width": "fill" },
+                    { "type": "toggle", "isOn": true }
+                  ] },
+                  { "type": "divider" },
+                  { "type": "row", "width": "fill", "align": "center", "gap": 12, "padding": [8, 16], "children": [
+                    { "type": "icon", "icon": "tshirt.fill", "size": 16, "color": "$muted", "width": 22 },
+                    { "type": "text", "text": "Warm layer and shell", "style": "body", "width": "fill" },
+                    { "type": "toggle", "isOn": true }
+                  ] },
+                  { "type": "divider" },
+                  { "type": "row", "width": "fill", "align": "center", "gap": 12, "padding": [8, 16], "children": [
+                    { "type": "icon", "icon": "map.fill", "size": 16, "color": "$muted", "width": 22 },
+                    { "type": "text", "text": "Offline map", "style": "body", "width": "fill" },
+                    { "type": "toggle", "isOn": true }
+                  ] },
+                  { "type": "divider" },
+                  { "type": "row", "width": "fill", "align": "center", "gap": 12, "padding": [8, 16], "children": [
+                    { "type": "icon", "icon": "flashlight.on.fill", "size": 16, "color": "$muted", "width": 22 },
+                    { "type": "text", "text": "Headlamp", "style": "body", "width": "fill" },
+                    { "type": "toggle", "isOn": false }
+                  ] },
+                  { "type": "divider" },
+                  { "type": "row", "width": "fill", "align": "center", "gap": 12, "padding": [8, 16], "children": [
+                    { "type": "icon", "icon": "cross.case.fill", "size": 16, "color": "$muted", "width": 22 },
+                    { "type": "text", "text": "First aid kit", "style": "body", "width": "fill" },
+                    { "type": "toggle", "isOn": false }
+                  ] }
+                ]
+              }
+            ]
+          },
+          { "type": "spacer" },
+          { "type": "PrimaryButton", "text": "Create Plan" }
+        ]
+      }
+    ]
+  }
+}

@@ -394,6 +394,9 @@ final class TerminalPaneViewController: NSViewController {
 
     func selectTab(_ id: UUID) { select(id) }
 
+    /// The chat in front, if the tab in front is one.
+    var selectedChatModel: ClaudeChatModel? { selectedTab?.chat }
+
     /// A shell in `directory` (an agent's worktree), optionally typing `command` once it's ready.
     @discardableResult
     func openTab(in directory: URL, command: String? = nil) -> UUID {

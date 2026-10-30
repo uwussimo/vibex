@@ -1,0 +1,115 @@
+{
+  "name": "Today, Small",
+  "group": "Adaptive",
+  "device": "iphone-small",
+  "background": "$background",
+  "root": {
+    "type": "column",
+    "width": "fill",
+    "height": "fill",
+    "children": [
+      {
+        "type": "column",
+        "width": "fill",
+        "padding": [8, 20, 0, 20],
+        "gap": 12,
+        "children": [
+          {
+            "type": "row",
+            "width": "fill",
+            "align": "center",
+            "gap": 12,
+            "children": [
+              { "type": "column", "width": "fill", "gap": 2, "children": [
+                { "type": "text", "text": "FRIDAY, OCTOBER 30", "style": "overline" },
+                { "type": "text", "text": "Morning, Maya", "style": "title", "size": 28 }
+              ] },
+              { "type": "Avatar" }
+            ]
+          },
+          {
+            "type": "layer",
+            "width": "fill",
+            "height": 232,
+            "radius": 24,
+            "clip": true,
+            "shadow": "md",
+            "children": [
+              { "type": "image", "src": "assets/alpine.jpg", "fit": "fill", "width": "fill", "height": "fill" },
+              { "type": "column", "width": "fill", "height": "fill", "fill": { "gradient": ["#0C0A0900", "#0C0A0900", "#0C0A09E6"], "angle": 180 } },
+              {
+                "type": "column",
+                "width": "fill",
+                "height": "fill",
+                "padding": 16,
+                "justify": "between",
+                "children": [
+                  { "type": "row", "children": [
+                    { "type": "text", "text": "TOMORROW · 7:30 AM", "style": ["overline", "pill"], "color": "$text" }
+                  ] },
+                  {
+                    "type": "column",
+                    "width": "fill",
+                    "gap": 10,
+                    "children": [
+                      { "type": "text", "text": "Silver Basin Loop", "style": "title", "size": 28 },
+                      {
+                        "type": "row",
+                        "width": "fill",
+                        "align": "center",
+                        "gap": 20,
+                        "children": [
+                          { "type": "column", "children": [
+                            { "type": "text", "text": "8.4 mi", "style": "stat" },
+                            { "type": "text", "text": "Distance", "style": "caption", "color": "$onArt" }
+                          ] },
+                          { "type": "column", "children": [
+                            { "type": "text", "text": "2,140 ft", "style": "stat" },
+                            { "type": "text", "text": "Elevation", "style": "caption", "color": "$onArt" }
+                          ] },
+                          { "type": "spacer" },
+                          { "type": "GoButton" }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "column",
+        "width": "fill",
+        "padding": [12, 20, 0, 20],
+        "gap": 6,
+        "children": [
+          { "type": "row", "width": "fill", "justify": "between", "align": "center", "children": [
+            { "type": "text", "text": "This week", "style": "headline" },
+            { "type": "text", "text": "3 hikes", "style": "caption" }
+          ] },
+          { "type": "WeekStats" }
+        ]
+      },
+      {
+        "type": "column",
+        "width": "fill",
+        "padding": [12, 20, 0, 20],
+        "gap": 6,
+        "children": [
+          { "type": "row", "width": "fill", "justify": "between", "align": "center", "children": [
+            { "type": "text", "text": "Nearby", "style": "headline" },
+            { "type": "text", "text": "Drive from Moab", "style": "caption" }
+          ] },
+          { "type": "column", "width": "fill", "gap": 8, "children": [
+            { "type": "NearbyEagle" },
+            { "type": "NearbyAspen" }
+          ] }
+        ]
+      },
+      { "type": "spacer" },
+      { "type": "TabBarCompact" }
+    ]
+  }
+}

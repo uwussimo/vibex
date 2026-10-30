@@ -1,0 +1,269 @@
+{
+ "name": "Today",
+ "group": "Main",
+ "device": "iphone",
+ "safeArea": false,
+ "background": "$background",
+ "root": {
+  "type": "column",
+  "width": "fill",
+  "height": "fill",
+  "children": [
+   {
+    "type": "column",
+    "width": "fill",
+    "padding": [
+     60,
+     24,
+     0,
+     24
+    ],
+    "children": [
+     {
+      "type": "row",
+      "width": "fill",
+      "align": "center",
+      "gap": 12,
+      "children": [
+       {
+        "type": "column",
+        "width": "fill",
+        "gap": 4,
+        "children": [
+         {
+          "type": "text",
+          "text": "FRIDAY, OCTOBER 30",
+          "style": "overline"
+         },
+         {
+          "type": "text",
+          "text": "Morning, Maya",
+          "style": "title"
+         }
+        ]
+       },
+       {
+        "type": "Avatar"
+       }
+      ]
+     },
+     {
+      "type": "layer",
+      "width": "fill",
+      "height": 316,
+      "radius": 28,
+      "clip": true,
+      "shadow": "lg",
+      "children": [
+       {
+        "type": "image",
+        "src": "assets/alpine.jpg",
+        "fit": "fill",
+        "width": "fill",
+        "height": "fill"
+       },
+       {
+        "type": "column",
+        "width": "fill",
+        "height": "fill",
+        "fill": {
+         "gradient": [
+          "#0C0A0900",
+          "#0C0A0900",
+          "#0C0A09E6"
+         ],
+         "angle": 180
+        }
+       },
+       {
+        "type": "column",
+        "width": "fill",
+        "height": "fill",
+        "padding": 20,
+        "justify": "between",
+        "children": [
+         {
+          "type": "row",
+          "children": [
+           {
+            "type": "text",
+            "text": "TOMORROW \u00b7 7:30 AM",
+            "style": [
+             "overline",
+             "pill"
+            ],
+            "color": "$text"
+           }
+          ]
+         },
+         {
+          "type": "column",
+          "width": "fill",
+          "gap": 14,
+          "children": [
+           {
+            "type": "column",
+            "width": "fill",
+            "gap": 2,
+            "children": [
+             {
+              "type": "text",
+              "text": "Silver Basin Loop",
+              "style": "title"
+             },
+             {
+              "type": "text",
+              "text": "La Sal Mountains, Utah",
+              "style": "caption",
+              "color": "$onArt"
+             }
+            ]
+           },
+           {
+            "type": "row",
+            "width": "fill",
+            "align": "center",
+            "gap": 18,
+            "children": [
+             {
+              "type": "column",
+              "gap": 2,
+              "children": [
+               {
+                "type": "text",
+                "text": "8.4 mi",
+                "style": "stat",
+                "lines": 1
+               },
+               {
+                "type": "text",
+                "text": "Distance",
+                "style": "caption",
+                "color": "$onArt"
+               }
+              ],
+              "minWidth": 88
+             },
+             {
+              "type": "column",
+              "gap": 2,
+              "children": [
+               {
+                "type": "text",
+                "text": "2,140 ft",
+                "style": "stat",
+                "lines": 1
+               },
+               {
+                "type": "text",
+                "text": "Elevation",
+                "style": "caption",
+                "color": "$onArt"
+               }
+              ],
+              "minWidth": 88
+             },
+             {
+              "type": "spacer"
+             },
+             {
+              "type": "GoButton"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ],
+    "gap": 16
+   },
+   {
+    "type": "column",
+    "width": "fill",
+    "padding": [
+     20,
+     24,
+     0,
+     24
+    ],
+    "gap": 8,
+    "children": [
+     {
+      "type": "row",
+      "width": "fill",
+      "justify": "between",
+      "align": "center",
+      "children": [
+       {
+        "type": "text",
+        "text": "This week",
+        "style": "headline"
+       },
+       {
+        "type": "text",
+        "text": "3 hikes",
+        "style": "caption"
+       }
+      ]
+     },
+     {
+      "type": "WeekStats"
+     }
+    ]
+   },
+   {
+    "type": "column",
+    "width": "fill",
+    "padding": [
+     20,
+     24,
+     0,
+     24
+    ],
+    "gap": 8,
+    "children": [
+     {
+      "type": "row",
+      "width": "fill",
+      "justify": "between",
+      "align": "center",
+      "children": [
+       {
+        "type": "text",
+        "text": "Nearby",
+        "style": "headline"
+       },
+       {
+        "type": "text",
+        "text": "Drive from Moab",
+        "style": "caption"
+       }
+      ]
+     },
+     {
+      "type": "column",
+      "width": "fill",
+      "gap": 10,
+      "children": [
+       {
+        "type": "NearbyEagle"
+       },
+       {
+        "type": "NearbyAspen"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "spacer"
+   },
+   {
+    "type": "TabBar"
+   }
+  ]
+ }
+}

@@ -1,0 +1,176 @@
+{
+  "name": "Today, iPad",
+  "group": "Adaptive",
+  "device": "ipad",
+  "background": "$background",
+  "root": {
+    "type": "column",
+    "width": "fill",
+    "height": "fill",
+    "padding": [12, 28, 28, 28],
+    "gap": 24,
+    "children": [
+      {
+        "type": "row",
+        "width": "fill",
+        "align": "center",
+        "justify": "between",
+        "children": [
+          { "type": "text", "text": "Ridge", "font": "serif", "size": 34, "weight": "bold", "tracking": -0.6, "color": "$text" },
+          {
+            "type": "row",
+            "fill": "$surface",
+            "radius": "full",
+            "padding": 4,
+            "border": { "color": "$border", "width": 1 },
+            "children": [
+              { "type": "row", "height": 40, "align": "center", "padding": [0, 20], "radius": "full", "fill": "$primary", "children": [
+                { "type": "text", "text": "Today", "style": "headline", "color": "$onPrimary" }
+              ] },
+              { "type": "row", "height": 40, "align": "center", "padding": [0, 20], "children": [
+                { "type": "text", "text": "Trails", "style": "body", "color": "$muted" }
+              ] },
+              { "type": "row", "height": 40, "align": "center", "padding": [0, 20], "children": [
+                { "type": "text", "text": "Plan", "style": "body", "color": "$muted" }
+              ] },
+              { "type": "row", "height": 40, "align": "center", "padding": [0, 20], "children": [
+                { "type": "text", "text": "You", "style": "body", "color": "$muted" }
+              ] }
+            ]
+          },
+          { "type": "Avatar" }
+        ]
+      },
+      {
+        "type": "column",
+        "width": "fill",
+        "gap": 4,
+        "children": [
+          { "type": "text", "text": "FRIDAY, OCTOBER 30", "style": "overline" },
+          { "type": "text", "text": "Morning, Maya", "style": "display" }
+        ]
+      },
+      {
+        "type": "row",
+        "width": "fill",
+        "height": "fill",
+        "align": "stretch",
+        "gap": 24,
+        "children": [
+          {
+            "type": "layer",
+            "width": "fill",
+            "height": "fill",
+            "radius": 32,
+            "clip": true,
+            "shadow": "lg",
+            "children": [
+              { "type": "image", "src": "assets/alpine.jpg", "fit": "fill", "width": "fill", "height": "fill" },
+              { "type": "column", "width": "fill", "height": "fill", "fill": { "gradient": ["#0C0A0900", "#0C0A0900", "#0C0A09EB"], "angle": 180 } },
+              {
+                "type": "column",
+                "width": "fill",
+                "height": "fill",
+                "padding": 28,
+                "justify": "between",
+                "children": [
+                  { "type": "row", "children": [
+                    { "type": "text", "text": "TOMORROW · 7:30 AM", "style": ["overline", "pill"], "color": "$text" }
+                  ] },
+                  {
+                    "type": "column",
+                    "width": "fill",
+                    "gap": 20,
+                    "children": [
+                      { "type": "column", "width": "fill", "gap": 4, "children": [
+                        { "type": "text", "text": "Silver Basin Loop", "style": "display", "width": "fill" },
+                        { "type": "text", "text": "La Sal Mountains, Utah", "style": "body", "color": "$onArt" }
+                      ] },
+                      {
+                        "type": "row",
+                        "width": "fill",
+                        "children": [
+                          { "type": "column", "width": "fill", "gap": 2, "children": [
+                            { "type": "text", "text": "8.4 mi", "style": "stat" },
+                            { "type": "text", "text": "Distance", "style": "caption", "color": "$onArt" }
+                          ] },
+                          { "type": "column", "width": "fill", "gap": 2, "children": [
+                            { "type": "text", "text": "2,140 ft", "style": "stat" },
+                            { "type": "text", "text": "Elevation", "style": "caption", "color": "$onArt" }
+                          ] },
+                          { "type": "column", "width": "fill", "gap": 2, "children": [
+                            { "type": "text", "text": "4h 20m", "style": "stat" },
+                            { "type": "text", "text": "Moving time", "style": "caption", "color": "$onArt" }
+                          ] }
+                        ]
+                      },
+                      { "type": "PrimaryButton", "text": "View Hike" }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "column",
+            "width": 360,
+            "height": "fill",
+            "gap": 24,
+            "children": [
+              {
+                "type": "column",
+                "width": "fill",
+                "gap": 8,
+                "children": [
+                  { "type": "row", "width": "fill", "justify": "between", "align": "center", "children": [
+                    { "type": "text", "text": "This week", "style": "headline" },
+                    { "type": "text", "text": "3 hikes", "style": "caption" }
+                  ] },
+                  { "type": "WeekStats" }
+                ]
+              },
+              {
+                "type": "column",
+                "width": "fill",
+                "gap": 12,
+                "children": [
+                  { "type": "row", "width": "fill", "justify": "between", "align": "center", "children": [
+                    { "type": "text", "text": "Nearby", "style": "headline" },
+                    { "type": "text", "text": "Drive from Moab", "style": "caption" }
+                  ] },
+                  { "type": "NearbyEagle" },
+                  { "type": "NearbyAspen" }
+                ]
+              },
+              {
+                "type": "layer",
+                "width": "fill",
+                "height": "fill",
+                "minHeight": 160,
+                "radius": 24,
+                "clip": true,
+                "children": [
+                  { "type": "image", "src": "assets/night.jpg", "fit": "fill", "width": "fill", "height": "fill" },
+                  { "type": "column", "width": "fill", "height": "fill", "fill": { "gradient": ["#0C0A0900", "#0C0A0900", "#0C0A09E6"], "angle": 180 } },
+                  {
+                    "type": "column",
+                    "width": "fill",
+                    "height": "fill",
+                    "padding": 20,
+                    "gap": 4,
+                    "justify": "end",
+                    "children": [
+                      { "type": "text", "text": "TONIGHT", "style": "overline", "color": "$onArt" },
+                      { "type": "text", "text": "Clear skies over the La Sals", "font": "serif", "size": 22, "weight": "bold", "color": "$text", "width": "fill" },
+                      { "type": "text", "text": "29° at the trailhead by dawn. Pack the extra layer.", "style": "caption", "color": "$onArt", "width": "fill" }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

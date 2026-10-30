@@ -1,0 +1,140 @@
+{
+  "name": "Eagle Ridge",
+  "group": "Main",
+  "device": "iphone",
+  "safeArea": false,
+  "background": "$background",
+  "root": {
+    "type": "column",
+    "width": "fill",
+    "height": "fill",
+    "children": [
+      {
+        "type": "layer",
+        "width": "fill",
+        "height": 400,
+        "children": [
+          { "type": "image", "src": "assets/desert.jpg", "fit": "fill", "width": "fill", "height": "fill" },
+          { "type": "column", "width": "fill", "height": "fill", "fill": { "gradient": ["#0C0A0900", "#0C0A0900", "#0C0A09FF"], "angle": 180 } },
+          {
+            "type": "column",
+            "width": "fill",
+            "height": "fill",
+            "padding": [60, 24, 12, 24],
+            "justify": "between",
+            "children": [
+              { "type": "row", "width": "fill", "justify": "between", "align": "center", "children": [
+                { "type": "BackButton" },
+                { "type": "row", "style": "circle", "fill": "$glass", "children": [
+                  { "type": "icon", "icon": "bookmark", "size": 17, "color": "$text" }
+                ] }
+              ] },
+              { "type": "column", "width": "fill", "gap": 2, "children": [
+                { "type": "text", "text": "MOAB, UTAH · OUT AND BACK", "style": "overline", "color": "$onArt" },
+                { "type": "text", "text": "Eagle Ridge", "style": "display" }
+              ] }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "column",
+        "width": "fill",
+        "height": "fill",
+        "padding": [8, 24, 34, 24],
+        "children": [
+          {
+            "type": "row",
+            "width": "fill",
+            "children": [
+              { "type": "column", "width": "fill", "gap": 2, "children": [
+                { "type": "text", "text": "6.8", "style": "stat" },
+                { "type": "text", "text": "Miles", "style": "caption" }
+              ] },
+              { "type": "column", "width": "fill", "gap": 2, "children": [
+                { "type": "text", "text": "1,940", "style": "stat" },
+                { "type": "text", "text": "Feet up", "style": "caption" }
+              ] },
+              { "type": "column", "width": "fill", "gap": 2, "children": [
+                { "type": "text", "text": "3.5", "style": "stat" },
+                { "type": "text", "text": "Hours", "style": "caption" }
+              ] },
+              { "type": "column", "width": "fill", "gap": 2, "children": [
+                { "type": "text", "text": "Hard", "style": "stat", "color": "$primary" },
+                { "type": "text", "text": "Grade", "style": "caption" }
+              ] }
+            ]
+          },
+          {
+            "type": "column",
+            "width": "fill",
+            "padding": [16, 0, 0, 0],
+            "gap": 8,
+            "children": [
+              { "type": "row", "width": "fill", "justify": "between", "align": "center", "children": [
+                { "type": "text", "text": "Elevation", "style": "headline" },
+                { "type": "text", "text": "Summit 6,900 ft", "style": "caption" }
+              ] },
+              {
+                "type": "chart",
+                "chart": "line",
+                "color": "$primary",
+                "height": 84,
+                "values": [4960, 5020, 5140, 5300, 5480, 5590, 5760, 5980, 6220, 6480, 6720, 6900, 6740, 6500, 6240, 6000, 5780, 5570, 5440, 5280, 5130, 5010, 4960]
+              },
+              { "type": "row", "width": "fill", "justify": "between", "children": [
+                { "type": "text", "text": "0 mi", "style": "caption" },
+                { "type": "text", "text": "3.4 mi", "style": "caption" },
+                { "type": "text", "text": "6.8 mi", "style": "caption" }
+              ] }
+            ]
+          },
+          {
+            "type": "column",
+            "width": "fill",
+            "padding": [16, 0, 0, 0],
+            "gap": 8,
+            "children": [
+              { "type": "row", "width": "fill", "justify": "between", "align": "center", "children": [
+                { "type": "text", "text": "Conditions", "style": "headline" },
+                { "type": "text", "text": "Saturday morning", "style": "caption" }
+              ] },
+              {
+                "type": "row",
+                "style": "card",
+                "width": "fill",
+                "padding": 12,
+                "radius": 16,
+                "children": [
+                  { "type": "row", "width": "fill", "align": "center", "gap": 8, "children": [
+                    { "type": "icon", "icon": "sun.max.fill", "size": 18, "color": "$primary" },
+                    { "type": "column", "children": [
+                      { "type": "text", "text": "54°", "style": "headline" },
+                      { "type": "text", "text": "Clear", "style": "caption" }
+                    ] }
+                  ] },
+                  { "type": "row", "width": "fill", "align": "center", "gap": 8, "children": [
+                    { "type": "icon", "icon": "wind", "size": 18, "color": "$primary" },
+                    { "type": "column", "children": [
+                      { "type": "text", "text": "9 mph", "style": "headline" },
+                      { "type": "text", "text": "NW wind", "style": "caption" }
+                    ] }
+                  ] },
+                  { "type": "row", "width": "fill", "align": "center", "gap": 8, "children": [
+                    { "type": "icon", "icon": "sunset.fill", "size": 18, "color": "$primary" },
+                    { "type": "column", "children": [
+                      { "type": "text", "text": "6:27 PM", "style": "headline" },
+                      { "type": "text", "text": "Sunset", "style": "caption" }
+                    ] }
+                  ] }
+                ]
+              }
+            ]
+          },
+          { "type": "spacer" },
+          { "type": "PrimaryButton", "text": "Start Hike" }
+        ]
+      }
+    ]
+  }
+}

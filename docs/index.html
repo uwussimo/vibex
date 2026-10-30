@@ -30,8 +30,8 @@
 <vx-nav></vx-nav>
 <main>
 
-<!-- Hero: the window rises, then the camera follows Claude's work from the chat to the phone. -->
-<vx-scene length="520" timeline="hero" rest="1" style="--tint:129,148,255">
+<!-- Hero: the real window rises, then the camera follows Claude from the chat to the phone. -->
+<vx-scene length="540" timeline="hero" rest="1" style="--tint:255,170,90">
   <div class="stage">
     <div class="glow"></div>
     <div class="hero-copy">
@@ -40,31 +40,28 @@
       <div class="cta-row load-in" style="--d:.16s">
         <a class="btn btn-primary" href="#install">Get Vibex free</a>
         <vx-install></vx-install>
+        <vx-star big label="Star"></vx-star>
       </div>
-      <p class="assure load-in" style="--d:.24s">For Mac. About a minute to install. No account.</p>
+      <p class="assure load-in" style="--d:.24s">For Mac. About a minute to install. No account. Open source.</p>
     </div>
-    <div class="world-box"><div class="world"><div class="cam" role="img" aria-label="The Vibex window: a Claude chat beside a live iPhone that Claude is tapping through.">
-      <div class="h-rise"><vx-window class="at h-win" title="habits">
-        <div class="rail"><i class="on"></i><i></i><i></i><i></i><i></i><i></i></div>
-        <div class="h-chat">
-          <div class="bubble h1">Run the app and check onboarding works</div>
-          <div class="tool h2"><span class="ic"></span>Build and launch Habits<span class="ok">✓</span></div>
-          <div class="tool h3"><span class="ic"></span>Simulator: find “Get started”<span class="ok">✓</span></div>
-          <div class="tool h4"><span class="ic"></span>Simulator: tap “Get started”<span class="ok">✓</span></div>
-          <div class="say h5">Onboarding works. The next button sat under the home bar on small phones, so I moved it up and checked again.</div>
-        </div>
-        <div class="h-side">
-          <vx-phone class="h-phone">
-            <div class="ph-page h-first"><div style="flex:1;display:grid;place-items:center"><div style="text-align:center"><div style="width:110px;height:110px;border-radius:28px;background:linear-gradient(135deg,#2f6bff,#8f6bff);margin:0 auto 22px"></div><div class="ph-title">Build better days</div><div class="ph-sub" style="margin-top:8px">Small habits, every morning.</div></div></div><div class="ph-cta h-btn">Get started</div></div>
-            <div class="ph-page h-next"><div class="ph-title">Today</div><div class="habit"><i class="on"></i>Morning walk</div><div class="habit"><i></i>Read 20 pages</div><div class="habit"><i></i>Call Mum</div><div class="ph-cta">Add a habit</div></div>
-            <span class="tap h-tap" style="left:186px;bottom:40px;top:auto;margin-bottom:-3px"></span>
-          </vx-phone>
-        </div>
+    <div class="world-box"><div class="world"><div class="cam" role="img" aria-label="The real Vibex window: Claude chats on the left while a beautiful hiking app runs on a live iPhone on the right, and Claude taps through it.">
+      <div class="h-rise"><vx-window class="at v-win h-win" title="ridge">
+        <img class="fill" src="/assets/shots/window.jpg" alt="">
+        <img class="col c0" src="/assets/shots/col-m-empty.jpg" alt="">
+        <img class="col c1" src="/assets/shots/col-h1.jpg" alt="" loading="lazy">
+        <img class="col c2" src="/assets/shots/col-h2.jpg" alt="" loading="lazy">
+        <img class="col c3" src="/assets/shots/col-h3.jpg" alt="" loading="lazy">
+        <img class="col c4" src="/assets/shots/col-h4.jpg" alt="" loading="lazy">
+        <div class="w-phone"><vx-phone class="real">
+          <img class="shot h-next" src="/assets/ridge/02-today.jpg" alt="">
+          <img class="shot h-first" src="/assets/ridge/01-welcome.jpg" alt="">
+          <span class="tap h-tap" style="left:196px;top:775px"></span>
+        </vx-phone></div>
       </vx-window></div>
     </div></div></div>
     <ol class="notes">
-      <li data-beat=".3-.52">You ask once. Claude builds it and launches it.</li>
-      <li data-beat=".54-.76">Then it <strong>looks at the real screen</strong> and taps, like you would.</li>
+      <li data-beat=".3-.5">You ask once. Claude builds it and launches it.</li>
+      <li data-beat=".52-.76">Then it <strong>looks at the real screen</strong> and taps, like you would.</li>
       <li data-beat=".8-1">And it tells you what it found, <strong>after it’s fixed</strong>.</li>
     </ol>
   </div>
@@ -77,16 +74,15 @@
     <h2 class="statement"><span class="line">Right now, you’re your agent’s eyes.</span></h2>
     <div class="world-box"><div class="world"><div class="cam" role="img" aria-label="Windows pile up while you switch between them, then collapse into one Vibex window.">
       <vx-window class="at mess m1" title="Terminal" style="left:60px;top:60px"><div class="pane mono">$ claude<br><br>Done! Please run the app<br>and tell me how it looks.</div></vx-window>
-      <vx-window class="at mess m2" title="Simulator" style="left:940px;top:40px"><div class="pane" style="color:#fff;font-size:30px;font-weight:600;letter-spacing:-.02em">Where did this window go?</div></vx-window>
-      <vx-window class="at mess m3" title="localhost:5173" style="left:500px;top:150px"><div class="pane mono"><span style="color:var(--red)">TypeError: cannot read 'id'</span><br><br>Copy it. Switch. Paste it.<br>Switch back.</div></vx-window>
+      <vx-window class="at mess m2" title="Simulator" style="left:940px;top:40px"><img class="mess-shot" src="/assets/ridge/03-trail.jpg" alt="" loading="lazy" style="object-position:center 8%"></vx-window>
+      <vx-window class="at mess m3" title="localhost:5173" style="left:500px;top:150px"><div class="pane mono"><span style="color:var(--red)">TypeError: cannot read 'trail'</span><br><br>Copy it. Switch. Paste it.<br>Switch back.</div></vx-window>
       <vx-window class="at mess m4" title="Git" style="left:120px;top:400px"><div class="pane mono">What did it change?<br><br>$ git diff | less<br>…412 more lines</div></vx-window>
-      <vx-window class="at mess m5" title="Usage" style="left:900px;top:380px"><div class="pane" style="color:#fff;font-size:30px;font-weight:600;letter-spacing:-.02em">Limit reached.<br><span style="color:var(--muted)">Resets in 3 hours.</span></div></vx-window>
-      <div class="at switcher"><span class="sw-ring"></span><b style="background:#111;font-size:30px">&gt;_</b><b style="background:linear-gradient(135deg,#3b82f6,#60a5fa)"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><rect x="7" y="2.5" width="10" height="19" rx="2.4"/><path d="M10.5 18.5h3"/></svg></b><b style="background:#fff"><svg viewBox="0 0 24 24" fill="none" stroke="#0a84ff" stroke-width="1.6"><circle cx="12" cy="12" r="9.5"/><path d="m15.8 8.2-2.4 5.2-5.2 2.4 2.4-5.2z" fill="#ff3b30" stroke="none"/></svg></b><b style="background:#fff"><img src="/logos/git.svg" alt=""></b><b style="background:linear-gradient(135deg,#f59e0b,#ef4444)"><svg viewBox="0 0 24 24" fill="#fff"><rect x="4" y="12" width="3.6" height="8" rx="1"/><rect x="10.2" y="7" width="3.6" height="13" rx="1"/><rect x="16.4" y="3.5" width="3.6" height="16.5" rx="1"/></svg></b></div>
+      <vx-window class="at mess m5" title="Usage" style="left:900px;top:380px"><div class="pane" style="color:#fff;font-size:32px;font-weight:600;letter-spacing:-.02em;line-height:1.25">Limit reached.<br><span style="color:var(--muted)">Resets in 3 hours.</span></div></vx-window>
+      <div class="at switcher"><span class="sw-ring"></span><b style="background:#111">&gt;_</b><b style="background:linear-gradient(135deg,#3b82f6,#60a5fa)"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><rect x="7" y="2.5" width="10" height="19" rx="2.4"/><path d="M10.5 18.5h3"/></svg></b><b style="background:#fff"><svg viewBox="0 0 24 24" fill="none" stroke="#0a84ff" stroke-width="1.6"><circle cx="12" cy="12" r="9.5"/><path d="m15.8 8.2-2.4 5.2-5.2 2.4 2.4-5.2z" fill="#ff3b30" stroke="none"/></svg></b><b style="background:#fff"><img src="/logos/git.svg" alt=""></b><b style="background:linear-gradient(135deg,#f59e0b,#ef4444)"><svg viewBox="0 0 24 24" fill="#fff"><rect x="4" y="12" width="3.6" height="8" rx="1"/><rect x="10.2" y="7" width="3.6" height="13" rx="1"/><rect x="16.4" y="3.5" width="3.6" height="16.5" rx="1"/></svg></b></div>
       <div class="at flash"></div>
-      <vx-window class="at one-win" title="Vibex">
-        <div class="rail"><i class="on"></i><i></i><i></i><i></i></div>
-        <div class="one-chat"><div class="bubble">Fix the checkout</div><div class="tool"><span class="ic"></span>Simulator: tap “Pay”<span class="ok">✓</span></div><div class="tool"><span class="ic"></span>Browser: read the console<span class="ok">✓</span></div><div class="say">Fixed. Two files changed.</div></div>
-        <div class="h-side"><vx-phone class="h-phone"><div class="ph-title">Checkout</div><div class="habit">Trail shoes<span style="margin-left:auto">$84</span></div><div class="habit">Socks<span style="margin-left:auto">$12</span></div><div class="ph-cta">Pay $96</div></vx-phone></div>
+      <vx-window class="at v-win one-win" title="ridge">
+        <img class="fill" src="/assets/shots/window.jpg" alt="" loading="lazy">
+        <div class="w-phone"><vx-phone src="/assets/ridge/02-today.jpg"></vx-phone></div>
       </vx-window>
     </div></div></div>
     <ol class="notes">
@@ -105,21 +101,17 @@
     <div class="world-box"><div class="world"><div class="cam" role="img" aria-label="A light circles a live iPhone. The camera dives onto a button that ran off the screen, and it gets fixed.">
       <div class="at verbs"><span class="v1">Writes.</span><span class="v2">Runs.</span><span class="v3">Sees.</span><span class="v4">Fixes.</span></div>
       <svg class="at comet" viewBox="0 0 458 916" aria-hidden="true"><rect x="3" y="3" width="452" height="910" rx="84" pathLength="1"/></svg>
-      <vx-phone class="at l-phone">
-        <div class="ph-title">Checkout</div>
-        <div class="habit">Trail shoes<span style="margin-left:auto">$84</span></div>
-        <div class="habit">Socks<span style="margin-left:auto">$12</span></div>
-        <div class="habit" style="font-weight:700">Total<span style="margin-left:auto">$96</span></div>
-        <div class="over">Pay $96 with card</div>
-        <div class="fixed">Pay $96 with card</div>
-        <div class="good">✓</div>
+      <vx-phone class="at l-phone real">
+        <img class="shot" src="/assets/ridge/08-permit-bug.jpg" alt="" loading="lazy">
+        <img class="shot l-fixed" src="/assets/ridge/04-permit.jpg" alt="" loading="lazy">
       </vx-phone>
       <div class="at reticle"><span>Runs off the screen</span></div>
+      <div class="at good">✓</div>
       <div class="at log">
-        <div class="l1">vibex_run → launched</div>
-        <div class="l2">simulator_find "Pay"</div>
-        <div class="l3"><i>→ 74 pt off the screen</i></div>
-        <div class="l4">Edit CheckoutView.swift</div>
+        <div class="l1">vibex_run → launched Ridge</div>
+        <div class="l2">simulator_find "Pay $48"</div>
+        <div class="l3"><i>→ 77 pt off the screen</i></div>
+        <div class="l4">Edit PermitView.swift</div>
         <div class="l5"><b>simulator_screenshot → fixed</b></div>
       </div>
     </div></div></div>
@@ -131,25 +123,49 @@
   </div>
 </vx-scene>
 
-<!-- Design: the camera starts inside the JSON, then pulls back as real renders assemble. -->
-<vx-scene id="design" length="620" timeline="design" rest=".97" style="--tint:241,124,197">
+<!-- Design: starts inside the JSON, pulls back as real renders assemble, lands on the real tab. -->
+<vx-scene id="design" length="640" timeline="design" rest=".98" style="--tint:255,170,90">
   <div class="stage">
     <div class="glow"></div>
     <h2 class="statement"><small>New · Vibex Design</small><span class="line">See it before you build it.</span></h2>
-    <div class="world-box"><div class="world"><div class="cam" role="img" aria-label="JSON types itself, then the camera pulls back as three real rendered phone screens assemble on a canvas.">
+    <div class="world-box"><div class="world"><div class="cam" role="img" aria-label="JSON types itself, the camera pulls back as five real rendered phone screens assemble on a canvas, and it lands on the real Design tab in Vibex.">
       <div class="grid-plane"></div>
-      <div class="at code"><span class="ln c1"><b>"name"</b>: <em>"Plantly"</em>,</span><span class="ln c2"><b>"font"</b>: <em>"rounded"</em>,</span><span class="ln c3"><b>"tokens"</b>: {</span><span class="ln c4">  <b>"primary"</b>: <em>"#2F7D57"</em>,</span><span class="ln c5">  <b>"surface"</b>: <em>"#FFFFFF"</em></span><span class="ln c6">},</span><span class="ln c7"><b>"device"</b>: <em>"iphone"</em>,</span><span class="ln c8"><b>"root"</b>: {</span><span class="ln c9">  <b>"type"</b>: <em>"column"</em>,</span><span class="ln c10">  <b>"gap"</b>: 14,</span><span class="ln c11">  <b>"children"</b>: [ … ]</span><span class="ln c12">}</span></div>
-      <span class="d-name n0" style="left:500px">Today</span><span class="d-name n1" style="left:860px">Plant Detail</span><span class="d-name n2" style="left:1220px">Add Plant</span>
-      <div class="d-frame f0" style="left:500px"><vx-phone data-slices="0"></vx-phone></div>
-      <div class="d-frame f1" style="left:860px"><vx-phone data-slices="1"></vx-phone></div>
-      <div class="d-frame f2" style="left:1220px"><vx-phone data-slices="2"></vx-phone></div>
-      <div class="at build">Build This</div>
+      <div class="at code"><span class="ln c1"><b>"name"</b>: <em>"Ridge"</em>,</span><span class="ln c2"><b>"tokens"</b>: {</span><span class="ln c3">  <b>"primary"</b>: <em>"#F5A93F"</em>,</span><span class="ln c4">  <b>"background"</b>: <em>"#0B0A09"</em></span><span class="ln c5">},</span><span class="ln c6"><b>"device"</b>: <em>"iphone"</em>,</span><span class="ln c7"><b>"root"</b>: {</span><span class="ln c8">  <b>"type"</b>: <em>"layer"</em>,</span><span class="ln c9">  <b>"children"</b>: [</span><span class="ln c10">    { <b>"src"</b>: <em>"assets/desert.jpg"</em> },</span><span class="ln c11">    { <b>"text"</b>: <em>"Eagle Ridge"</em> }</span><span class="ln c12">  ]</span></div>
+      <span class="d-name n0" style="left:70px">Welcome</span><span class="d-name n1" style="left:368px">Today</span><span class="d-name n2" style="left:666px">Eagle Ridge</span><span class="d-name n3" style="left:964px">Book a permit</span><span class="d-name n4" style="left:1262px">Plan a hike</span>
+      <div class="d-frame f0" style="left:70px"><vx-phone class="real" data-slices="01-welcome"></vx-phone></div>
+      <div class="d-frame f1" style="left:368px"><vx-phone class="real" data-slices="02-today"></vx-phone></div>
+      <div class="d-frame f2" style="left:666px"><vx-phone class="real" data-slices="03-trail"></vx-phone></div>
+      <div class="d-frame f3" style="left:964px"><vx-phone class="real" data-slices="04-permit"></vx-phone></div>
+      <div class="d-frame f4" style="left:1262px"><vx-phone class="real" data-slices="05-plan"></vx-phone></div>
+      <vx-window class="at d-tab" title="ridge"><img src="/assets/shots/design-tab.jpg" alt="" loading="lazy"></vx-window>
     </div></div></div>
     <ol class="notes">
-      <li data-beat=".18-.42">Describe an app or a site. Claude writes the design as plain JSON in your repo.</li>
-      <li data-beat=".44-.68">It appears on a canvas, screen by screen. <strong>These are real Vibex renders.</strong></li>
-      <li data-beat=".7-.86">Here, a wrong idea costs you a sentence. <strong>Not a week of code.</strong></li>
-      <li data-beat=".87-1"><strong>Build This</strong> hands the design to Claude.</li>
+      <li data-beat=".18-.4">Describe an app or a site. Claude writes the design as plain JSON in your repo.</li>
+      <li data-beat=".42-.66">It appears on a canvas, screen by screen. <strong>Nothing here is a mock-up.</strong></li>
+      <li data-beat=".68-.84">A wrong idea costs you a sentence. <strong>Not a week of code.</strong></li>
+      <li data-beat=".86-1">Love it? <strong>Build This</strong> hands the design to Claude.</li>
+    </ol>
+  </div>
+</vx-scene>
+
+<!-- The wall: the proof. Real renders, at full size, turning past as you scroll. -->
+<vx-scene length="420" timeline="wall" rest=".5" style="--tint:255,170,90">
+  <div class="stage">
+    <div class="glow"></div>
+    <h2 class="statement"><small>Made with Vibex Design</small><span class="line">Claude designed every pixel of this.</span></h2>
+    <div class="world-box"><div class="world"><div class="cam" role="img" aria-label="Seven real screens of Ridge, a hiking app, designed by Claude in Vibex Design, turning past at full size.">
+      <div class="w-track">
+        <vx-phone class="w-item" src="/assets/ridge/01-welcome.jpg"></vx-phone>
+        <vx-phone class="w-item" src="/assets/ridge/02-today.jpg"></vx-phone>
+        <vx-phone class="w-item" src="/assets/ridge/03-trail.jpg"></vx-phone>
+        <vx-phone class="w-item" src="/assets/ridge/04-permit.jpg"></vx-phone>
+        <vx-phone class="w-item" src="/assets/ridge/05-plan.jpg"></vx-phone>
+        <div class="w-item w-pad"><img src="/assets/ridge/06-today-ipad.jpg" alt="" loading="lazy"></div>
+      </div>
+    </div></div></div>
+    <ol class="notes">
+      <li data-beat=".16-.58">These are <strong>real renders</strong> from Vibex Design, not drawings of what it might do.</li>
+      <li data-beat=".6-1">The result is JSON in your repo, so Claude can <strong>build exactly this</strong>.</li>
     </ol>
   </div>
 </vx-scene>
@@ -159,32 +175,12 @@
   <div class="stage">
     <div class="glow"></div><div class="glow g2"></div><div class="glow g3"></div>
     <h2 class="statement"><small>Claude, native</small><span class="line">All of Claude Code. None of the terminal.</span></h2>
-    <div class="world-box"><div class="world"><div class="cam" role="img" aria-label="The composer opens a command menu, then the mode switches from Ask to Plan to Auto while Claude works.">
-      <vx-window class="at c-win" title="Claude">
-        <div class="c-col">
-          <div class="bubble c-a">Add Sign in with Apple</div>
-          <div class="plan c-b"><b>Plan</b>Add the entitlement, a sign-in screen and a session store. Nothing has changed yet.</div>
-          <div class="tool c-c"><span class="ic"></span>Edit AuthStore.swift<span class="ok">✓</span></div>
-          <div class="tool c-d"><span class="ic"></span>Edit SignInView.swift<span class="ok">✓</span></div>
-          <div class="tool c-e"><span class="ic"></span>Simulator: tap “Sign in with Apple”<span class="ok">✓</span></div>
-          <div class="say c-f">Done, and it works on the simulator.</div>
-          <div class="menu">
-            <span class="menu-hi"></span>
-            <div><b>/compact</b>Free up context by summarizing</div>
-            <div><b>/context</b>Show what’s using the conversation</div>
-            <div><b>/code-review</b>Review the changes since a commit</div>
-            <div><b>/config</b>Set a setting by key</div>
-          </div>
-          <div class="composer">
-            <div class="c-field"><span class="c-typed">/co</span></div>
-            <div class="c-tools">
-              <span class="mode-slot"><span class="chip mode m-ask">Ask</span><span class="chip mode m-plan">Plan</span><span class="chip mode m-auto">Auto</span></span>
-              <span class="chip">Opus 5.5</span>
-              <span class="chip">⑂ Agent</span>
-              <span class="c-send"></span>
-            </div>
-          </div>
-        </div>
+    <div class="world-box"><div class="world"><div class="cam" role="img" aria-label="The real chat in Vibex: a command menu opens, Claude proposes a plan, then works on its own in Auto mode.">
+      <vx-window class="at c-win" title="ridge">
+        <img class="cimg" src="/assets/shots/c-0.jpg" alt="" loading="lazy">
+        <img class="cimg ci1" src="/assets/shots/c-menu.jpg" alt="" loading="lazy">
+        <img class="cimg ci2" src="/assets/shots/c-plan.jpg" alt="" loading="lazy">
+        <img class="cimg ci3" src="/assets/shots/c-auto.jpg" alt="" loading="lazy">
       </vx-window>
     </div></div></div>
     <ol class="notes">
@@ -204,16 +200,16 @@
     <div class="world-box"><div class="world"><div class="cam" role="img" aria-label="A keypress sends light along main. It splits into three branches with running agents. The best one merges home and the others fade.">
       <svg class="tree" viewBox="0 0 1600 1000" aria-hidden="true">
         <path class="p0" d="M-300 500 H430" stroke="#c9c9d4" pathLength="1"/>
-        <path class="p1 lit" d="M430 500 C 640 500 680 210 985 210" stroke="#a78bfa" style="color:#a78bfa" pathLength="1"/>
-        <path class="p2 lit" d="M430 500 H985" stroke="#3dd68c" style="color:#3dd68c" pathLength="1"/>
-        <path class="p3 lit" d="M430 500 C 640 500 680 790 985 790" stroke="#f17cc5" style="color:#f17cc5" pathLength="1"/>
-        <path class="p4 lit" d="M1470 500 H1900" stroke="#3dd68c" style="color:#3dd68c" pathLength="1"/>
+        <path class="p1 lit" d="M430 500 C 640 500 680 180 965 180" stroke="#a78bfa" style="color:#a78bfa" pathLength="1"/>
+        <path class="p2 lit" d="M430 500 H965" stroke="#3dd68c" style="color:#3dd68c" pathLength="1"/>
+        <path class="p3 lit" d="M430 500 C 640 500 680 820 965 820" stroke="#f17cc5" style="color:#f17cc5" pathLength="1"/>
+        <path class="p4 lit" d="M1510 500 H1900" stroke="#3dd68c" style="color:#3dd68c" pathLength="1"/>
       </svg>
       <div class="at keys"><span class="key k1">⌘</span><span class="key wide k2">return</span></div>
       <span class="at main-label">main</span>
-      <div class="at agent ag1" style="top:130px;color:#a78bfa"><h3 style="color:#fff"><span class="dot" style="color:#a78bfa;background:#a78bfa"></span>sheet-checkout</h3><p><span class="plus x1" data-prefix="+">0</span> <span class="minus x2" data-prefix="−">0</span> · 2 screens still failing</p><div class="a-bar"><i class="b1"></i></div></div>
-      <div class="at agent ag2" style="top:420px;color:#3dd68c"><h3 style="color:#fff"><span class="dot" style="color:#3dd68c"></span>one-page-checkout</h3><p><span class="plus x3" data-prefix="+">0</span> <span class="minus x4" data-prefix="−">0</span> · Checked on the simulator</p><div class="a-bar"><i class="b2"></i></div></div>
-      <div class="at agent ag3" style="top:710px;color:#f17cc5"><h3 style="color:#fff"><span class="dot" style="color:#f17cc5;background:#f17cc5"></span>apple-pay-first</h3><p><span class="plus x5" data-prefix="+">0</span> <span class="minus x6" data-prefix="−">0</span> · Waiting for you</p><div class="a-bar"><i class="b3"></i></div></div>
+      <div class="at agent ag1" style="top:92px;color:#a78bfa"><img src="/assets/ridge/08-permit-bug.jpg" alt="" loading="lazy"><div><h3><span class="dot" style="color:#a78bfa;background:#a78bfa"></span>sheet-checkout</h3><p><span class="plus x1" data-prefix="+">0</span> <span class="minus x2" data-prefix="−">0</span> · Pay button still clipped</p><div class="a-bar"><i class="b1"></i></div></div></div>
+      <div class="at agent ag2" style="top:412px;color:#3dd68c"><img src="/assets/ridge/04-permit.jpg" alt="" loading="lazy"><div><h3><span class="dot" style="color:#3dd68c"></span>one-page-checkout</h3><p><span class="plus x3" data-prefix="+">0</span> <span class="minus x4" data-prefix="−">0</span> · Checked on the simulator</p><div class="a-bar"><i class="b2"></i></div></div></div>
+      <div class="at agent ag3" style="top:732px;color:#f17cc5"><img src="/assets/ridge/05-plan.jpg" alt="" loading="lazy"><div><h3><span class="dot" style="color:#f17cc5;background:#f17cc5"></span>apple-pay-first</h3><p><span class="plus x5" data-prefix="+">0</span> <span class="minus x6" data-prefix="−">0</span> · Waiting for you</p><div class="a-bar"><i class="b3"></i></div></div></div>
       <span class="at merged">✓ Merged into main</span>
     </div></div></div>
     <ol class="notes">
@@ -225,30 +221,28 @@
 </vx-scene>
 
 <!-- Simulator: a phone turns into place, the window forms around it, labels light up, it multiplies. -->
-<vx-scene id="simulator" length="600" timeline="sim" rest=".98" style="--tint:61,214,140">
+<vx-scene id="simulator" length="600" timeline="sim" rest=".98" style="--tint:255,170,90">
   <div class="stage">
     <div class="glow"></div>
     <h2 class="statement"><small>Simulator</small><span class="line">The iPhone, inside your window.</span></h2>
-    <div class="world-box"><div class="world"><div class="cam" role="img" aria-label="An iPhone turns into place and a window forms around it. Claude sees each element by its label and taps one. Then a small phone and an iPad join it.">
-      <vx-window class="at s-frame" title="habits">
-        <div class="rail"><i class="on"></i><i></i><i></i><i></i><i></i></div>
-        <div class="s-chat"><div class="bubble">Add a habit and make sure it saves</div><div class="tool"><span class="ic"></span>Simulator: describe the screen<span class="ok">✓</span></div><div class="tool sx"><span class="ic"></span>Simulator: tap “Add a habit”<span class="ok">✓</span></div></div>
-        <div class="s-right"></div>
+    <div class="world-box"><div class="world"><div class="cam" role="img" aria-label="An iPhone turns into place and the Vibex window forms around it. Claude sees each element by name and taps one. Then a small phone and an iPad join it.">
+      <vx-window class="at v-win s-frame" title="ridge">
+        <img class="fill" src="/assets/shots/window-sim.jpg" alt="" loading="lazy">
+        <img class="col s-col2" src="/assets/shots/col-s1.jpg" alt="" loading="lazy">
       </vx-window>
-      <vx-phone class="at s-small"><div class="ph-title">Today</div><div class="habit"><i class="on"></i>Morning walk</div><div class="habit"><i></i>Read 20 pages</div><div class="ph-cta">Add a habit</div></vx-phone>
-      <div class="at s-pad"><div><div class="ph-title" style="font-size:44px">Today</div><div class="habit"><i class="on"></i>Morning walk</div><div class="habit"><i></i>Read 20 pages</div><div class="habit"><i></i>Call Mum</div><div class="ph-cta">Add a habit</div></div></div>
-      <vx-phone class="at s-phone">
-        <div class="ph-title">Today</div>
-        <div class="habit"><i class="on"></i>Morning walk</div>
-        <div class="habit"><i></i>Read 20 pages</div>
-        <div class="habit"><i></i>Call Mum</div>
-        <div class="habit s-new"><i></i>Drink water</div>
-        <div class="ph-cta">Add a habit</div>
-        <div class="ax a1" style="left:16px;right:16px;top:74px;height:66px"><span>Morning walk</span></div>
-        <div class="ax a2" style="left:16px;right:16px;top:154px;height:66px"><span>Read 20 pages</span></div>
-        <div class="ax a3" style="left:16px;right:16px;top:234px;height:66px"><span>Call Mum</span></div>
-        <div class="ax hit a4" style="left:16px;right:16px;bottom:24px;height:70px"><span>Add a habit</span></div>
-        <span class="tap s-tap" style="left:196px;bottom:27px"></span>
+      <div class="at dev-small"><img src="/assets/ridge/07-today-small.jpg" alt="" loading="lazy"></div>
+      <div class="at s-pad"><img src="/assets/ridge/06-today-ipad.jpg" alt="" loading="lazy"></div>
+      <vx-phone class="at s-phone real">
+        <img class="shot" src="/assets/ridge/05-plan.jpg" alt="" loading="lazy">
+        <img class="shot s-packed" src="/assets/ridge/09-plan-packed.jpg" alt="" loading="lazy">
+        <div class="ax a1" style="top:190px;height:44px"><span>Trail: Eagle Ridge</span></div>
+        <div class="ax a2" style="top:267px;height:44px"><span>Date</span></div>
+        <div class="ax a3" style="top:325px;height:58px"><span>Party size: 2</span></div>
+        <div class="ax a4" style="top:434px;height:46px"><span>Water, 3 liters</span></div>
+        <div class="ax a5" style="top:482px;height:46px"><span>Warm layer and shell</span></div>
+        <div class="ax a6" style="top:530px;height:46px"><span>Offline map</span></div>
+        <div class="ax hit" style="top:578px;height:46px"><span>Headlamp</span></div>
+        <span class="tap s-tap" style="left:318px;top:601px"></span>
       </vx-phone>
     </div></div></div>
     <ol class="notes">
@@ -259,25 +253,30 @@
   </div>
 </vx-scene>
 
-<!-- Browser: the address bar fills the screen, then a crosshair works through the page. -->
-<vx-scene length="560" timeline="browser" rest=".98" style="--tint:129,148,255">
+<!-- Browser: the address bar fills the screen, then a crosshair works through Ridge's site. -->
+<vx-scene length="560" timeline="browser" rest=".98" style="--tint:255,150,90">
   <div class="stage">
     <div class="glow"></div>
     <h2 class="statement"><small>Browser</small><span class="line">It reads the console so you don’t have to.</span></h2>
-    <div class="world-box"><div class="world"><div class="cam" role="img" aria-label="A route types into the address bar. A crosshair finds a button and clicks it, and the console reports zero errors.">
-      <vx-window class="at b-win" title="Vibex">
+    <div class="world-box"><div class="world"><div class="cam" role="img" aria-label="A route types into the address bar of Ridge's website. A crosshair finds a button and clicks it, and the console reports zero errors.">
+      <vx-window class="at b-win" title="ridge">
         <div class="b-col">
-          <div class="addr"><span class="host">localhost:5173</span><span class="route">/orders/42?tab=items</span></div>
-          <div class="page">
-            <h4 class="b1x">Order #42</h4>
-            <div class="row-card b2x"><span>Trail shoes</span><b>$84.00</b></div>
-            <div class="row-card b3x"><span>Socks</span><b>$12.00</b></div>
-            <div class="row-card refund b4x">Refund order</div>
+          <div class="addr"><span class="host">localhost:5173</span><span class="route">/permits/42?tab=details</span></div>
+          <div class="site">
+            <div class="site-art"></div>
+            <div class="site-nav"><b>Ridge</b><span>Trails &nbsp;&nbsp;&nbsp; Permits &nbsp;&nbsp;&nbsp; Journal</span></div>
+            <div class="site-body">
+              <small class="b1x">PERMIT #42 · SAT, NOV 7</small>
+              <h4 class="b2x">Eagle Ridge</h4>
+              <div class="s-row b3x"><span>Two hikers, sunrise entry</span><b>$36.00</b></div>
+              <div class="s-row b3x"><span>Conservation and booking</span><b>$12.00</b></div>
+              <div class="refund b4x">Refund this permit</div>
+            </div>
           </div>
         </div>
       </vx-window>
       <span class="at cross"></span>
-      <div class="at console"><div class="k1x">browser_click "Refund order" → ok</div><div class="k2x">POST /api/refund 200 · 41 ms</div><div class="k3x" style="color:var(--green)">browser_console → 0 errors</div></div>
+      <div class="at console"><div class="k1x">browser_click "Refund this permit" → ok</div><div class="k2x">POST /api/refund 200 · 41 ms</div><div class="k3x" style="color:var(--green)">browser_console → 0 errors</div></div>
       <span class="at zero">0 errors</span>
     </div></div></div>
     <ol class="notes">
@@ -293,21 +292,15 @@
   <div class="stage">
     <div class="glow"></div>
     <h2 class="statement"><small>Approvals</small><span class="line">Walk away. We’ll get you when it matters.</span></h2>
-    <div class="world-box"><div class="world"><div class="cam" role="img" aria-label="The window recedes while Claude works. A notification arrives, and Allow is clicked. The tests pass.">
-      <vx-window class="at b-win r-win" title="habits">
-        <div class="b-col">
-          <div class="tabs"><span>Claude</span><span class="on">add-notes<i class="waiting"></i></span><span>Terminal</span></div>
-          <div class="c-col" style="flex:1">
-            <div class="bubble">Add notes to each habit</div>
-            <div class="tool"><span class="ic"></span>Edit Habit.swift<span class="ok">✓</span></div>
-            <div class="tool"><span class="ic"></span>Edit HabitRow.swift<span class="ok">✓</span></div>
-            <div class="approve r-card"><small>Claude wants to run</small><code>swift test</code><div class="approve-row"><span class="a-btn yes r-yes">Allow</span><span class="a-btn">Always Allow</span><span class="a-btn">Don’t Allow</span></div></div>
-            <div class="tool r-run"><span class="ic"></span>Run swift test<span class="ok">✓</span></div>
-            <div class="say r-say">All <b class="r-count" data-suffix="">0</b> tests pass. Notes are in, and they sync.</div>
-          </div>
-        </div>
+    <div class="world-box"><div class="world"><div class="cam" role="img" aria-label="The window recedes while Claude works. A notification arrives, and Allow is clicked. All the tests pass.">
+      <vx-window class="at v-win r-win" title="ridge">
+        <img class="fill" src="/assets/shots/window-approve.jpg" alt="" loading="lazy">
+        <img class="col r1" src="/assets/shots/col-ap1.jpg" alt="" loading="lazy">
+        <img class="col r2" src="/assets/shots/col-ap2.jpg" alt="" loading="lazy">
+        <span class="press r-press"></span>
+        <div class="w-phone"><vx-phone src="/assets/ridge/05-plan.jpg"></vx-phone></div>
       </vx-window>
-      <div class="at banner"><img src="/icon.png" alt=""><div><b>Claude needs you in add-notes</b>Allow Bash: swift test</div></div>
+      <div class="at banner"><img src="/icon.png" alt=""><div><b>Claude needs you in Ridge</b>Allow Bash: swift test</div></div>
     </div></div></div>
     <ol class="notes">
       <li data-beat=".18-.38">Long job? Go make a coffee. You don’t have to watch Claude work.</li>
@@ -317,26 +310,16 @@
   </div>
 </vx-scene>
 
-<!-- Review: code wipes in close up, then a divider drags between before and after. -->
-<vx-scene length="560" timeline="review" rest=".72" style="--tint:240,160,90">
+<!-- Review: the real diff wipes in, then a divider drags between before and after. -->
+<vx-scene length="560" timeline="review" rest=".72" style="--tint:255,170,90">
   <div class="stage">
     <div class="glow"></div>
     <h2 class="statement"><small>Review</small><span class="line">Every change, before it counts.</span></h2>
-    <div class="world-box"><div class="world"><div class="cam" role="img" aria-label="Diff lines wipe in red and green, then a divider drags across before and after screenshots of the app.">
-      <div class="at diff"><div class="diff-head">CheckoutView.swift &nbsp;<span style="color:var(--green)">+3</span> <span style="color:var(--red)">−2</span></div>
-        <div class="l"><span>struct CheckoutView: View {</span></div>
-        <div class="l"><span>  var body: some View {</span></div>
-        <div class="l del"><i class="w1"></i><span>-   Button("Pay") { pay() }</span></div>
-        <div class="l del"><i class="w2"></i><span>-     .frame(width: 460)</span></div>
-        <div class="l add"><i class="w3"></i><span>+   Button("Pay \(total)") {</span></div>
-        <div class="l add"><i class="w4"></i><span>+     pay()</span></div>
-        <div class="l add"><i class="w5"></i><span>+   }.frame(maxWidth: .infinity)</span></div>
-        <div class="l"><span>  }</span></div>
-        <div class="l"><span>}</span></div>
-      </div>
-      <vx-phone class="at cmp">
-        <div class="before"><div class="ph-title">Checkout</div><div class="habit">Trail shoes<span style="margin-left:auto">$84</span></div><div class="habit" style="font-weight:700">Total<span style="margin-left:auto">$96</span></div><div class="over">Pay $96 with card</div></div>
-        <div class="after"><div class="ph-title">Checkout</div><div class="habit">Trail shoes<span style="margin-left:auto">$84</span></div><div class="habit" style="font-weight:700">Total<span style="margin-left:auto">$96</span></div><div class="fixed">Pay $96 with card</div></div>
+    <div class="world-box"><div class="world"><div class="cam" role="img" aria-label="The real diff view wipes in, then a divider drags across before and after screenshots of the app.">
+      <div class="at d-shot"><img src="/assets/shots/diff.jpg" alt="" loading="lazy"></div>
+      <vx-phone class="at cmp real">
+        <img class="shot" src="/assets/ridge/08-permit-bug.jpg" alt="" loading="lazy">
+        <div class="after"><img class="shot" src="/assets/ridge/04-permit.jpg" alt="" loading="lazy"></div>
         <span class="cmp-tag t-after" style="left:12px">After</span><span class="cmp-tag t-before" style="right:12px">Before</span>
         <span class="divider"></span>
       </vx-phone>
@@ -411,15 +394,6 @@
   </vx-reveal>
 </div></section>
 
-<!-- Film -->
-<section class="section" style="padding-top:0"><div class="wrap">
-  <vx-reveal class="center"><h2>Watch Claude see what it builds.</h2></vx-reveal>
-  <vx-reveal><vx-film src="/launch.mp4" poster="/launch-poster.jpg" class="film-frame">
-    <img src="/launch-poster.jpg" alt="The Vibex launch film" loading="lazy">
-    <button type="button" aria-label="Play the film"><span>▶ Play the film</span></button>
-  </vx-film></vx-reveal>
-</div></section>
-
 <!-- Open source: zero price, and honest about the limits -->
 <section class="section" id="open-source"><div class="wrap">
   <vx-reveal class="free">
@@ -428,6 +402,8 @@
       <h2 style="margin-top:14px">Free. Not free for now.</h2>
       <p class="lede" style="margin-top:14px">Vibex is MIT licensed and built in the open. Read every line, fork it, ship your own. You only pay for the AI tools you already use.</p>
       <ul class="ticks"><li>No account, no subscription, no trial</li><li>No tracking. Usage numbers stay on your Mac</li><li>Use it at work, change it, keep it</li></ul>
+      <div class="cta-row" style="margin-top:26px"><vx-star big></vx-star></div>
+      <p class="assure">A star costs you nothing, and it’s how other people find this.</p>
     </div>
     <div class="honest">
       <h3>What it won’t do, so you don’t find out later</h3>
@@ -456,22 +432,26 @@
   </vx-reveal>
 </div></section>
 
-<!-- The end: small steps, one action -->
-<section class="section final center" id="install"><div class="wrap">
-  <vx-reveal>
-    <img class="final-icon" src="/icon.png" alt="" width="96" height="96" loading="lazy">
-    <h1 style="font-size:clamp(40px,6vw,76px)">Give your agent eyes.</h1>
-    <p class="lede">Paste one line. A minute from now, Claude can see what it builds.</p>
-    <div class="cta-row"><vx-install></vx-install></div>
-    <p class="assure">Free forever. No account. Or <a href="https://github.com/uwussimo/vibex/releases/latest" style="text-decoration:underline">download the DMG</a>.</p>
-  </vx-reveal>
-  <vx-reveal><ol class="steps">
-    <li><b>1. Paste the command</b>It checks the release, installs Vibex and links the <code>vibex</code> command.</li>
-    <li><b>2. Open a project</b>Setup shows what’s missing, with one button to fix each thing.</li>
-    <li><b>3. Ask Claude for something</b>Then watch it run, look and fix, instead of asking you to.</li>
-  </ol></vx-reveal>
-</div></section>
+<!-- The end: the art, one line, and the two things we'd like you to do. -->
+<section class="final center" id="install">
+  <div class="final-art"></div>
+  <div class="wrap">
+    <vx-reveal>
+      <img class="final-icon" src="/icon.png" alt="" width="96" height="96" loading="lazy">
+      <h2>Give your agent eyes.</h2>
+      <p class="lede">Paste one line. A minute from now, Claude can see what it builds.</p>
+      <div class="cta-row"><vx-install></vx-install><vx-star big></vx-star></div>
+      <p class="assure">Free forever. No account. Or <a href="https://github.com/uwussimo/vibex/releases/latest">download the DMG</a>.</p>
+    </vx-reveal>
+    <vx-reveal><ol class="steps">
+      <li><b>1. Paste the command</b>It checks the release, installs Vibex and links the <code>vibex</code> command.</li>
+      <li><b>2. Open a project</b>Setup shows what’s missing, with one button to fix each thing.</li>
+      <li><b>3. Ask Claude for something</b>Then watch it run, look and fix, instead of asking you to.</li>
+    </ol></vx-reveal>
+  </div>
+</section>
 </main>
 <vx-footer></vx-footer>
+<vx-star-float></vx-star-float>
 </body>
 </html>
