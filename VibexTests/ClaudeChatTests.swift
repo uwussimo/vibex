@@ -188,6 +188,15 @@ import Testing
         #expect(rows("/compact").first?.completion == "/compact ")
     }
 
+    @Test func `common commands win a shared prefix, and long hints stay out of the row`() {
+        let list = [ClaudeCommand(name: "color", summary: "Set the color", argumentHint: "[red|blue|green|yellow|purple]"), ClaudeCommand(name: "compact", summary: "Free up context", argumentHint: "[notes]")]
+        let suggestions = ClaudeCompleter.suggestions(for: "/co", commands: list, models: [], sessions: [], files: [])
+        #expect(suggestions.map(\.id) == ["compact", "color"])
+        #expect(suggestions[0].title == "/compact")
+        #expect(suggestions[0].detail == "[notes]  Free up context")
+        #expect(suggestions[1].detail == "Set the color")
+    }
+
     @Test func `arguments open their own menus`() {
         #expect(rows("/model ").map(\.title) == ["Default (recommended)", "Opus 5.5", "Opus 4.8"])
         #expect(rows("/model 4.8").first?.action == .run("/model claude-opus-4-8"))

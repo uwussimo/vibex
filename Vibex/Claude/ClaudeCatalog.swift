@@ -50,7 +50,9 @@ nonisolated struct ClaudeCapabilities: Equatable, Sendable {
 
     /// The first sentence, without the "(user)" Claude Code adds to say where a skill lives.
     private static func summary(_ text: String) -> String {
-        let cleaned = text.replacingOccurrences(of: #"\s*\([^)]*\)\s*$"#, with: "", options: .regularExpression)
+        let cleaned = text
+            .replacingOccurrences(of: #"\s*\([^)]*\)\s*$"#, with: "", options: .regularExpression)
+            .replacingOccurrences(of: #"^\([^)]*\)\s*"#, with: "", options: .regularExpression)
         return cleaned.prefix(while: { !$0.isNewline }).split(separator: ". ").first.map(String.init) ?? cleaned
     }
 }
@@ -64,7 +66,12 @@ final class ClaudeCatalog {
     private(set) var byFolder: [String: ClaudeCapabilities] = [:]
     @ObservationIgnored private var requested = Set<String>()
 
-    func capabilities(folder: String) -> ClaudeCapabilities { byFolder[folder] ?? ClaudeCapabilities() }
+    /// The models don't depend on the folder, so a new agent's worktree can name them right away.
+    func capabilities(folder: String) -> ClaudeCapabilities {
+        var capabilities = byFolder[folder] ?? ClaudeCapabilities()
+        if capabilities.models.isEmpty { capabilities.models = byFolder.values.first { !$0.models.isEmpty }?.models ?? [] }
+        return capabilities
+    }
 
     func update(folder: String, commands: [ClaudeCommand]) { byFolder[folder, default: ClaudeCapabilities()].commands = commands }
 
@@ -191,19 +198,23 @@ nonisolated enum ClaudeCompleter {
             let first = common.compactMap { name in all.first { $0.name == name } }
             ranked = first + all.filter { !common.contains($0.name) }.sorted { $0.name < $1.name }
         } else {
-            let starts = all.filter { $0.name.lowercased().hasPrefix(query) }.sorted { $0.name.count < $1.name.count }
+            // What people reach for most beats alphabetical luck: /co means /compact before /color.
+            let starts = all.filter { $0.name.lowercased().hasPrefix(query) }.sorted { a, b in
+                let ranks = [a, b].map { command in common.firstIndex(of: command.name) ?? common.count }
+                return ranks[0] != ranks[1] ? ranks[0] < ranks[1] : a.name.count < b.name.count
+            }
             let inName = all.filter { !$0.name.lowercased().hasPrefix(query) && $0.name.lowercased().contains(query) }
             let inSummary = query.count < 3 ? [] : all.filter { !$0.name.lowercased().contains(query) && $0.summary.lowercased().contains(query) }
             ranked = starts + inName + inSummary
         }
         return ranked.map { command in
-            let takesArgument = !command.argumentHint.isEmpty || opensMenu.contains(command.name)
             // An optional argument can still run bare; a required one, or its own menu, can't.
             let mustContinue = opensMenu.contains(command.name) || command.argumentHint.hasPrefix("<")
             return ClaudeSuggestion(
                 id: command.name,
-                title: "/\(command.name)" + (takesArgument && !command.argumentHint.isEmpty ? " \(command.argumentHint)" : ""),
-                detail: command.summary,
+                title: "/\(command.name)",
+                // Some hints list every value; those are too long to help in one row.
+                detail: [command.argumentHint.count <= 16 ? command.argumentHint : "", command.summary].filter { !$0.isEmpty }.joined(separator: "  "),
                 action: mustContinue ? .insert("/\(command.name) ") : .run("/\(command.name)"),
                 completion: "/\(command.name) "
             )
