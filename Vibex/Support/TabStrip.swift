@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 /// One tab in a `TabStrip`.
@@ -18,6 +19,8 @@ struct TabStripActions {
     var close: (UUID) -> Void
     var new: () -> Void
     var newClaude: () -> Void
+    /// Double-clicking a tab opens another one like it.
+    var duplicate: (UUID) -> Void
 }
 
 /// The tab row shared by the terminal and the browser. `dark` forces the terminal's always-dark look;
@@ -38,9 +41,12 @@ struct TabStrip: View {
                             isSelected: item.id == selectedID,
                             dark: dark,
                             select: { actions.select(item.id) },
-                            close: { actions.close(item.id) }
+                            close: { actions.close(item.id) },
+                            duplicate: { actions.duplicate(item.id) }
                         )
                         .contextMenu {
+                            Button("Duplicate Tab") { actions.duplicate(item.id) }
+                            Divider()
                             TabCloseCommands(id: item.id, all: items.map(\.id), close: actions.close)
                         }
                     }
@@ -84,6 +90,7 @@ private struct TabStripCell: View {
     let dark: Bool
     let select: () -> Void
     let close: () -> Void
+    let duplicate: () -> Void
 
     @State private var isHovering = false
 
@@ -136,7 +143,10 @@ private struct TabStripCell: View {
         .frame(minWidth: 90, maxWidth: 200)
         .background(RoundedRectangle(cornerRadius: 7, style: .continuous).fill(fill))
         .contentShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
-        .onTapGesture(perform: select)
+        .onTapGesture {
+            select()
+            if NSApp.currentEvent?.clickCount == 2 { duplicate() }
+        }
         .onHover { isHovering = $0 }
         .animation(.spring(response: 0.2, dampingFraction: 1), value: isHovering)
         .animation(.spring(response: 0.2, dampingFraction: 1), value: isSelected)

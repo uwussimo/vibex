@@ -26,6 +26,7 @@ struct SidebarView: View {
     let browseSkills: () -> Void
     let browseMCP: () -> Void
     let openClaude: () -> Void
+    let clickServer: (ServerProfile, Int) -> Void
     let connectServer: (ServerProfile) -> Void
 
     var body: some View {
@@ -40,7 +41,7 @@ struct SidebarView: View {
             case .mcp:
                 MCPServersSidebar(model: mcpServers, browse: browseMCP, openClaude: openClaude)
             case .servers:
-                ServersSidebar(model: .shared, connect: connectServer)
+                ServersSidebar(model: .shared, click: clickServer, connect: connectServer)
             }
         }
         // Solid, like the landing page, instead of the translucent sidebar material.

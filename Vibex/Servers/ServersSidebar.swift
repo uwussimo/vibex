@@ -1,9 +1,10 @@
 import AppKit
 import SwiftUI
 
-/// The Servers sidebar: saved SSH servers, one click from a terminal tab.
+/// The Servers sidebar: saved SSH servers, one click from a terminal tab and two from another.
 struct ServersSidebar: View {
     @Bindable var model: ServersModel
+    let click: (ServerProfile, Int) -> Void
     let connect: (ServerProfile) -> Void
     @State private var query = ""
     @State private var editing: EditTarget?
@@ -38,7 +39,7 @@ struct ServersSidebar: View {
                     if let problem = model.problem { problemView(problem) }
                     if model.servers.isEmpty { emptyState }
                     ForEach(model.matching(query)) { server in
-                        ServerRow(server: server, hasSecret: model.hasSecret(server), connect: { connect(server) }, edit: { editing = .server(server) }, forget: { model.forgetSecret(of: server) }, delete: { deleting = server })
+                        ServerRow(server: server, hasSecret: model.hasSecret(server), click: { click(server, $0) }, connect: { connect(server) }, edit: { editing = .server(server) }, forget: { model.forgetSecret(of: server) }, delete: { deleting = server })
                     }
                     if !model.servers.isEmpty, model.matching(query).isEmpty {
                         Text("No servers match “\(query)”.").font(.vibex(size: 12)).foregroundStyle(Theme.faint).padding(8)
@@ -141,6 +142,7 @@ struct ServersSidebar: View {
 private struct ServerRow: View {
     let server: ServerProfile
     let hasSecret: Bool
+    let click: (Int) -> Void
     let connect: () -> Void
     let edit: () -> Void
     let forget: () -> Void
@@ -148,7 +150,7 @@ private struct ServerRow: View {
     @State private var isHovering = false
 
     var body: some View {
-        Button(action: connect) {
+        Button { click(NSApp.currentEvent?.clickCount ?? 1) } label: {
             HStack(spacing: 10) {
                 Text(server.name.prefix(1).uppercased())
                     .font(.vibex(size: 12, weight: .semibold))
@@ -177,9 +179,10 @@ private struct ServerRow: View {
         }
         .buttonStyle(PressFeedbackButtonStyle())
         .onHover { isHovering = $0 }
-        .help(server.notes.isEmpty ? "Connect to \(server.endpointDescription)" : server.notes)
+        .help(server.notes.isEmpty ? "\(server.endpointDescription). Double-click for another tab." : server.notes)
         .contextMenu {
-            Button("Connect", action: connect)
+            Button("Open") { click(1) }
+            Button("Open in New Tab", action: connect)
             Button("Edit…", action: edit)
             Button("Copy SSH Command") {
                 NSPasteboard.general.clearContents()

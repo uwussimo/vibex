@@ -68,6 +68,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
             browseSkills: { [weak workspace] in workspace?.editor.openSkillsMarketplace() },
             browseMCP: { [weak self] in self?.browseMCPServers(nil) },
             openClaude: { [weak self] in self?.openClaudeCode() },
+            clickServer: { [weak self] server, count in self?.click(server, count: count) },
             connectServer: { [weak self] server in self?.connect(to: server) }
         )))
         sidebarItem.minimumThickness = 240
@@ -108,6 +109,10 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
         sourceControl.start()
         agents.refresh()
         workspace.simulatorPane.openDevices = { [weak self] in self?.showDevices(nil) }
+        workspace.terminalPane.connectServer = { [weak self] id in
+            guard let server = ServersModel.shared.servers.first(where: { $0.id == id }) else { return }
+            self?.connect(to: server)
+        }
         workspace.terminalPane.openFile = { [weak self] url in self?.openFile(url, keep: true) }
         workspace.terminalPane.agents = ClaudeAgentsContext(model: agents, actions: agentActions())
         workspace.terminalPane.showSkills = { [weak self] in self?.showSidebar(.skills) }
@@ -337,6 +342,15 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
     @objc func toggleServers(_ sender: Any?) { toggleSidebar(.servers) }
 
     /// Touch ID first when a secret is saved, then a terminal tab in this window running `ssh`.
+    private func click(_ server: ServerProfile, count: Int) {
+        let open = workspace.terminalPane.liveTab(forServer: server.id)
+        switch ServersModel.shared.click(on: server.id, count: count, hasOpenTab: open != nil) {
+        case .connect: connect(to: server)
+        case .focus: if let open { workspace.showTerminalTab(open) }
+        case .nothing: break
+        }
+    }
+
     func connect(to server: ServerProfile) {
         let model = ServersModel.shared
         Task { [weak self] in

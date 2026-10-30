@@ -122,7 +122,8 @@ final class EditorAreaViewController: NSViewController {
             model: tabs,
             select: { [weak self] tab in self?.select(tab) },
             close: { [weak self] tab in self?.close(tab) },
-            newTab: { [weak self] in self?.browserPane.newTab(nil) }
+            newTab: { [weak self] in self?.browserPane.newTab(nil) },
+            duplicate: { [weak self] tab in self?.duplicate(tab) }
         ))
         strip.sizingOptions = []
         strip.translatesAutoresizingMaskIntoConstraints = false
@@ -391,6 +392,12 @@ final class EditorAreaViewController: NSViewController {
 
     // MARK: - Items
 
+    /// Only the browser has more than one of a thing; the other tabs are single views.
+    private func duplicate(_ tab: EditorTabsModel.Tab) {
+        guard case let .browser(id) = tab, let page = browserPane.tab(withID: id) else { return }
+        browserPane.openTab(url: page.url)
+    }
+
     private func rebuildItems() {
         var items = browserPane.tabs.map { tab in
             EditorTabsModel.Item(tab: .browser(tab.id), title: tab.title, icon: .globe, isLoading: tab.isLoading)
@@ -488,6 +495,7 @@ struct EditorTabStrip: View {
     let select: (EditorTabsModel.Tab) -> Void
     let close: (EditorTabsModel.Tab) -> Void
     let newTab: () -> Void
+    let duplicate: (EditorTabsModel.Tab) -> Void
 
     var body: some View {
         HStack(spacing: 2) {
@@ -499,10 +507,15 @@ struct EditorTabStrip: View {
                                 item: item,
                                 isSelected: item.tab == model.selected,
                                 select: { select(item.tab) },
-                                close: { close(item.tab) }
+                                close: { close(item.tab) },
+                                duplicate: { duplicate(item.tab) }
                             )
                             .id(item.tab)
                             .contextMenu {
+                                if case .browser = item.tab {
+                                    Button("Duplicate Tab") { duplicate(item.tab) }
+                                    Divider()
+                                }
                                 TabCloseCommands(id: item.tab, all: model.items.map(\.tab), close: close)
                             }
                             .transition(.opacity.combined(with: .scale(scale: 0.96, anchor: .leading)))
@@ -540,6 +553,7 @@ private struct EditorTabCell: View {
     let isSelected: Bool
     let select: () -> Void
     let close: () -> Void
+    let duplicate: () -> Void
     @State private var isHovering = false
 
     var body: some View {
@@ -585,7 +599,10 @@ private struct EditorTabCell: View {
                 .strokeBorder(isSelected ? Theme.line : .clear)
         )
         .contentShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
-        .onTapGesture(perform: select)
+        .onTapGesture {
+            select()
+            if NSApp.currentEvent?.clickCount == 2 { duplicate() }
+        }
         .onHover { isHovering = $0 }
         .animation(.spring(response: 0.2, dampingFraction: 1), value: isHovering)
         .animation(.spring(response: 0.2, dampingFraction: 1), value: isSelected)

@@ -102,3 +102,27 @@ import Testing
         #expect(gated.problem == nil)
     }
 }
+
+@MainActor @Suite struct ServerClickTests {
+    private let model = ServersModel(file: FileManager.default.temporaryDirectory.appendingPathComponent("clicks-\(UUID().uuidString).json"), store: KeychainCredentialStore(service: "clicks", backend: InMemoryKeychain()))
+    private let server = UUID()
+
+    @Test func `a click goes to the open tab, or connects when there is none`() {
+        #expect(model.click(on: server, count: 1, hasOpenTab: true) == .focus)
+        #expect(model.click(on: server, count: 1, hasOpenTab: false) == .connect)
+    }
+
+    @Test func `a double-click opens another tab`() {
+        #expect(model.click(on: server, count: 1, hasOpenTab: true) == .focus)
+        #expect(model.click(on: server, count: 2, hasOpenTab: true) == .connect)
+    }
+
+    @Test func `a double-click on a server with no tab opens just one`() {
+        #expect(model.click(on: server, count: 1, hasOpenTab: false) == .connect)
+        #expect(model.click(on: server, count: 2, hasOpenTab: true) == .nothing)
+        #expect(model.click(on: server, count: 3, hasOpenTab: true) == .nothing)
+        // The next double-click is a new request.
+        #expect(model.click(on: server, count: 1, hasOpenTab: true) == .focus)
+        #expect(model.click(on: server, count: 2, hasOpenTab: true) == .connect)
+    }
+}

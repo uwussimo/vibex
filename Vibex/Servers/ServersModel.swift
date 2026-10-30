@@ -19,6 +19,7 @@ final class ServersModel {
     @ObservationIgnored private let file: URL
     /// Open sessions, so a re-lock can scrub any secret they're still holding.
     @ObservationIgnored private var sessions: [SSHSessionController] = []
+    @ObservationIgnored private var connectedByFirstClick: UUID?
 
     init(file: URL, store: (any CredentialStoring)? = nil, authenticator: any DeviceAuthenticating = DeviceAuthenticator()) {
         self.file = file
@@ -130,6 +131,22 @@ final class ServersModel {
     }
 
     // MARK: Connecting
+
+    enum ServerClick: Equatable { case focus, connect, nothing }
+
+    /// One click goes to the server's tab, or connects if it has none. A double-click opens another,
+    /// unless its first click just opened the only one: that's one tab, and one Touch ID.
+    func click(on id: UUID, count: Int, hasOpenTab: Bool) -> ServerClick {
+        switch count {
+        case 1:
+            connectedByFirstClick = hasOpenTab ? nil : id
+            return hasOpenTab ? .focus : .connect
+        case 2:
+            return connectedByFirstClick == id ? .nothing : .connect
+        default:
+            return .nothing
+        }
+    }
 
     /// The only path from a saved secret to a live SSH session, and it opens with the presence
     /// gate: nothing reaches the tab until Touch ID or the login password says it's the owner.

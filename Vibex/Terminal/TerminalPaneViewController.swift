@@ -18,8 +18,9 @@ final class TerminalPaneViewController: NSViewController {
         /// Set for tabs that run one command (Run): they stay open on exit and report the code.
         var onExit: ((Int32?) -> Void)?
         var fixedTitle: String?
-        /// A server's tab: what's running there can retitle it, while `fixedTitle` stays its name.
-        var followsRemoteTitle = false
+        /// The saved server this tab is connected to. What's running there can retitle it, while
+        /// `fixedTitle` stays the server's name.
+        var serverID: UUID?
 
         init(id: UUID = UUID(), terminal: LocalProcessTerminalView, content: NSView? = nil, title: String, directory: String?) {
             self.id = id
@@ -50,6 +51,8 @@ final class TerminalPaneViewController: NSViewController {
     private var clickMonitor: Any?
     /// Tabs were opened or closed (the workspace collapses the column when none are left).
     var onTabsChange: () -> Void = {}
+    /// Opens another session on a saved server; set by the window, which owns connecting.
+    var connectServer: (UUID) -> Void = { _ in }
     var isEmpty: Bool { tabs.isEmpty }
     /// False until the saved tabs were restored, so an empty pane at launch isn't taken for a closed one.
     var hasLoadedTabs: Bool { hasRestored }
@@ -82,7 +85,8 @@ final class TerminalPaneViewController: NSViewController {
             select: { [weak self] id in self?.select(id) },
             close: { [weak self] id in self?.close(id) },
             new: { [weak self] in self?.newTab(nil) },
-            newClaude: { [weak self] in self?.newClaudeChat(nil) }
+            newClaude: { [weak self] in self?.newClaudeChat(nil) },
+            duplicate: { [weak self] id in self?.duplicate(id) }
         )
         let tabBar = NSHostingView(rootView: TerminalTabStrip(model: tabBarModel, actions: actions))
         tabBar.sizingOptions = []
@@ -325,13 +329,31 @@ final class TerminalPaneViewController: NSViewController {
         content.autoresizingMask = [.width, .height]
         let tab = Tab(terminal: terminal, content: content, title: profile.name, directory: nil)
         tab.fixedTitle = profile.name
-        tab.followsRemoteTitle = true
+        tab.serverID = profile.id
         // Reads as "connection closed" in the terminal, like a Run tab reads as finished.
         tab.onExit = { _ in }
         tabs.append(tab)
         syncTabBar()
         select(tab.id)
         return (tab.id, ssh)
+    }
+
+    /// This server's newest tab that's still connected.
+    func liveTab(forServer server: UUID) -> UUID? {
+        tabs.last { $0.serverID == server && !$0.hasExited }?.id
+    }
+
+    /// Another tab like this one: the same server, the same folder for a terminal or a chat. A Run
+    /// tab gives a plain terminal, so a double-click can't start its command a second time.
+    func duplicate(_ id: UUID) {
+        guard let tab = tabs.first(where: { $0.id == id }) else { return }
+        if let server = tab.serverID {
+            connectServer(server)
+        } else if let chat = tab.chat {
+            openChat(in: chat.folder)
+        } else {
+            openTab(directory: tab.directory)
+        }
     }
 
     private func makeTerminalView() -> LocalProcessTerminalView {
@@ -389,7 +411,7 @@ final class TerminalPaneViewController: NSViewController {
 
     private func syncTabBar() {
         let attention = AttentionCenter.shared
-        tabBarModel.tabs = tabs.map { TabStripItem(id: $0.id, title: $0.title, isLoading: false, needsAttention: attention.isWaiting(tab: $0.id) || $0.chat?.needsAttention == true, isClaude: $0.chat != nil, isServer: $0.followsRemoteTitle) }
+        tabBarModel.tabs = tabs.map { TabStripItem(id: $0.id, title: $0.title, isLoading: false, needsAttention: attention.isWaiting(tab: $0.id) || $0.chat?.needsAttention == true, isClaude: $0.chat != nil, isServer: $0.serverID != nil) }
         attention.forget(tabs: Set(tabs.map(\.id)), inWindow: session.windowID)
         tabBarModel.selectedID = selectedID
         emptyHost?.isHidden = !tabs.isEmpty
@@ -571,7 +593,7 @@ extension TerminalPaneViewController: LocalProcessTerminalViewDelegate {
 
     func setTerminalTitle(source: LocalProcessTerminalView, title: String) {
         guard let tab = tabs.first(where: { $0.terminal === source }) else { return }
-        if tab.followsRemoteTitle, let server = tab.fixedTitle {
+        if tab.serverID != nil, let server = tab.fixedTitle {
             guard !tab.hasExited else { return }
             tab.title = Self.serverTabTitle(title, server: server)
             syncTabBar()
