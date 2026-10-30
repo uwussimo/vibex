@@ -140,6 +140,24 @@ import Testing
         #expect(model.chat.contextLabel == nil)
     }
 
+    @Test func `a full-bleed picture stays inside its screen`() async throws {
+        let root = try folder(screens: ["a.json": #"{"name":"Hero","safeArea":false,"root":{"type":"layer","width":"fill","height":"fill","children":[{"type":"image","src":"wide.png","width":"fill","height":"fill"},{"type":"text","text":"Over the art","place":"bottom","width":"fill"}]}}"#])
+        let wide = NSImage(size: NSSize(width: 3000, height: 400), flipped: false) { rect in NSColor.red.setFill(); rect.fill(); return true }
+        try NSBitmapImageRep(data: try #require(wide.tiffRepresentation))?.representation(using: .png, properties: [:])?.write(to: root.appendingPathComponent("wide.png"))
+        let image = try #require(await DesignSnapshot.image(of: DesignDocument.load(folder: root), screen: "Hero", scale: 1))
+        #expect(abs(image.size.width - (393 + 20 + 32)) < 1)
+    }
+
+    @Test func `a button with a set width paints that width`() throws {
+        let view = DesignNodeView(node: try node(#"{"type":"button","text":"Pay","width":300,"height":50}"#), theme: DesignTheme(document: DesignDocument(folder: FileManager.default.temporaryDirectory)))
+        let renderer = ImageRenderer(content: view.fixedSize())
+        let bitmap = NSBitmapImageRep(cgImage: try #require(renderer.cgImage))
+        #expect(bitmap.pixelsWide >= 300)
+        // Near the far edge, where a label-sized button wouldn't reach.
+        let color = try #require(bitmap.colorAt(x: bitmap.pixelsWide - Int(10 * renderer.scale), y: bitmap.pixelsHigh / 2))
+        #expect(color.alphaComponent > 0.9)
+    }
+
     @Test func `a screen renders at its device's size`() async throws {
         let root = try folder(design: ##"{"tokens":{"primary":"#0A84FF"}}"##, screens: [
             "a.json": #"{"name":"Phone","root":{"type":"column","children":[{"type":"text","text":"Hi"},{"type":"button","text":"Go"}]}}"#,

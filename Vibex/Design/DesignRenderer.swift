@@ -340,27 +340,30 @@ struct DesignNodeView: View {
         }
     }
 
-    @ViewBuilder
+    /// The picture fills whatever frame the layout gives it and is cropped there: it's an overlay on
+    /// empty space, because an image that fills takes its own size in layout and would push its
+    /// parent wider than the screen.
     private var picture: some View {
         let needsHeight = node.height == nil && node.aspect == nil
-        Group {
-            if let source = node.src, let image = DesignImageStore.shared.image(source, folder: theme.document.folder) {
-                Image(nsImage: image)
-                    .resizable()
-                    .aspectRatio(contentMode: node.fit?.lowercased() == "fit" || node.fit?.lowercased() == "contain" ? .fit : .fill)
-            } else {
-                // No picture yet: a calm placeholder that still reads as an image.
-                ZStack {
-                    theme.color(node.color) ?? theme.color(token: "muted").opacity(0.14)
-                    Image(systemName: node.icon ?? "photo")
-                        .font(.system(size: 22))
-                        .foregroundStyle(theme.color(token: "muted").opacity(0.7))
+        return Color.clear
+            .overlay {
+                if let source = node.src, let image = DesignImageStore.shared.image(source, folder: theme.document.folder) {
+                    Image(nsImage: image)
+                        .resizable()
+                        .aspectRatio(contentMode: node.fit?.lowercased() == "fit" || node.fit?.lowercased() == "contain" ? .fit : .fill)
+                } else {
+                    // No picture yet: a calm placeholder that still reads as an image.
+                    ZStack {
+                        theme.color(node.color) ?? theme.color(token: "muted").opacity(0.14)
+                        Image(systemName: node.icon ?? "photo")
+                            .font(.system(size: 22))
+                            .foregroundStyle(theme.color(token: "muted").opacity(0.7))
+                    }
                 }
             }
-        }
-        .frame(maxWidth: node.width == nil ? .infinity : nil)
-        .frame(height: needsHeight ? 160 : nil)
-        .clipped()
+            .clipped()
+            .frame(maxWidth: node.width == nil ? .infinity : nil)
+            .frame(height: needsHeight ? 160 : nil)
     }
 
     private var button: some View {
@@ -377,7 +380,7 @@ struct DesignNodeView: View {
         }
         .padding(.horizontal, node.padding == nil ? (variant == "link" ? 0 : 18) : 0)
         .padding(.vertical, node.padding == nil ? (variant == "link" ? 0 : 13) : 0)
-        .frame(maxWidth: node.width == .fill || stretch == .horizontal ? .infinity : nil)
+        .frame(maxWidth: Self.fillsFrame(node.width) || stretch == .horizontal ? .infinity : nil, maxHeight: Self.isFixed(node.height) ? .infinity : nil)
         .background {
             if node.fill == nil {
                 let shape = RoundedRectangle(cornerRadius: min(radius, 2000), style: .continuous)
@@ -390,6 +393,14 @@ struct DesignNodeView: View {
                 }
             }
         }
+    }
+
+    /// A button given a size paints all of it, not just the space around its label.
+    private static func fillsFrame(_ length: DesignLength?) -> Bool { length == .fill || isFixed(length) }
+
+    private static func isFixed(_ length: DesignLength?) -> Bool {
+        if case .points = length { return true }
+        return false
     }
 
     private var input: some View {
@@ -501,7 +512,10 @@ struct DesignScreenView: View {
                 content(top: device.height.map { $0 < 700 } == true ? 20 : 54, bottom: device.height.map { $0 < 700 } == true ? 0 : 30)
                     .overlay(alignment: .top) { phoneStatusBar }
                     .overlay(alignment: .bottom) {
-                        Capsule().fill(barColor).frame(width: 134, height: 5).padding(.bottom, 8)
+                        // A small iPhone has a home button, not a home bar.
+                        if device.height.map({ $0 < 700 }) != true {
+                            Capsule().fill(barColor).frame(width: 134, height: 5).padding(.bottom, 8)
+                        }
                     }
             }
         case .tablet:
