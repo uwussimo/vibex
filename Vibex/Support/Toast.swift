@@ -32,6 +32,8 @@ final class ToastModel {
     }
 }
 
+/// Hosted in a view that hugs the card, so with no toast it has no size: a hosting view takes every
+/// click inside its frame, even where SwiftUI has nothing to hit.
 struct ToastView: View {
     let model: ToastModel
 
@@ -63,10 +65,8 @@ struct ToastView: View {
                 .onTapGesture { model.dismiss() }
                 .transition(.move(edge: .top).combined(with: .opacity))
                 .id(toast.id)
+                .padding(.top, 12)
             }
-            Spacer()
         }
-        .padding(.top, 12)
-        .allowsHitTesting(model.current != nil)
     }
 }

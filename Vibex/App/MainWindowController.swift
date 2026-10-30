@@ -372,8 +372,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
         NSLayoutConstraint.activate([
             host.topAnchor.constraint(equalTo: contentView.topAnchor),
             host.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
-            host.widthAnchor.constraint(equalToConstant: 400),
-            host.heightAnchor.constraint(equalToConstant: 140),
+            host.widthAnchor.constraint(equalToConstant: 360),
         ])
     }
 
