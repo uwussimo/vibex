@@ -16,6 +16,7 @@ final class EditorTabsModel {
         case compare
         case devices
         case mcp
+        case design
         /// A file (or a skill's SKILL.md), by OpenDocument.id.
         case file(String)
 
@@ -29,6 +30,7 @@ final class EditorTabsModel {
             case .compare: "compare"
             case .devices: "devices"
             case .mcp: "mcp"
+            case .design: "design"
             case .file: "file"
             }
         }
@@ -76,6 +78,12 @@ final class EditorAreaViewController: NSViewController {
     private var compareHost: NSView?
     private var devicesController: DeviceMatrixViewController?
     private var mcpHost: NSView?
+    private var designHost: NSView?
+    private var designModel: DesignModel?
+    /// Reopens the Design tab that was showing when the project closed.
+    var restoreDesign: () -> Void = {}
+    /// The Design chat's process, for finding which window an MCP caller runs in.
+    var designPID: pid_t? { designModel?.chat.processID }
     /// File tabs in the order they opened; the preview one is replaced by the next single click.
     private var fileHosts: [String: NSView] = [:]
     private var fileDocuments: [String: OpenDocument] = [:]
@@ -156,6 +164,7 @@ final class EditorAreaViewController: NSViewController {
         switch session.state.editorTab {
         case "agents": openAgents()
         case "skills": openSkillsMarketplace()
+        case "design": restoreDesign()
         default: break
         }
         if tabs.selected == nil {
@@ -195,6 +204,7 @@ final class EditorAreaViewController: NSViewController {
         compareHost?.isHidden = tab != .compare
         devicesController?.view.isHidden = tab != .devices
         mcpHost?.isHidden = tab != .mcp
+        designHost?.isHidden = tab != .design
         for (id, host) in fileHosts { host.isHidden = tab != .file(id) }
         if case let .file(id) = tab { onFileShown(fileDocuments[id]?.file) } else { onFileShown(nil) }
         session.update { $0.editorTab = tab.kind }
@@ -212,7 +222,7 @@ final class EditorAreaViewController: NSViewController {
 
     private func showNothing() {
         tabs.selected = nil
-        for view in [browserPane.view, simulatorPane.view, diffHost, agentsHost, skillsHost, compareHost, devicesController?.view, mcpHost] + fileHosts.values.map(Optional.some) { view?.isHidden = true }
+        for view in [browserPane.view, simulatorPane.view, diffHost, agentsHost, skillsHost, compareHost, devicesController?.view, mcpHost, designHost] + fileHosts.values.map(Optional.some) { view?.isHidden = true }
         simulatorPane.setVisible(false)
         reportPreferredWidth()
     }
@@ -274,6 +284,16 @@ final class EditorAreaViewController: NSViewController {
             rebuildItems()
         }
         select(.mcp)
+    }
+
+    /// Vibex Design: a chat and a canvas.
+    func openDesign(model: DesignModel) {
+        if designHost == nil {
+            designModel = model
+            designHost = host(DesignTabView(model: model))
+            rebuildItems()
+        }
+        select(.design)
     }
 
     /// Several simulators side by side.
@@ -341,6 +361,12 @@ final class EditorAreaViewController: NSViewController {
             fileOrder.removeAll { $0 == id }
             if previewFile == id { previewFile = nil }
             rebuildItems()
+        case .design:
+            designModel?.stop()
+            designModel = nil
+            designHost?.removeFromSuperview()
+            designHost = nil
+            rebuildItems()
         case .mcp:
             mcpHost?.removeFromSuperview()
             mcpHost = nil
@@ -387,6 +413,9 @@ final class EditorAreaViewController: NSViewController {
         }
         if devicesController != nil {
             items.append(EditorTabsModel.Item(tab: .devices, title: "Devices", icon: .grid))
+        }
+        if designHost != nil {
+            items.append(EditorTabsModel.Item(tab: .design, title: "Design", icon: .feather))
         }
         if mcpHost != nil {
             items.append(EditorTabsModel.Item(tab: .mcp, title: "MCP Servers", icon: .server))

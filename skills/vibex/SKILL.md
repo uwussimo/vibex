@@ -78,6 +78,14 @@ happened.
   read next comes from your reproduction.
 - `browser_evaluate` runs JavaScript when nothing else fits. Prefer refs for anything the user would do.
 
+## Designing before building
+
+The Design tab (⌘4) draws JSON from `vibex-design/` in the project on a canvas, so the user can see and
+change a product before it's built. To start one from any session, call `design_open`: it opens the tab and
+returns the format. Write `design.json` and one file per screen, then check them with `design_screenshot`,
+which shows how they really render and lists problems. When asked to build a design, read those files and
+compare the running app with `design_screenshot`.
+
 ## The window
 
 - `terminal_run` opens a terminal tab with a command the user can see and stop. Dev servers and watchers go

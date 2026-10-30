@@ -86,6 +86,9 @@ final class ClaudeChatModel {
     var extraArguments: [String] = []
     /// Added to what's sent but not to what's shown, such as the screen selected on the canvas.
     var messageContext: () -> String? = { nil }
+    /// Names that context on a chip above the composer, so nothing is sent unseen.
+    var contextLabel: String?
+    var clearContext: () -> Void = {}
     var actions = ClaudeChatActions()
     private(set) var title = "Claude"
     private(set) var isLoadingHistory = false

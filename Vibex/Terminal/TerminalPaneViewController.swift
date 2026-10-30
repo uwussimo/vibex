@@ -221,6 +221,15 @@ final class TerminalPaneViewController: NSViewController {
 
     @objc func newClaudeChat(_ sender: Any?) { openChat() }
 
+    /// Gives the project's Claude a job: its idle chat if there is one, otherwise a new one.
+    func sendToClaude(_ prompt: String) {
+        hasRestored = true
+        let idle = tabs.first { $0.chat?.name == nil && $0.chat?.isBusy == false }
+        let id = idle?.id ?? openChat()
+        select(id)
+        tabs.first { $0.id == id }?.chat?.send(prompt)
+    }
+
     /// A chat for an agent, in its worktree. Edits there can't touch the project until it's merged,
     /// so they don't stop to ask; commands still do.
     @discardableResult

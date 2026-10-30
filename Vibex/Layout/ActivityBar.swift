@@ -57,6 +57,13 @@ struct ActivityBar: View {
                 isSelected: isBrowserShowing,
                 action: actions.showBrowser
             )
+            ActivityButton(
+                icon: .feather,
+                label: "Design",
+                help: "Vibex Design: Claude draws apps and sites on a canvas (⌘4)",
+                isSelected: isEditorShowing(.design),
+                action: actions.showDesign
+            )
             groupDivider
             ActivityButton(
                 icon: .files,
@@ -134,6 +141,7 @@ struct ActivityBarActions {
     var showTerminal: () -> Void
     var showSimulator: () -> Void
     var showBrowser: () -> Void
+    var showDesign: () -> Void
     var toggleSourceControl: () -> Void
     var toggleSkills: () -> Void
     var toggleExplorer: () -> Void

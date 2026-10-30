@@ -18,7 +18,7 @@ struct ClaudeChatView: View {
             } else {
                 transcript
             }
-            ClaudeComposer(model: model, placeholder: welcome.placeholder, agents: agents)
+            ClaudeComposer(model: model, placeholder: welcome.placeholder, showsModes: welcome.showsModes, agents: agents)
         }
         .background(Theme.background)
         .task { ClaudeCatalog.shared.load(folder: model.folder, environment: model.environment) }
@@ -169,6 +169,7 @@ struct ClaudeChatWelcome {
     var showsTerminal = true
     var showsRecent = true
     var tip: String?
+    var showsModes = true
 
     static let standard = ClaudeChatWelcome(
         title: "What should we build?",
@@ -262,6 +263,7 @@ private struct ClaudeChatEmptyState: View {
 private struct ClaudeComposer: View {
     let model: ClaudeChatModel
     let placeholder: String
+    let showsModes: Bool
     let agents: ClaudeAgentsContext?
     @State private var text = ""
     @State private var pasteMonitor: Any?
@@ -309,6 +311,23 @@ private struct ClaudeComposer: View {
                 }
                 .padding(.top, 10)
             }
+            if let label = model.contextLabel {
+                HStack(spacing: 5) {
+                    IconView(.target, size: 12).foregroundStyle(Theme.accent)
+                    Text("About \(label)").font(.vibex(size: 11.5, weight: .medium)).foregroundStyle(Theme.text)
+                    Button { model.clearContext() } label: {
+                        IconView(.close, size: 9).foregroundStyle(Theme.muted).frame(width: 18, height: 18).contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .help("Talk about the whole design")
+                }
+                .padding(.leading, 8)
+                .padding(.trailing, 2)
+                .frame(height: 24)
+                .background(Capsule().fill(Theme.accent.opacity(0.14)))
+                .padding(.horizontal, 10)
+                .padding(.top, 10)
+            }
             TextField(isAgentMode ? "Describe the task. It gets its own branch and its own chat." : placeholder, text: $text, axis: .vertical)
                 .textFieldStyle(.plain)
                 .font(.vibex(size: 13.5))
@@ -334,7 +353,7 @@ private struct ClaudeComposer: View {
                 }
                 .buttonStyle(.plain)
                 .help("Attach images or files. You can also drop them here, or paste a screenshot.")
-                modeMenu
+                if showsModes { modeMenu }
                 modelMenu
                 Spacer()
                 contextMeter

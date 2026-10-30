@@ -107,6 +107,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
         workspace.simulatorPane.openDevices = { [weak self] in self?.showDevices(nil) }
         workspace.terminalPane.openFile = { [weak self] url in self?.openFile(url, keep: true) }
         workspace.terminalPane.agents = ClaudeAgentsContext(model: agents, actions: agentActions())
+        workspace.editor.restoreDesign = { [weak self] in self?.openDesignTab() }
         workspace.terminalPane.showSkills = { [weak self] in self?.showSidebar(.skills) }
         workspace.terminalPane.showMCP = { [weak self] in self?.showSidebar(.mcp) }
         workspace.editor.onFileShown = { [weak self] url in if let url { self?.explorer.selection = url.standardizedFileURL } }
@@ -128,6 +129,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
                 showTerminal: { [weak self] in self?.showTerminalOrWaiting() },
                 showSimulator: { [weak self] in self?.workspace.focusSimulator(nil) },
                 showBrowser: { [weak self] in self?.workspace.focusBrowser(nil) },
+                showDesign: { [weak self] in self?.showDesign(nil) },
                 toggleSourceControl: { [weak self] in self?.toggleSourceControl(nil) },
                 toggleSkills: { [weak self] in self?.toggleSkills(nil) },
                 toggleExplorer: { [weak self] in self?.toggleExplorer(nil) },
@@ -201,6 +203,49 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
     @objc func newAgent(_ sender: Any?) {
         showClaude()
         agents.isComposing = true
+    }
+
+    // MARK: - Design
+
+    private var designModel: DesignModel?
+
+    /// A canvas needs the room, so the design gets the wide side of the window.
+    @objc func showDesign(_ sender: Any?) {
+        // In this order, because the wide layout brings the browser forward.
+        workspace.apply(mode: .watch, animated: true)
+        openDesignTab()
+    }
+
+    private func openDesignTab() {
+        // Closing the tab ends its chat, so each opening starts from a live model.
+        let model = workspace.editor.tabs.items.contains { $0.tab == .design } ? designModel : nil
+        let design = model ?? makeDesignModel()
+        designModel = design
+        workspace.editor.openDesign(model: design)
+    }
+
+    private func makeDesignModel() -> DesignModel {
+        let design = DesignModel(project: project.url, environment: session.terminalEnvironment, resuming: session.state.designSession)
+        design.chat.actions = ClaudeChatActions(
+            openFile: { [weak self] url in self?.openFile(url, keep: true) },
+            runInTerminal: { [weak self] command in
+                guard let self else { return }
+                workspace.showTerminalTab(workspace.terminalPane.runCommandInNewTab(command, directory: project.path))
+            }
+        )
+        design.onSessionChange = { [weak self] id in self?.session.update { $0.designSession = id } }
+        design.build = { [weak self] prompt, asAgent in
+            guard let self else { return }
+            if asAgent {
+                agents.isComposing = false
+                agentActions().create("build-design", prompt, [])
+            } else {
+                workspace.apply(mode: .balanced, animated: true)
+                workspace.terminalPane.sendToClaude(prompt)
+                workspace.updatePanesAfterTabChange()
+            }
+        }
+        return design
     }
 
     // MARK: - Agents

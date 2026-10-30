@@ -109,6 +109,7 @@ enum MainMenu {
         menu.addItem(withTitle: "Focus Terminal", action: #selector(WorkspaceSplitViewController.focusTerminal(_:)), keyEquivalent: "1")
         menu.addItem(withTitle: "Focus Simulator", action: #selector(WorkspaceSplitViewController.focusSimulator(_:)), keyEquivalent: "2")
         menu.addItem(withTitle: "Focus Browser", action: #selector(WorkspaceSplitViewController.focusBrowser(_:)), keyEquivalent: "3")
+        menu.addItem(withTitle: "Design", action: #selector(MainWindowController.showDesign(_:)), keyEquivalent: "4")
         menu.addItem(.separator())
         let fullScreen = menu.addItem(withTitle: "Enter Full Screen", action: #selector(NSWindow.toggleFullScreen(_:)), keyEquivalent: "f")
         fullScreen.keyEquivalentModifierMask = [.command, .control]
