@@ -63,6 +63,19 @@ final class BrowserTab: NSObject {
         return url.host()?.replacingOccurrences(of: "www.", with: "") ?? "New Tab"
     }
 
+    /// "https://www.acme.com/orders/42?tab=items" → "acme.com/orders/42?tab=items", so the address bar
+    /// says which route a page is on. A dev server keeps its port; hash routes stay too.
+    nonisolated static func address(_ url: URL) -> String {
+        guard let host = url.host(), let components = URLComponents(url: url, resolvingAgainstBaseURL: false) else { return url.absoluteString }
+        var text = host.hasPrefix("www.") ? String(host.dropFirst(4)) : host
+        if let port = components.port { text += ":\(port)" }
+        let path = components.percentEncodedPath
+        if path != "/" { text += path.removingPercentEncoding ?? path }
+        if let query = components.percentEncodedQuery { text += "?" + (query.removingPercentEncoding ?? query) }
+        if let fragment = components.percentEncodedFragment { text += "#" + (fragment.removingPercentEncoding ?? fragment) }
+        return text
+    }
+
     func load(_ url: URL) {
         webView.load(URLRequest(url: url))
     }

@@ -100,3 +100,16 @@ import WebKit
         window.orderOut(nil)
     }
 }
+
+
+@MainActor @Suite struct BrowserAddressTests {
+    private func address(_ text: String) throws -> String { BrowserTab.address(try #require(URL(string: text))) }
+
+    @Test func `the address bar shows the route, not just the domain`() throws {
+        #expect(try address("https://www.acme.com/orders/42?tab=items") == "acme.com/orders/42?tab=items")
+        #expect(try address("https://acme.com/") == "acme.com")
+        #expect(try address("http://localhost:3000/dashboard/settings") == "localhost:3000/dashboard/settings")
+        #expect(try address("http://localhost:5173/#/cart") == "localhost:5173#/cart")
+        #expect(try address("https://acme.com/caf%C3%A9") == "acme.com/café")
+    }
+}

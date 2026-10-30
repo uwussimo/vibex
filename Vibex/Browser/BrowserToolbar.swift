@@ -3,7 +3,8 @@ import SwiftUI
 @Observable
 final class BrowserToolbarModel {
     var urlText = ""
-    var host = ""
+    /// What the field shows when it isn't being edited: where the page is, without the scheme.
+    var address = ""
     var canGoBack = false
     var canGoForward = false
     var isLoading = false
@@ -71,16 +72,16 @@ struct BrowserToolbar: View {
                     actions.focusWebView()
                 }
                 .onChange(of: isEditing) { _, editing in
-                    if editing { draft = model.urlText } else { draft = model.host }
+                    if editing { draft = model.urlText } else { draft = model.address }
                 }
-                .onChange(of: model.host) { _, host in
-                    if !isEditing { draft = host }
+                .onChange(of: model.address) { _, address in
+                    if !isEditing { draft = address }
                 }
                 .onChange(of: model.tabID) { _, _ in
                     isEditing = false
-                    draft = model.host
+                    draft = model.address
                 }
-                .onAppear { draft = model.host }
+                .onAppear { draft = model.address }
         }
         .padding(.horizontal, 10)
         .frame(height: 28)

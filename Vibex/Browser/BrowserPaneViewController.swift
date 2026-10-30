@@ -160,7 +160,7 @@ final class BrowserPaneViewController: NSViewController, NSMenuItemValidation {
         let isBlank = tab.url.map { $0.scheme == "about" || NewTabPage.isNewTab($0) } ?? true
         toolbarModel.tabID = tab.id
         toolbarModel.urlText = isBlank ? "" : tab.url?.absoluteString ?? ""
-        toolbarModel.host = isBlank ? "" : tab.hostTitle
+        toolbarModel.address = isBlank ? "" : tab.url.map(BrowserTab.address) ?? ""
         toolbarModel.canGoBack = tab.canGoBack
         toolbarModel.canGoForward = tab.canGoForward
         toolbarModel.isLoading = tab.isLoading
