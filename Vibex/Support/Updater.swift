@@ -99,7 +99,7 @@ final class Updater {
         if let version = availableVersion { Defaults.dismissedUpdate = version }
     }
 
-    /// Installs now: the installer quits Vibex, replaces it and opens the new version.
+    /// Installs now: Vibex quits once the installer is ready, which replaces it and opens the new version.
     func restartToUpdate() {
         guard let version = availableVersion else { return }
         state = .installing(version)
@@ -164,7 +164,7 @@ final class Updater {
         environment["VIBEX_INSTALL_DIR"] = appPath.deletingLastPathComponent().path
         environment["VIBEX_UPDATE_LOG"] = log
         environment["PATH"] = "/usr/bin:/bin:/usr/sbin:/sbin"
-        if !reopen { environment["VIBEX_NO_OPEN"] = "1" }
+        if reopen { environment["VIBEX_QUITS_ITSELF"] = "1" } else { environment["VIBEX_NO_OPEN"] = "1" }
         process.environment = environment
         process.standardInput = FileHandle.nullDevice
         process.standardOutput = FileHandle.nullDevice
@@ -177,17 +177,35 @@ final class Updater {
             return
         }
         guard reopen else { return }
-        // On success the installer quits Vibex, so this only ever sees it fail.
+        // The installer waits for this process to go before it replaces the app.
         Task { [weak self] in
+            var isQuitting = false
             while process.isRunning {
-                self?.progress = Self.readProgress(log: log, from: logStart)
+                let progress = Self.readProgress(log: log, from: logStart)
+                self?.progress = progress
+                if progress.isWaitingForQuit, !isQuitting {
+                    isQuitting = true
+                    NSApp.terminate(nil)
+                }
                 try? await Task.sleep(for: .milliseconds(250))
             }
-            guard let self, process.terminationStatus != 0 else { return }
+            guard process.terminationStatus != 0 else {
+                // Installed without seeing this copy running: the new one still needs opening.
+                Self.relaunch(appPath)
+                return
+            }
             let reason = Self.readProgress(log: log, from: logStart).failure ?? "The installer stopped without saying why."
-            state = .failed(reason)
-            progress = nil
+            self?.state = .failed(reason)
+            self?.progress = nil
         }
+    }
+
+    private static func relaunch(_ app: URL) {
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/bin/sh")
+        process.arguments = ["-c", "sleep 1; /usr/bin/open \"$0\"", app.path]
+        try? process.run()
+        NSApp.terminate(nil)
     }
 
     private static func readProgress(log: String, from offset: Int) -> InstallProgress {
@@ -242,6 +260,8 @@ nonisolated struct InstallProgress: Equatable, Sendable {
     var fraction: Double?
     /// The installer's own error line.
     var failure: String?
+    /// The installer is ready and waiting for Vibex to quit.
+    var isWaitingForQuit = false
 
     init(step: Step, fraction: Double? = nil, failure: String? = nil) {
         self.step = step
@@ -257,6 +277,7 @@ nonisolated struct InstallProgress: Equatable, Sendable {
         for piece in pieces {
             if piece.contains("Checksum verified") || piece.contains("no checksum file") { step = .verifying }
             if piece.contains("Quitting the running Vibex") || piece.contains("Installing to") { step = .installing }
+            if piece.contains("Quitting the running Vibex") { isWaitingForQuit = true }
             if piece.contains("%"), let number = piece.split(separator: " ").last?.dropLast(), let percent = Double(number) { fraction = percent / 100 }
             if let range = piece.range(of: "error:", options: .caseInsensitive) {
                 failure = piece[range.upperBound...].trimmingCharacters(in: .whitespaces)

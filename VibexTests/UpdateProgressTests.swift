@@ -11,6 +11,13 @@ import Testing
         #expect(InstallProgress(log: "==> Checksum verified\n==> Installing to /Applications/Vibex.app").step == .installing)
     }
 
+    @Test func `Vibex quits only once the installer asks`() {
+        #expect(!InstallProgress(log: "==> Downloading Vibex 2.2.0\n==> Checksum verified").isWaitingForQuit)
+        let waiting = InstallProgress(log: "==> Checksum verified\n==> Quitting the running Vibex (your windows come back on relaunch)")
+        #expect(waiting.isWaitingForQuit)
+        #expect(waiting.step == .installing)
+    }
+
     @Test func `the installer's error comes through`() {
         let progress = InstallProgress(log: "==> Downloading Vibex 2.2.0\n\u{1B}[31merror:\u{1B}[0m Download failed.")
         #expect(progress.failure == "Download failed.")

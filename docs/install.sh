@@ -75,12 +75,34 @@ hdiutil attach "$tmp/Vibex.dmg" -nobrowse -readonly -quiet -mountpoint "$mount" 
 
 # Quit the copy being replaced (matched by path, so a development build elsewhere keeps running).
 running="$dest/Contents/MacOS/Vibex"
-if pgrep -f "^$running" >/dev/null 2>&1; then
-  say "Quitting the running Vibex (your windows come back on relaunch)"
-  osascript -e "tell application \"$dest\" to quit" >/dev/null 2>&1 || true
+running_pids() {
+  ps -axo pid=,comm= | awk -v path="$running" '{ pid = $1; sub(/^ *[0-9]+ /, ""); if ($0 == path) print pid }'
+}
+is_running() { [ -n "$(running_pids)" ]; }
+# Waits up to $1 half-seconds.
+wait_for_quit() {
   i=0
-  while pgrep -f "^$running" >/dev/null 2>&1 && [ $i -lt 40 ]; do sleep 0.5; i=$((i + 1)); done
-  pgrep -f "^$running" >/dev/null 2>&1 && die "Vibex is still running; quit it and run the installer again."
+  while is_running && [ "$i" -lt "$1" ]; do sleep 0.5; i=$((i + 1)); done
+  return 0
+}
+if is_running; then
+  say "Quitting the running Vibex (your windows come back on relaunch)"
+  if [ -n "${VIBEX_QUITS_ITSELF:-}" ]; then
+    # Vibex started this update and reads this log: it quits when it sees the line above.
+    wait_for_quit 60
+  else
+    # In the background because osascript can sit for two minutes waiting on a busy app.
+    osascript -e "tell application \"$dest\" to quit" >/dev/null 2>&1 &
+    asked=$!
+    wait_for_quit 20
+    kill "$asked" 2>/dev/null || true
+    # Vibex before 2.4.1 pressed Restart to Update and waits to be quit, so this can't be left to the user.
+    if is_running && [ -n "${VIBEX_UPDATE_LOG:-}" ] && [ -z "${VIBEX_NO_OPEN:-}" ]; then
+      running_pids | xargs kill 2>/dev/null || true
+      wait_for_quit 10
+    fi
+  fi
+  if is_running; then die "Vibex is still running; quit it and run the installer again."; fi
 fi
 
 say "Installing to $dest"
