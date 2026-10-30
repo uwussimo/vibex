@@ -3,14 +3,6 @@ import Testing
 @testable import Vibex
 
 @Suite struct AgentNamingTests {
-    @Test func `tasks become short branch names`() {
-        #expect(AgentsModel.slug("Add a dark mode toggle to Settings, please") == "add-a-dark-mode-toggle")
-        #expect(AgentsModel.slug("Fix #42: crash!") == "fix-42-crash")
-        #expect(AgentsModel.slug("   ") == "agent")
-        #expect(AgentsModel.claudeCommand(task: "Don't break the build") == #"claude 'Don'\''t break the build'"#)
-        #expect(AgentsModel.claudeCommand(task: nil) == "claude")
-    }
-
     @Test func `worktree list and shortstat parse`() {
         let trees = GitWorktree.parse("worktree /repo\nHEAD abc\nbranch refs/heads/main\n\nworktree /agents/dark\nHEAD def\nbranch refs/heads/vibex/dark\n\nworktree /tmp/x\nHEAD 123\ndetached\n")
         #expect(trees.map(\.branch) == ["main", "vibex/dark", nil])

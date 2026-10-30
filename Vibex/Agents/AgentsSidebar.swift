@@ -1,8 +1,8 @@
 import SwiftUI
 
-/// What the window does for the Agents sidebar: terminal tabs, Source Control, confirmations.
+/// What the window does for the Agents sidebar: chat tabs, Source Control, confirmations.
 struct AgentActions {
-    /// Creates an agent and opens its terminal (running Claude with the task when there is one).
+    /// Creates an agent and opens its Claude chat, starting on the task when there is one.
     var create: (_ name: String, _ task: String?) -> Void
     var open: (AgentsModel.Agent) -> Void
     var review: (AgentsModel.Agent) -> Void
@@ -11,8 +11,10 @@ struct AgentActions {
     var reveal: (AgentsModel.Agent) -> Void
     /// What the agent's Claude is waiting for, if anything.
     var waiting: (AgentsModel.Agent) -> String?
-    /// Whether one of the agent's terminal tabs is open.
+    /// Whether the agent has a tab open.
     var isOpen: (AgentsModel.Agent) -> Bool
+    /// Whether the agent's Claude is in the middle of a turn.
+    var isWorking: (AgentsModel.Agent) -> Bool
 }
 
 /// The Agents sidebar: parallel Claude Code attempts, each on its own branch and worktree.
@@ -40,7 +42,7 @@ struct AgentsSidebar: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .onAppear(perform: model.refresh)
         .task {
-            // Agents work in their own terminals; keep their numbers fresh while the panel is open.
+            // Agents work in their own tabs; keep their numbers fresh while the panel is open.
             while !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(4))
                 model.refresh()
@@ -232,7 +234,7 @@ private struct AgentCard: View {
                 Text(agent.name).font(.vibex(size: 13, weight: .semibold)).foregroundStyle(Theme.text).lineLimit(1)
                 Spacer(minLength: 4)
                 Menu {
-                    Button("Open Terminal") { actions.open(agent) }
+                    Button("Open Chat") { actions.open(agent) }
                     Button("Show in Finder") { actions.reveal(agent) }
                     Divider()
                     Button("Remove Agent…", role: .destructive) { actions.remove(agent) }
@@ -260,6 +262,12 @@ private struct AgentCard: View {
                 .background(Capsule().fill(Theme.orange.opacity(0.12)))
                 .onTapGesture { actions.open(agent) }
             }
+            if waiting == nil, actions.isWorking(agent) {
+                HStack(spacing: 6) {
+                    ProgressView().controlSize(.mini)
+                    Text("Working…").font(.vibex(size: 11.5)).foregroundStyle(Theme.muted)
+                }
+            }
             stats
             HStack(spacing: 6) {
                 Button { actions.review(agent) } label: {
@@ -279,7 +287,7 @@ private struct AgentCard: View {
                 .disabled(agent.stats.isEmpty || isBusy)
                 .help("Commit what's left and merge \(agent.branch) into \(base ?? "the base branch")")
                 Spacer()
-                ToolbarIconButton(icon: .terminal, help: isOpen ? "Show Terminal" : "Open Terminal") { actions.open(agent) }
+                ToolbarIconButton(icon: .message, help: isOpen ? "Show Chat" : "Open Chat") { actions.open(agent) }
             }
         }
         .padding(12)

@@ -63,7 +63,7 @@ import Testing
         var state = ProjectState()
         state.browserTabURLs = ["about:blank"]
         state.terminalDirectories = [folder.path]
-        state.claudeSessions = ["restored-session"]
+        state.claudeChats = [ClaudeChatState(session: "restored-session", folder: folder.path, name: nil)]
         store.save(state, for: project)
         let session = ProjectSession(project: project, store: store)
         let controller = MainWindowController(session: session)
@@ -77,7 +77,7 @@ import Testing
         // A saved chat comes back beside the saved terminal, and both stay saved.
         #expect(pane.tabBarModel.tabs.map(\.isClaude) == [false, true])
         pane.persistTabs()
-        #expect(session.state.claudeSessions == ["restored-session"])
+        #expect(session.state.claudeChats?.map(\.session) == ["restored-session"])
         #expect(session.state.terminalDirectories.count == 1)
 
         pane.selectTab(pane.tabBarModel.tabs[0].id)

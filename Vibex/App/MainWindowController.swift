@@ -212,8 +212,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
                 guard let self else { return }
                 Task {
                     guard let folder = await self.agents.create(name: name, task: task) else { return }
-                    let id = self.workspace.terminalPane.openTab(in: folder, command: task.map { AgentsModel.claudeCommand(task: $0) })
-                    self.workspace.showTerminalTab(id)
+                    self.workspace.showTerminalTab(self.workspace.terminalPane.openAgentChat(in: folder, name: name, task: task))
                 }
             },
             open: { [weak self] agent in
@@ -221,7 +220,10 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
                 if let id = workspace.terminalPane.tabIDs(inside: agent.path).first {
                     workspace.showTerminalTab(id)
                 } else {
-                    workspace.showTerminalTab(workspace.terminalPane.openTab(in: agent.path, command: "claude --continue"))
+                    Task {
+                        let session = await ClaudeTranscript.latestSession(folder: agent.path.path)
+                        self.workspace.showTerminalTab(self.workspace.terminalPane.openAgentChat(in: agent.path, name: agent.name, task: nil, resuming: session))
+                    }
                 }
             },
             review: { [weak self] agent in
@@ -237,7 +239,8 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
                 let tabs = workspace.terminalPane.tabIDs(inside: agent.path)
                 return tabs.lazy.compactMap { AttentionCenter.shared.waiting[$0]?.message }.first
             },
-            isOpen: { [weak self] agent in !(self?.workspace.terminalPane.tabIDs(inside: agent.path).isEmpty ?? true) }
+            isOpen: { [weak self] agent in !(self?.workspace.terminalPane.tabIDs(inside: agent.path).isEmpty ?? true) },
+            isWorking: { [weak self] agent in self?.workspace.terminalPane.chat(inside: agent.path)?.isBusy == true }
         )
     }
 
@@ -264,7 +267,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
         guard let window else { return }
         let alert = NSAlert()
         alert.messageText = "Remove \(agent.name)?"
-        alert.informativeText = "Its folder and terminal tabs close. The branch \(agent.branch) is deleted only if it was merged; otherwise Vibex keeps it."
+        alert.informativeText = "Its folder, chat and terminal tabs close. The branch \(agent.branch) is deleted only if it was merged; otherwise Vibex keeps it."
         alert.alertStyle = .warning
         alert.addButton(withTitle: "Remove").hasDestructiveAction = true
         alert.addButton(withTitle: "Cancel")

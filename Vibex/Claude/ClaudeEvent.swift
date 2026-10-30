@@ -33,6 +33,7 @@ nonisolated enum ClaudeEvent: Equatable, Sendable {
     case toolUse(ClaudeToolUse)
     case toolResult(ClaudeToolResult)
     case userText(String)
+    case userImages([Data])
     case permission(ClaudePermissionRequest)
     case permissionCancelled(String)
     case turnEnded(seconds: Double, isError: Bool, message: String?)
@@ -95,6 +96,10 @@ nonisolated enum ClaudeEvent: Equatable, Sendable {
         switch block["type"] as? String {
         case "text":
             return userEvent(block["text"] as? String ?? "")
+        case "image":
+            guard let source = block["source"] as? [String: Any], let base64 = source["data"] as? String,
+                  let data = Data(base64Encoded: base64) else { return [] }
+            return [.userImages([data])]
         case "tool_result":
             guard let id = block["tool_use_id"] as? String else { return [] }
             var text = block["content"] as? String ?? ""
@@ -131,8 +136,13 @@ nonisolated enum ClaudeEvent: Equatable, Sendable {
 
 /// The lines Vibex writes to Claude's stdin.
 nonisolated enum ClaudeMessage {
-    static func user(_ text: String) -> String {
-        json(["type": "user", "message": ["role": "user", "content": text]])
+    static func user(_ text: String, images: [ClaudeAttachment.Image] = []) -> String {
+        guard !images.isEmpty else { return json(["type": "user", "message": ["role": "user", "content": text]]) }
+        var content: [[String: Any]] = images.map { image in
+            ["type": "image", "source": ["type": "base64", "media_type": image.mediaType, "data": image.data.base64EncodedString()]]
+        }
+        if !text.isEmpty { content.append(["type": "text", "text": text]) }
+        return json(["type": "user", "message": ["role": "user", "content": content]])
     }
 
     static func allow(requestID: String, input: Data, permissions: Data? = nil) -> String {
@@ -172,6 +182,18 @@ nonisolated enum ClaudeTranscript {
     static func file(session: String, folder: String, home: URL = FileManager.default.homeDirectoryForCurrentUser) -> URL {
         let slug = String(folder.map { $0.isLetter && $0.isASCII || $0.isNumber ? $0 : "-" })
         return home.appendingPathComponent(".claude/projects/\(slug)/\(session).jsonl")
+    }
+
+    /// The newest session in a folder, to pick an agent's conversation back up.
+    @concurrent static func latestSession(folder: String) async -> String? {
+        let directory = file(session: "x", folder: folder).deletingLastPathComponent()
+        let files = (try? FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: [.contentModificationDateKey])) ?? []
+        return files.filter { $0.pathExtension == "jsonl" }
+            .max { a, b in
+                let dates = [a, b].map { (try? $0.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate) ?? .distantPast }
+                return dates[0] < dates[1]
+            }?
+            .deletingPathExtension().lastPathComponent
     }
 
     @concurrent static func load(session: String, folder: String) async -> [ClaudeEvent] {

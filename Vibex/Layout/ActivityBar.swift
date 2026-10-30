@@ -24,8 +24,11 @@ struct ActivityBar: View {
                 icon: .sparkles,
                 logo: .claude,
                 label: "Claude",
-                help: "Claude (⌃⇧C for a new chat)",
+                help: chatsWaiting > 0
+                    ? "Claude needs you in \(chatsWaiting) chat\(chatsWaiting == 1 ? "" : "s")"
+                    : "Claude (⌃⇧C for a new chat)",
                 isSelected: panes.terminal && leftTabs.isClaudeSelected,
+                attention: chatsWaiting,
                 action: actions.showClaude
             )
             ActivityButton(
@@ -111,7 +114,9 @@ struct ActivityBar: View {
         }
     }
 
-    private var waiting: Int { attention.count(windowID: windowID) }
+    private var chatsWaiting: Int { leftTabs.tabs.count { $0.isClaude && $0.needsAttention } }
+    /// Terminal tabs waiting on the user; chats count on the Claude button.
+    private var waiting: Int { max(0, attention.count(windowID: windowID) - chatsWaiting) }
 
     /// Space plus a hairline: the panes above, the sidebar views below.
     private var groupDivider: some View {

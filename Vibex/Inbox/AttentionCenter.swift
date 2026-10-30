@@ -47,6 +47,27 @@ final class AttentionCenter {
             return Event(name: name, message: object["message"] as? String, tool: object["tool_name"] as? String, toolDetail: detail)
         }
 
+        /// A request in a native Claude chat, in the terms a hook would have used.
+        init(chatRequest request: ClaudePermissionRequest) {
+            let input = request.tool.input
+            switch request.tool.name {
+            case "AskUserQuestion":
+                let questions = input["questions"].flatMap { try? JSONSerialization.jsonObject(with: Data($0.utf8)) } as? [[String: Any]]
+                self.init(name: .notification, message: questions?.first?["question"] as? String ?? "Claude has a question for you")
+            case "ExitPlanMode":
+                self.init(name: .notification, message: "Claude's plan is ready for you to review")
+            default:
+                self.init(name: .permissionRequest, tool: request.tool.name, toolDetail: input["command"] ?? input["file_path"] ?? input["url"] ?? input["pattern"])
+            }
+        }
+
+        init(name: Name, message: String? = nil, tool: String? = nil, toolDetail: String? = nil) {
+            self.name = name
+            self.message = message
+            self.tool = tool
+            self.toolDetail = toolDetail
+        }
+
         /// The line shown in the inbox for a waiting event, or nil for events that end the wait.
         var waitingMessage: (Item.Kind, String)? {
             switch name {

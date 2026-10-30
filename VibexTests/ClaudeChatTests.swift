@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import Testing
 @testable import Vibex
@@ -80,5 +81,59 @@ import Testing
         #expect(ClaudeEvent.parse(#"{"type":"user","message":{"content":"<command-name>/clear</command-name>"}}"#).isEmpty)
         #expect(ClaudeEvent.parse(#"{"type":"user","isMeta":true,"message":{"content":"hidden"}}"#).isEmpty)
         #expect(ClaudeEvent.parse(#"{"type":"user","message":{"content":"Fix the bug"}}"#) == [.userText("Fix the bug")])
+    }
+
+    @Test func `images go as content blocks and files as paths`() throws {
+        let image = ClaudeAttachment.Image(data: Data("png".utf8), mediaType: "image/png")
+        let line = ClaudeMessage.user("Look", images: [image])
+        let object = try #require(try JSONSerialization.jsonObject(with: Data(line.utf8)) as? [String: Any])
+        let content = try #require((object["message"] as? [String: Any])?["content"] as? [[String: Any]])
+        #expect(content.map { $0["type"] as? String } == ["image", "text"])
+        #expect((content[0]["source"] as? [String: String])?["media_type"] == "image/png")
+        #expect(ClaudeChatModel.message("Fix it", files: [URL(fileURLWithPath: "/a/b.log")]) == "Fix it\n\nAttached files:\n- /a/b.log")
+        #expect(ClaudeChatModel.message("Fix it", files: []) == "Fix it")
+        #expect(ClaudeEvent.parse(#"{"type":"user","message":{"content":[{"type":"image","source":{"data":"\#(image.data.base64EncodedString())"}}]}}"#) == [.userImages([image.data])])
+    }
+
+    @Test func `an attachment is an image only if it is one`() throws {
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent("attach-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let rep = try #require(NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: 3000, pixelsHigh: 100, bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false, colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0))
+        let large = folder.appendingPathComponent("wide.png"), small = folder.appendingPathComponent("small.png"), log = folder.appendingPathComponent("run.log")
+        try rep.representation(using: .png, properties: [:])?.write(to: large)
+        let tiny = try #require(NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: 4, pixelsHigh: 4, bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false, colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0))
+        try tiny.representation(using: .png, properties: [:])?.write(to: small)
+        try Data("hello".utf8).write(to: log)
+        guard case let .image(kept, _) = ClaudeAttachment(url: small).kind else { Issue.record("not an image"); return }
+        #expect(kept.mediaType == "image/png")
+        guard case let .image(shrunk, _) = ClaudeAttachment(url: large).kind else { Issue.record("not an image"); return }
+        #expect(shrunk.mediaType == "image/jpeg")
+        #expect(NSBitmapImageRep(data: shrunk.data)?.pixelsWide == 2000)
+        #expect(ClaudeAttachment(url: log).kind == .file(log.standardizedFileURL))
+    }
+
+    @Test func `a chat's requests read like a hook's`() {
+        func request(_ name: String, _ input: [String: String]) -> ClaudePermissionRequest {
+            ClaudePermissionRequest(id: "r", tool: ClaudeToolUse(id: "t", name: name, input: input), rawInput: Data(), suggestions: nil)
+        }
+        #expect(AttentionCenter.Event(chatRequest: request("Bash", ["command": "npm test"])).waitingMessage?.1 == "Allow Bash: npm test?")
+        let question = request("AskUserQuestion", ["questions": #"[{"question":"Which color?","options":[]}]"#])
+        #expect(AttentionCenter.Event(chatRequest: question).waitingMessage?.1 == "Which color?")
+        #expect(AttentionCenter.Event(chatRequest: request("ExitPlanMode", [:])).waitingMessage?.0 == .question)
+    }
+
+    @Test func `the latest session in a folder is the one to resume`() async throws {
+        let folder = "/tmp/vibex-latest-\(UUID().uuidString)"
+        let directory = ClaudeTranscript.file(session: "x", folder: folder).deletingLastPathComponent()
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        for (index, name) in ["older", "newer"].enumerated() {
+            let file = directory.appendingPathComponent(name + ".jsonl")
+            try Data().write(to: file)
+            try FileManager.default.setAttributes([.modificationDate: Date(timeIntervalSince1970: Double(1000 + index))], ofItemAtPath: file.path)
+        }
+        #expect(await ClaudeTranscript.latestSession(folder: folder) == "newer")
+        #expect(await ClaudeTranscript.latestSession(folder: "/tmp/nothing-\(UUID().uuidString)") == nil)
     }
 }

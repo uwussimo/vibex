@@ -6,6 +6,7 @@ struct ClaudeChatView: View {
     let model: ClaudeChatModel
     let openFile: (URL) -> Void
     let openTerminal: () -> Void
+    @State private var isDropTargeted = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -17,6 +18,20 @@ struct ClaudeChatView: View {
             ClaudeComposer(model: model)
         }
         .background(Theme.background)
+        .overlay {
+            if isDropTargeted {
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .strokeBorder(Theme.accent, lineWidth: 2)
+                    .padding(6)
+                    .allowsHitTesting(false)
+            }
+        }
+        .dropDestination(for: URL.self) { urls, _ in
+            let files = urls.filter(\.isFileURL)
+            model.attachments += files.map(ClaudeAttachment.init(url:))
+            model.focusComposer()
+            return !files.isEmpty
+        } isTargeted: { isDropTargeted = $0 }
     }
 
     private var transcript: some View {
@@ -62,6 +77,22 @@ struct ClaudeChatView: View {
                     .padding(.horizontal, 12)
                     .padding(.vertical, 8)
                     .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Theme.raised))
+            }
+        case let .attachments(images, files):
+            HStack(spacing: 6) {
+                Spacer(minLength: 60)
+                ForEach(files, id: \.self) { file in
+                    ClaudeFileChip(name: file)
+                }
+                ForEach(Array(images.enumerated()), id: \.offset) { _, data in
+                    if let image = NSImage(data: data) {
+                        Image(nsImage: image)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(maxWidth: 220, maxHeight: 180)
+                            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                    }
+                }
             }
         case let .text(text):
             MarkdownView(document: MarkdownDocument(text))
@@ -146,6 +177,7 @@ private struct ClaudeChatEmptyState: View {
 private struct ClaudeComposer: View {
     let model: ClaudeChatModel
     @State private var text = ""
+    @State private var pasteMonitor: Any?
     @FocusState private var isFocused: Bool
 
     private var matches: [String] {
@@ -168,6 +200,19 @@ private struct ClaudeComposer: View {
                 }
                 .buttonStyle(.plain)
             }
+            if !model.attachments.isEmpty {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 6) {
+                        ForEach(model.attachments) { attachment in
+                            ClaudeAttachmentChip(attachment: attachment) {
+                                model.attachments.removeAll { $0.id == attachment.id }
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 10)
+                }
+                .padding(.top, 10)
+            }
             TextField("Ask Claude to build, fix or explain…", text: $text, axis: .vertical)
                 .textFieldStyle(.plain)
                 .font(.vibex(size: 13.5))
@@ -185,6 +230,14 @@ private struct ClaudeComposer: View {
                     return .handled
                 }
             HStack(spacing: 6) {
+                Button(action: chooseFiles) {
+                    IconView(.plus, size: 15)
+                        .foregroundStyle(Theme.muted)
+                        .frame(width: 24, height: 24)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .help("Attach images or files. You can also drop them here, or paste a screenshot.")
                 picker(model.mode.title, icon: model.mode == .plan ? .book : (model.mode == .acceptEdits ? .zap : .lock), help: "When Claude asks before acting") {
                     ForEach(ClaudeChatModel.Mode.allCases) { mode in
                         Button(mode.title) { model.mode = mode }
@@ -232,10 +285,40 @@ private struct ClaudeComposer: View {
         .padding(.top, 4)
         .frame(maxWidth: .infinity)
         .onChange(of: model.focusRequest) { isFocused = true }
-        .onAppear { isFocused = true }
+        .onAppear {
+            isFocused = true
+            // The text field would swallow ⌘V and beep on an image, so look first.
+            pasteMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+                guard isFocused, event.modifierFlags.intersection(.deviceIndependentFlagsMask) == .command,
+                      event.charactersIgnoringModifiers == "v" else { return event }
+                let pasted = ClaudeAttachment.fromPasteboard()
+                guard !pasted.isEmpty else { return event }
+                model.attachments += pasted
+                return nil
+            }
+        }
+        .onDisappear {
+            if let pasteMonitor { NSEvent.removeMonitor(pasteMonitor) }
+            pasteMonitor = nil
+        }
     }
 
-    private var canSend: Bool { !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+    private var canSend: Bool {
+        !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || !model.attachments.isEmpty
+    }
+
+    private func chooseFiles() {
+        let panel = NSOpenPanel()
+        panel.allowsMultipleSelection = true
+        panel.canChooseDirectories = true
+        panel.directoryURL = URL(fileURLWithPath: model.folder)
+        panel.prompt = "Attach"
+        panel.begin { response in
+            guard response == .OK else { return }
+            model.attachments += panel.urls.map(ClaudeAttachment.init(url:))
+            model.focusComposer()
+        }
+    }
 
     private func submit() {
         guard canSend else { return }
@@ -259,6 +342,60 @@ private struct ClaudeComposer: View {
         .menuIndicator(.hidden)
         .fixedSize()
         .help(help)
+    }
+}
+
+// MARK: - Attachments
+
+private struct ClaudeFileChip: View {
+    let name: String
+
+    var body: some View {
+        HStack(spacing: 5) {
+            IconView(.file, size: 13).foregroundStyle(Theme.muted)
+            Text(name).font(.vibex(size: 12)).foregroundStyle(Theme.text).lineLimit(1).truncationMode(.middle)
+        }
+        .padding(.horizontal, 9)
+        .frame(height: 30)
+        .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Theme.raised))
+    }
+}
+
+private struct ClaudeAttachmentChip: View {
+    let attachment: ClaudeAttachment
+    let remove: () -> Void
+
+    var body: some View {
+        Group {
+            switch attachment.kind {
+            case let .image(image, _):
+                if let picture = NSImage(data: image.data) {
+                    Image(nsImage: picture)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: 44, height: 44)
+                        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                }
+            case let .file(url):
+                ClaudeFileChip(name: url.lastPathComponent).padding(.vertical, 7)
+            }
+        }
+        .overlay(alignment: .topTrailing) {
+            Button(action: remove) {
+                IconView(.close, size: 9)
+                    .foregroundStyle(Theme.text)
+                    .frame(width: 16, height: 16)
+                    .background(Circle().fill(Theme.background))
+                    .overlay(Circle().strokeBorder(Theme.lineStrong))
+                    .frame(width: 22, height: 22)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .offset(x: 6, y: -6)
+            .help("Remove")
+        }
+        .padding(.top, 5)
+        .padding(.trailing, 5)
     }
 }
 

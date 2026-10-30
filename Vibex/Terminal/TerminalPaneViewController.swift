@@ -150,9 +150,9 @@ final class TerminalPaneViewController: NSViewController {
         guard !hasRestored else { return }
         hasRestored = true
         let directories = session.state.terminalDirectories.filter { FileManager.default.fileExists(atPath: $0) }
-        let chats = session.state.claudeSessions ?? []
+        let chats = (session.state.claudeChats ?? []).filter { FileManager.default.fileExists(atPath: $0.folder) }
         for directory in directories { openTab(directory: directory) }
-        for chat in chats { openChat(resuming: chat) }
+        for chat in chats { openChat(in: chat.folder, name: chat.name, resuming: chat.session) }
         if directories.isEmpty, chats.isEmpty, session.state.terminalClosed != true {
             // A new project starts with Claude if it's here; otherwise with a shell to install it from.
             if ClaudeCodeRegistrar.findClaude() != nil { openChat() } else { openTab(directory: session.project.path) }
@@ -202,20 +202,43 @@ final class TerminalPaneViewController: NSViewController {
 
     // MARK: - Claude chats
 
-    /// Shows the Claude chat this project already has, or starts one.
+    /// Shows the chat that's waiting on the user, or the one this project already has, or starts one.
     func showClaude() {
         hasRestored = true
-        if let chat = tabs.first(where: { $0.chat != nil }) { select(chat.id) } else { openChat() }
+        let chats = tabs.filter { $0.chat != nil }
+        if let chat = chats.first(where: { $0.chat?.needsAttention == true }) ?? chats.first(where: { $0.chat?.name == nil }) {
+            select(chat.id)
+        } else {
+            openChat()
+        }
         focusCurrentTerminal()
     }
 
     @objc func newClaudeChat(_ sender: Any?) { openChat() }
 
+    /// A chat for an agent, in its worktree. Edits there can't touch the project until it's merged,
+    /// so they don't stop to ask; commands still do.
     @discardableResult
-    private func openChat(resuming sessionID: String? = nil) -> UUID {
+    func openAgentChat(in folder: URL, name: String, task: String?, resuming sessionID: String? = nil) -> UUID {
+        let id = openChat(in: folder.path, name: name, resuming: sessionID)
+        if let chat = tabs.first(where: { $0.id == id })?.chat {
+            chat.mode = .acceptEdits
+            if let task { chat.send(task) }
+        }
+        return id
+    }
+
+    /// The chat running in `folder`, for an agent's status.
+    func chat(inside folder: URL) -> ClaudeChatModel? {
+        let ids = Set(tabIDs(inside: folder))
+        return tabs.first { ids.contains($0.id) && $0.chat != nil }?.chat
+    }
+
+    @discardableResult
+    private func openChat(in folder: String? = nil, name: String? = nil, resuming sessionID: String? = nil) -> UUID {
         hasRestored = true
         if session.state.terminalClosed == true { session.update { $0.terminalClosed = false } }
-        let model = ClaudeChatModel(folder: session.project.path, environment: session.terminalEnvironment, resuming: sessionID)
+        let model = ClaudeChatModel(folder: folder ?? session.project.path, environment: session.terminalEnvironment, resuming: sessionID, name: name)
         let host = NSHostingView(rootView: ClaudeChatView(
             model: model,
             openFile: { [weak self] url in self?.openFile(url) },
@@ -227,6 +250,7 @@ final class TerminalPaneViewController: NSViewController {
         model.onChange = { [weak self, weak tab, weak model] in
             guard let self, let tab, let model else { return }
             tab.title = model.title
+            reportAttention(tab: tab.id, chat: model)
             syncTabBar()
             persistTabs()
         }
@@ -234,6 +258,16 @@ final class TerminalPaneViewController: NSViewController {
         syncTabBar()
         select(tab.id)
         return tab.id
+    }
+
+    /// A chat's approvals go through the same inbox as Claude's hooks in a terminal: the tab's dot, the
+    /// activity bar's count, the menu bar's list, and a notification when the user isn't looking.
+    private func reportAttention(tab: UUID, chat: ClaudeChatModel) {
+        guard let request = chat.permissions.first else {
+            AttentionCenter.shared.clear(tab)
+            return
+        }
+        AttentionCenter.shared.handle(AttentionCenter.Event(chatRequest: request), tabID: tab, windowID: session.windowID)
     }
 
     private func makeTerminalView() -> LocalProcessTerminalView {
@@ -418,10 +452,14 @@ final class TerminalPaneViewController: NSViewController {
 
     func persistTabs() {
         let directories = tabs.filter { $0.fixedTitle == nil && $0.terminal != nil }.compactMap(\.directory)
-        let chats = tabs.compactMap { $0.chat?.sessionID }
+        let chats = tabs.compactMap { tab in
+            tab.chat.flatMap { chat in
+                chat.sessionID.map { ClaudeChatState(session: $0, folder: chat.folder, name: chat.name) }
+            }
+        }
         session.update {
             $0.terminalDirectories = directories
-            $0.claudeSessions = chats
+            $0.claudeChats = chats
         }
     }
 

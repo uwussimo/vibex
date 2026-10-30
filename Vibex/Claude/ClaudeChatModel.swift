@@ -10,6 +10,7 @@ final class ClaudeChatModel {
     struct Item: Identifiable, Equatable {
         enum Kind: Equatable {
             case user(String)
+            case attachments(images: [Data], files: [String])
             case text(String)
             case tool(ClaudeToolUse, ClaudeToolResult?)
             case notice(String, isError: Bool)
@@ -51,6 +52,10 @@ final class ClaudeChatModel {
     private(set) var slashCommands: [String] = []
     private(set) var title = "Claude"
     private(set) var isLoadingHistory = false
+    /// Added to the next message.
+    var attachments: [ClaudeAttachment] = []
+    /// A fixed tab title (an agent's name) rather than the first thing asked.
+    let name: String?
     var mode = Mode.ask {
         didSet { if mode != oldValue { write(ClaudeMessage.control("set_permission_mode", ["mode": mode.rawValue])) } }
     }
@@ -69,10 +74,12 @@ final class ClaudeChatModel {
     private var streaming: UUID?
     private var toolItems: [String: UUID] = [:]
 
-    init(folder: String, environment: [String: String], resuming session: String? = nil) {
+    init(folder: String, environment: [String: String], resuming session: String? = nil, name: String? = nil) {
         self.folder = folder
         self.environment = environment
+        self.name = name
         sessionID = session
+        if let name { title = name }
         if let session { loadHistory(session) }
     }
 
@@ -87,16 +94,40 @@ final class ClaudeChatModel {
 
     func send(_ text: String) {
         let text = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !text.isEmpty else { return }
+        let attached = attachments
+        guard !text.isEmpty || !attached.isEmpty else { return }
+        attachments = []
         if title == "Claude" {
-            title = text.count > 28 ? String(text.prefix(27)) + "…" : text
+            noteTitle(text.isEmpty ? "Attachment" : text)
             onChange()
         }
-        items.append(Item(kind: .user(text)))
+        var images: [ClaudeAttachment.Image] = []
+        var files: [URL] = []
+        for attachment in attached {
+            switch attachment.kind {
+            case let .image(image, _): images.append(image)
+            case let .file(url): files.append(url)
+            }
+        }
+        if !attached.isEmpty {
+            items.append(Item(kind: .attachments(images: images.map(\.data), files: files.map(\.lastPathComponent))))
+        }
+        if !text.isEmpty { items.append(Item(kind: .user(text))) }
         isBusy = true
         streaming = nil
         if process?.isRunning != true { start() }
-        write(ClaudeMessage.user(text))
+        write(ClaudeMessage.user(Self.message(text, files: files), images: images))
+    }
+
+    /// Files reach Claude as paths, which it reads with its own tools.
+    nonisolated static func message(_ text: String, files: [URL]) -> String {
+        guard !files.isEmpty else { return text }
+        let list = files.map { "- \($0.path)" }.joined(separator: "\n")
+        return (text.isEmpty ? "" : text + "\n\n") + "Attached files:\n" + list
+    }
+
+    private func noteTitle(_ text: String) {
+        title = text.count > 28 ? String(text.prefix(27)) + "…" : text
     }
 
     func stopTurn() { write(ClaudeMessage.control("interrupt")) }
@@ -167,7 +198,9 @@ final class ClaudeChatModel {
             items[index].kind = .tool(tool, result)
         case let .userText(text):
             if items.last?.kind != .user(text) { items.append(Item(kind: .user(text))) }
-            if title == "Claude" { title = text.count > 28 ? String(text.prefix(27)) + "…" : text }
+            if title == "Claude" { noteTitle(text) }
+        case let .userImages(images):
+            items.append(Item(kind: .attachments(images: images, files: [])))
         case let .permission(request):
             permissions.append(request)
             onChange()

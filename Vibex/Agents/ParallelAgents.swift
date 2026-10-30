@@ -188,9 +188,4 @@ final class AgentsModel {
         return true
     }
 
-    /// `claude 'Add a dark mode toggle'`, quoted for any POSIX shell.
-    nonisolated static func claudeCommand(task: String?) -> String {
-        guard let task, !task.isEmpty else { return "claude" }
-        return "claude '" + task.replacingOccurrences(of: "'", with: #"'\''"#) + "'"
-    }
 }

@@ -50,8 +50,8 @@ nonisolated struct ProjectState: Codable, Equatable, Sendable {
     var editorTab: String?
     /// The user closed every tab of the pane; it stays closed until reopened from the activity bar.
     var terminalClosed: Bool?
-    /// Claude chat tabs, by Claude Code session id.
-    var claudeSessions: [String]?
+    /// Claude chat tabs, to reload and resume.
+    var claudeChats: [ClaudeChatState]?
     var browserClosed: Bool?
     /// The simulators in the Devices tab, by UDID.
     var matrixDevices: [String]?
@@ -75,4 +75,11 @@ nonisolated struct ProjectState: Codable, Equatable, Sendable {
             manualWidths = newValue.map { [Double($0.terminal), Double($0.editor)] }
         }
     }
+}
+
+/// A Claude chat tab: its session, the folder it runs in (an agent's worktree, say) and any fixed name.
+nonisolated struct ClaudeChatState: Codable, Equatable, Sendable {
+    var session: String
+    var folder: String
+    var name: String?
 }
