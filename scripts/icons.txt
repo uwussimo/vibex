@@ -80,4 +80,7 @@ rocket Rocket01
 target Target04
 flag Flag05
 hardDrive HardDrive
+layers LayersThree01
+palette Palette
+eyeOff EyeOff
 moon Moon01

@@ -94,6 +94,39 @@ nonisolated struct DesignShadow: Equatable, Sendable {
     }
 }
 
+/// Where an element is defined in the kit: a component's name and the path inside it.
+nonisolated struct DesignMainRef: Equatable, Sendable {
+    var component: String
+    var path: [Int]
+}
+
+/// Number tokens, written `$md`: corner sizes, and spacing for padding and gaps. Changing one reaches
+/// everything that uses it.
+nonisolated struct DesignScales: Equatable, Sendable {
+    var radii: [String: Double] = [:]
+    var spacing: [String: Double] = [:]
+
+    init(radii: [String: Double] = [:], spacing: [String: Double] = [:]) {
+        self.radii = radii
+        self.spacing = spacing
+    }
+
+    func value(_ text: String, isRadius: Bool) -> Double? {
+        guard text.hasPrefix("$") else { return nil }
+        return (isRadius ? radii : spacing)[String(text.dropFirst())]
+    }
+
+    /// Padding, with any tokens in it turned to numbers.
+    func resolved(_ value: Any?) -> Any? {
+        switch value {
+        case let text as String: self.value(text, isRadius: false)
+        case let list as [Any]: list.map { resolved($0) ?? 0 }
+        case let sides as [String: Any]: sides.mapValues { resolved($0) ?? 0 }
+        default: value
+        }
+    }
+}
+
 /// One element of a screen. The format forgives: Claude may write `vstack` or `column`,
 /// `cornerRadius` or `radius`. It's a design tool, and a missing style shouldn't lose a screen.
 nonisolated struct DesignNode: Equatable, Sendable {
@@ -143,6 +176,27 @@ nonisolated struct DesignNode: Equatable, Sendable {
     var x: Double?
     var y: Double?
     var clips = false
+    /// The element's own name, for the layer list.
+    var name: String?
+    var isHidden = false
+    /// A number written as a `$token`, so editing can show the token rather than what it resolved to.
+    var radiusToken: String?
+
+    // Where this element came from, which is what editing it needs to know.
+
+    /// Its place in the drawn tree: child indexes from the screen's root.
+    var path: [Int] = []
+    /// The kit component this element is a use of.
+    var component: String?
+    /// The variant it's showing, and the ones its component offers.
+    var activeVariant: String?
+    var variantNames: [String] = []
+    /// Its definition in the kit, when it's from one or sits inside one.
+    var main: DesignMainRef?
+    /// The path of the outermost use of a component it's part of. Nil for an element the screen owns.
+    var instance: [Int]?
+    /// A type that's neither built in nor in the kit.
+    var unknownType: String?
 
     private static let kinds: [String: Kind] = [
         "column": .column, "vstack": .column, "stack": .column, "col": .column, "view": .column, "container": .column, "box": .column, "card": .column, "section": .column, "div": .column,
@@ -160,40 +214,102 @@ nonisolated struct DesignNode: Equatable, Sendable {
     ]
 
     /// `styles` are shared bundles of properties and `components` shared elements, from design.json.
-    init(_ raw: [String: Any], styles: [String: [String: Any]] = [:], components: [String: [String: Any]] = [:], depth: Int = 0) {
+    init(_ raw: [String: Any], styles: [String: [String: Any]] = [:], components: [String: [String: Any]] = [:], scales: DesignScales = DesignScales()) {
+        self.init(raw, library: Library(styles: styles, components: components, scales: scales), path: [], overrides: [:], owner: Owner())
+    }
+
+    private struct Library {
+        let styles: [String: [String: Any]]
+        let components: [String: [String: Any]]
+        let scales: DesignScales
+    }
+
+    /// Which definition and which use of a component an element belongs to.
+    private struct Owner {
+        var main: DesignMainRef?
+        var instance: [Int]?
+    }
+
+    private init(_ raw: [String: Any], library: Library, path: [Int], overrides inherited: [String: [String: Any]], owner: Owner) {
         var object = raw
+        // A use's overrides reach down the tree, and the outermost says last.
+        if let here = inherited[""] { object.merge(here) { $1 } }
+        var overrides = (object.removeValue(forKey: "overrides") as? [String: [String: Any]]) ?? [:]
+        overrides.merge(inherited) { $1 }
+        overrides[""] = nil
+
+        var component: String?
+        var activeVariant: String?
+        var variantNames: [String] = []
+        var childOwner: String?
         // A component's properties sit under the element's own. The limit stops one that uses itself.
         for _ in 0..<12 {
-            guard let name = (object["type"] as? String) ?? (object["component"] as? String), let component = components[name] else { break }
-            var merged = component.merging(object) { $1 }
-            merged["type"] = component["type"]
+            guard let name = (object["type"] as? String) ?? (object["component"] as? String), var definition = library.components[name] else { break }
+            if component == nil { component = name }
+            if Self.children(of: object) == nil, Self.children(of: definition) != nil { childOwner = name }
+            let props = ((definition.removeValue(forKey: "props") as? [String: Any]) ?? [:])
+                .merging((object.removeValue(forKey: "props") as? [String: Any]) ?? [:]) { $1 }
+            let variants = (definition.removeValue(forKey: "variants") as? [String: [String: Any]]) ?? [:]
+            if variantNames.isEmpty { variantNames = variants.keys.sorted() }
+            if let chosen = object["variant"] as? String, let variant = variants[chosen] {
+                definition.merge(variant) { $1 }
+                activeVariant = chosen
+                // What's left is for the built-in button's own looks, if the variant names one.
+                object["variant"] = definition["variant"]
+                if definition["variant"] == nil { object.removeValue(forKey: "variant") }
+            }
+            var merged = definition.merging(object) { $1 }
+            merged["type"] = definition["type"]
             merged["component"] = nil
-            object = merged
+            object = Self.filling(merged, with: props)
         }
         // Named styles too, so what the element says itself wins.
         var names: [String] = []
         if let one = object["style"] as? String { names = [one] }
         if let many = object["style"] as? [String] { names = many }
         for name in names.reversed() {
-            object = (styles[name.replacingOccurrences(of: "$", with: "")] ?? [:]).merging(object) { $1 }
+            object = (library.styles[name.replacingOccurrences(of: "$", with: "")] ?? [:]).merging(object) { $1 }
         }
         let typeName = (object["type"] as? String) ?? ""
-        let childObjects = (object["children"] as? [[String: Any]]) ?? (object["items"] as? [[String: Any]]) ?? []
+        let childObjects = Self.children(of: object) ?? []
         if let known = Self.kinds[typeName.lowercased()] {
             kind = known
         } else if !childObjects.isEmpty {
             kind = .column
+            unknownType = typeName.isEmpty ? nil : typeName
         } else if object["text"] != nil || object["content"] != nil {
             kind = .text
         } else {
             kind = .column
+            unknownType = typeName.isEmpty ? nil : typeName
         }
-        children = depth < 60 ? childObjects.map { DesignNode($0, styles: styles, components: components, depth: depth + 1) } : []
+        self.path = path
+        self.component = component
+        self.activeVariant = activeVariant
+        self.variantNames = variantNames
+        main = component.map { DesignMainRef(component: $0, path: []) } ?? owner.main
+        instance = component == nil ? owner.instance : (owner.instance ?? path)
+        if path.count < 60 {
+            children = childObjects.enumerated().map { index, child in
+                let prefix = "\(index)"
+                var below: [String: [String: Any]] = [:]
+                for (key, value) in overrides {
+                    if key == prefix { below[""] = value } else if key.hasPrefix(prefix + "/") { below[String(key.dropFirst(prefix.count + 1))] = value }
+                }
+                let next = childOwner.map { Owner(main: DesignMainRef(component: $0, path: [index]), instance: owner.instance ?? path) }
+                    ?? Owner(main: owner.main.map { DesignMainRef(component: $0.component, path: $0.path + [index]) }, instance: owner.instance)
+                return DesignNode(child, library: library, path: path + [index], overrides: below, owner: next)
+            }
+        }
+        name = object["name"] as? String
+        isHidden = object["hidden"] as? Bool ?? false
+        if let token = (object["radius"] ?? object["cornerRadius"]) as? String, token.hasPrefix("$") { radiusToken = String(token.dropFirst()) }
 
         func number(_ names: String...) -> Double? {
             for name in names {
                 if let value = object[name] as? Double { return value }
                 if let value = object[name] as? Int { return Double(value) }
+                if let value = object[name] as? String, let token = library.scales.value(value, isRadius: name.lowercased().contains("radius")) { return token }
             }
             return nil
         }
@@ -207,7 +323,7 @@ nonisolated struct DesignNode: Equatable, Sendable {
         label = kind == .input ? string("label") : nil
         placeholder = string("placeholder", "hint")
         gap = number("gap", "spacing")
-        padding = DesignInsets(object["padding"])
+        padding = DesignInsets(library.scales.resolved(object["padding"]))
         align = string("align", "alignItems", "alignment")
         justify = string("justify", "justifyContent", "distribute")
         width = DesignLength(object["width"] ?? object["w"])
@@ -242,7 +358,7 @@ nonisolated struct DesignNode: Equatable, Sendable {
         tracking = number("tracking", "letterSpacing")
         lines = (object["lines"] as? Int) ?? (object["lineLimit"] as? Int)
         font = string("font", "fontFamily")
-        icon = string("icon", "symbol", "name")
+        icon = string("icon", "symbol") ?? (kind == .icon ? string("name") : nil)
         src = string("src", "url")
         fit = string("fit", "contentMode")
         columns = object["columns"] as? Int
@@ -254,6 +370,52 @@ nonisolated struct DesignNode: Equatable, Sendable {
         x = number("x", "offsetX")
         y = number("y", "offsetY")
         clips = object["clip"] as? Bool ?? (string("overflow") == "clip" || string("overflow") == "hidden")
+    }
+
+    private static func children(of object: [String: Any]) -> [[String: Any]]? {
+        (object["children"] as? [[String: Any]]) ?? (object["items"] as? [[String: Any]])
+    }
+
+    /// Puts a component's props in place of `{{name}}`, everywhere in it.
+    private static func filling(_ value: [String: Any], with props: [String: Any]) -> [String: Any] {
+        guard !props.isEmpty else { return value }
+        func fill(_ value: Any) -> Any {
+            switch value {
+            case let text as String:
+                guard text.contains("{{") else { return text }
+                // A prop that's the whole value keeps its type, so a number stays a number.
+                if text.hasPrefix("{{"), text.hasSuffix("}}"), let whole = props[String(text.dropFirst(2).dropLast(2)).trimmingCharacters(in: .whitespaces)] { return whole }
+                return props.reduce(text) { $0.replacingOccurrences(of: "{{\($1.key)}}", with: "\($1.value)") }
+            case let list as [Any]:
+                return list.map(fill)
+            case let object as [String: Any]:
+                return object.mapValues(fill)
+            default:
+                return value
+            }
+        }
+        return value.mapValues(fill)
+    }
+
+    var visibleChildren: [DesignNode] { children.filter { !$0.isHidden } }
+
+    /// What the layer list calls this element.
+    var layerName: String {
+        if let name { return name }
+        if let component { return component }
+        if let text, !text.isEmpty { return text }
+        if let icon { return icon }
+        return kind.rawValue.capitalized
+    }
+
+    /// The element at a path below this one.
+    func node(at path: [Int]) -> DesignNode? {
+        var node = self
+        for index in path {
+            guard node.children.indices.contains(index) else { return nil }
+            node = node.children[index]
+        }
+        return node
     }
 
     /// Every color name and icon in this element and below, for checking the screen.
@@ -308,6 +470,31 @@ nonisolated struct DesignDevice: Equatable, Sendable {
     }
 }
 
+/// A component shown in the kit, with each of its variants.
+nonisolated struct DesignKitItem: Equatable, Sendable, Identifiable {
+    var name: String
+    var node: DesignNode
+    var variants: [DesignKitVariant]
+    var width: Double
+    var id: String { name }
+}
+
+nonisolated struct DesignKitVariant: Equatable, Sendable {
+    var name: String
+    var node: DesignNode
+
+    init(_ pair: (String, DesignNode)) {
+        name = pair.0
+        node = pair.1
+    }
+}
+
+nonisolated struct DesignTypeStyle: Equatable, Sendable {
+    var name: String
+    var size: Double
+    var weight: String?
+}
+
 /// One file in `screens/`, or what went wrong reading it.
 nonisolated struct DesignScreen: Equatable, Sendable, Identifiable {
     /// The file's name, which keeps it in place while it's rewritten.
@@ -333,8 +520,14 @@ nonisolated struct DesignDocument: Equatable, Sendable {
     var screens: [DesignScreen] = []
     var error: String?
     var folder: URL
+    var scales = DesignScales()
+    /// Text styles with a size: the design's type scale.
+    var typeScale: [DesignTypeStyle] = []
+    /// The UI kit, in name order.
+    var kit: [DesignKitItem] = []
 
-    var isEmpty: Bool { screens.isEmpty && error == nil }
+    /// A kit alone counts as a design: it comes first, before any screen.
+    var isEmpty: Bool { screens.isEmpty && kit.isEmpty && error == nil }
 
     static func folder(inProject project: URL) -> URL { project.appendingPathComponent(folderName, isDirectory: true) }
 
@@ -354,6 +547,15 @@ nonisolated struct DesignDocument: Equatable, Sendable {
                 document.tokens = colors.compactMapValues { $0 as? String }
                 styles = (object["styles"] as? [String: [String: Any]]) ?? [:]
                 components = (object["components"] as? [String: [String: Any]]) ?? [:]
+                func numbers(_ value: Any?) -> [String: Double] {
+                    ((value as? [String: Any]) ?? [:]).compactMapValues { ($0 as? Double) ?? ($0 as? Int).map(Double.init) }
+                }
+                document.scales = DesignScales(radii: numbers(tokens["radii"]), spacing: numbers(tokens["spacing"]))
+                document.typeScale = styles.compactMap { name, style in
+                    let size = (style["size"] as? Double) ?? (style["size"] as? Int).map(Double.init)
+                    return size.map { DesignTypeStyle(name: name, size: $0, weight: style["weight"] as? String) }
+                }
+                .sorted { ($0.size, $1.name) > ($1.size, $0.name) }
             } catch {
                 document.error = "design.json: \(error.localizedDescription)"
             }
@@ -362,11 +564,26 @@ nonisolated struct DesignDocument: Equatable, Sendable {
         let files = ((try? FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)) ?? [])
             .filter { $0.pathExtension == "json" }
             .sorted { $0.lastPathComponent.localizedStandardCompare($1.lastPathComponent) == .orderedAscending }
-        document.screens = files.map { screen(at: $0, styles: styles, components: components) }
+        let scales = document.scales
+        document.screens = files.map { screen(at: $0, styles: styles, components: components, scales: scales) }
+        document.kit = components.keys.sorted().map { name in
+            let definition = components[name] ?? [:]
+            let names = ((definition["variants"] as? [String: Any]) ?? [:]).keys.sorted()
+            let preview = (definition["preview"] as? [String: Any]) ?? [:]
+            let node = DesignNode(["type": name], styles: styles, components: components, scales: scales)
+            // Something square that fills its parent, like a dot in a grid, would fill the whole card.
+            let fallback = node.aspect != nil && (node.width == .fill || node.width == nil) ? 96.0 : 340.0
+            return DesignKitItem(
+                name: name,
+                node: node,
+                variants: names.map { ($0, DesignNode(["type": name, "variant": $0], styles: styles, components: components, scales: scales)) }.map(DesignKitVariant.init),
+                width: (preview["width"] as? Double) ?? (preview["width"] as? Int).map(Double.init) ?? fallback
+            )
+        }
         return document
     }
 
-    private static func screen(at url: URL, styles: [String: [String: Any]], components: [String: [String: Any]]) -> DesignScreen {
+    private static func screen(at url: URL, styles: [String: [String: Any]], components: [String: [String: Any]], scales: DesignScales) -> DesignScreen {
         let id = url.lastPathComponent
         let fallback = Self.title(fromFile: url)
         do {
@@ -380,7 +597,7 @@ nonisolated struct DesignDocument: Equatable, Sendable {
                 background: DesignPaint(object["background"] ?? object["fill"]),
                 url: object["url"] as? String,
                 safeArea: object["safeArea"] as? Bool ?? true,
-                root: root.map { DesignNode($0, styles: styles, components: components) },
+                root: root.map { DesignNode($0, styles: styles, components: components, scales: scales) },
                 error: root == nil ? "This screen has no \"root\" element." : nil
             )
         } catch {
@@ -402,22 +619,33 @@ nonisolated struct DesignDocument: Equatable, Sendable {
         return words.drop { $0.allSatisfy(\.isNumber) }.map(\.capitalized).joined(separator: " ")
     }
 
+    /// How many times the screens use a kit component.
+    func uses(of component: String) -> Int {
+        var count = 0
+        for screen in screens {
+            screen.root?.walk { if $0.component == component { count += 1 } }
+        }
+        return count
+    }
+
     /// What's wrong that Claude can fix: unreadable files, tokens that don't exist, icons SF Symbols doesn't have.
     func problems() -> [String] {
         var found: [String] = error.map { [$0] } ?? []
         for screen in screens {
             if let error = screen.error { found.append("\(screen.id): \(error)") }
-            var missing = Set<String>(), icons = Set<String>()
+            var missing = Set<String>(), icons = Set<String>(), unknown = Set<String>()
             screen.background?.colorNames.forEach { if isMissing($0) { missing.insert($0) } }
             screen.root?.walk { node in
                 let colors = (node.fill?.colorNames ?? []) + [node.color, node.borderColor, node.shadow?.color].compactMap(\.self)
                 for color in colors where isMissing(color) { missing.insert(color) }
+                if let type = node.unknownType { unknown.insert(type) }
                 if node.kind == .icon || node.kind == .button || node.kind == .input, let icon = node.icon, NSImage(systemSymbolName: icon, accessibilityDescription: nil) == nil {
                     icons.insert(icon)
                 }
             }
             if !missing.isEmpty { found.append("\(screen.id): unknown colors \(missing.sorted().joined(separator: ", "))") }
             if !icons.isEmpty { found.append("\(screen.id): not SF Symbols: \(icons.sorted().joined(separator: ", "))") }
+            if !unknown.isEmpty { found.append("\(screen.id): not built in and not in the kit: \(unknown.sorted().joined(separator: ", "))") }
         }
         return found
     }

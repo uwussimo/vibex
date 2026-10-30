@@ -11,6 +11,9 @@ final class DesignCanvasModel {
     private(set) var offset = CGSize(width: 60, height: 80)
     var viewport = CGSize.zero
     var contentSize = CGSize.zero
+    /// Width taken by the panels floating over each side, so fitting keeps everything in the clear.
+    var leadingInset = 0.0
+    var trailingInset = 0.0
     /// True once the user has moved around, so new screens stop re-framing the view.
     private(set) var hasMoved = false
 
@@ -38,11 +41,12 @@ final class DesignCanvasModel {
     func fit(animated: Bool = true) {
         guard contentSize.width > 0, contentSize.height > 0, viewport.width > 0, viewport.height > 0 else { return }
         let margin = 48.0, top = 64.0
-        let scale = min((viewport.width - margin * 2) / contentSize.width, (viewport.height - top - margin) / contentSize.height)
+        let available = max(viewport.width - leadingInset - trailingInset, 200)
+        let scale = min((available - margin * 2) / contentSize.width, (viewport.height - top - margin) / contentSize.height)
         let new = min(max(scale, Self.zoomRange.lowerBound), 1)
         let apply = { [self] in
             zoom = new
-            offset = CGSize(width: max((viewport.width - contentSize.width * new) / 2, margin), height: top)
+            offset = CGSize(width: leadingInset + max((available - contentSize.width * new) / 2, margin), height: top)
         }
         if animated { withAnimation(.spring(response: 0.4, dampingFraction: 1), apply) } else { apply() }
         hasMoved = false
@@ -52,6 +56,55 @@ final class DesignCanvasModel {
 /// Takes the trackpad before SwiftUI can: two fingers pan, a pinch or ⌘-scroll zooms.
 final class DesignCanvasHostView<Content: View>: NSHostingView<Content> {
     var canvas: DesignCanvasModel?
+    var design: DesignModel?
+    private var monitor: Any?
+
+    override var acceptsFirstResponder: Bool { true }
+
+    /// A click on the canvas picks what's under it, even as the click that brings the window forward.
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
+
+    /// Keys act on the selection only once the canvas was clicked, so typing elsewhere is never taken.
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        if let monitor { NSEvent.removeMonitor(monitor) }
+        monitor = nil
+        guard window != nil else { return }
+        monitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown, .keyDown]) { [weak self] event in
+            // Local monitors run on the main thread, with an event that's only ever used there.
+            nonisolated(unsafe) let event = event
+            nonisolated(unsafe) var result: NSEvent? = event
+            MainActor.assumeIsolated {
+                if let self { result = self.handle(event) }
+            }
+            return result
+        }
+    }
+
+    private func handle(_ event: NSEvent) -> NSEvent? {
+        guard let window, event.window === window, !isHiddenOrHasHiddenAncestor else { return event }
+        if event.type == .leftMouseDown {
+            if bounds.contains(convert(event.locationInWindow, from: nil)), let superview, hitTest(superview.convert(event.locationInWindow, from: nil)) != nil {
+                window.makeFirstResponder(self)
+            }
+            return event
+        }
+        guard window.firstResponder === self, let design else { return event }
+        let command = event.modifierFlags.contains(.command), shift = event.modifierFlags.contains(.shift)
+        switch (event.keyCode, event.charactersIgnoringModifiers?.lowercased()) {
+        case (_, "z") where command:
+            if shift { design.redo() } else { design.undo() }
+        case (_, "d") where command:
+            design.duplicateSelected()
+        case (51, _), (117, _):
+            design.deleteSelected()
+        case (53, _):
+            design.selectParent()
+        default:
+            return event
+        }
+        return nil
+    }
 
     override func scrollWheel(with event: NSEvent) {
         guard let canvas else { return super.scrollWheel(with: event) }
@@ -80,6 +133,7 @@ struct DesignCanvasContainer: NSViewRepresentable {
     func makeNSView(context: Context) -> NSView {
         let host = DesignCanvasHostView(rootView: DesignCanvasSurface(model: model))
         host.canvas = model.canvas
+        host.design = model
         host.sizingOptions = []
         return host
     }
@@ -162,6 +216,7 @@ struct DesignBoard: View {
         let document = model.document
         let theme = DesignTheme(document: document)
         VStack(alignment: .leading, spacing: 110) {
+            if !document.kit.isEmpty { DesignKitBoard(document: document, theme: theme, model: model) }
             ForEach(Self.rows(document.screens), id: \.title) { row in
                 VStack(alignment: .leading, spacing: 34) {
                     if !row.title.isEmpty {
@@ -171,7 +226,7 @@ struct DesignBoard: View {
                     }
                     HStack(alignment: .top, spacing: 84) {
                         ForEach(row.screens) { screen in
-                            DesignFrame(screen: screen, theme: theme, isSelected: model.selection == screen.id, select: { model.select(screen.id) }, fix: { model.fix(screen) })
+                            DesignFrame(screen: screen, theme: theme, model: model, isSelected: model.selection == screen.id && model.element == nil, select: { model.select(screen.id) }, fix: { model.fix(screen) })
                                 .transition(.opacity.combined(with: .scale(scale: 0.97)))
                         }
                     }
@@ -202,6 +257,7 @@ struct DesignBoard: View {
 private struct DesignFrame: View {
     let screen: DesignScreen
     let theme: DesignTheme
+    let model: DesignModel
     let isSelected: Bool
     let select: () -> Void
     let fix: () -> Void
@@ -217,6 +273,7 @@ private struct DesignFrame: View {
                     failure(error)
                 } else {
                     DesignScreenView(screen: screen, theme: theme)
+                        .environment(\.designEditing, DesignEditing(model: model, screen: screen.id))
                 }
             }
             .overlay {
@@ -263,7 +320,9 @@ enum DesignSnapshot {
         await DesignImageStore.shared.preload(document)
         let theme = DesignTheme(document: document)
         let renderer: ImageRenderer<AnyView>
-        if let screen, let found = document.screens.first(where: { $0.id == screen || $0.name.lowercased() == screen.lowercased() }) {
+        if screen?.lowercased() == "kit" {
+            renderer = ImageRenderer(content: AnyView(DesignKitBoard(document: document, theme: theme, model: nil).padding(30).background(Theme.background).fixedSize()))
+        } else if let screen, let found = document.screens.first(where: { $0.id == screen || $0.name.lowercased() == screen.lowercased() }) {
             renderer = ImageRenderer(content: AnyView(DesignScreenView(screen: found, theme: theme).padding(16).background(Theme.background).fixedSize()))
         } else {
             renderer = ImageRenderer(content: AnyView(

@@ -69,6 +69,9 @@ enum Icon: String, CaseIterable, Sendable {
     case server
     case hardDrive
     case moon
+    case layers
+    case palette
+    case eyeOff
     case package
     case eye
     case key

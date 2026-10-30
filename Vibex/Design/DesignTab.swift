@@ -11,7 +11,15 @@ final class DesignModel {
     let canvas = DesignCanvasModel()
     let chat: ClaudeChatModel
     private(set) var document: DesignDocument
+    /// The screen, or the kit card (`kit:Button`, `kit:Button#secondary`), in focus.
     private(set) var selection: String?
+    /// The element selected inside it, by its path from the root.
+    private(set) var element: [Int]?
+    var hovered: DesignHover?
+    /// Changes to a kit element's style reach every use, unless this says otherwise.
+    var styleOnlyHere = false
+    var showsLayers = true
+    var showsStyle = false
     /// Sends a finished design to be built: `asAgent` starts it on its own branch.
     var build: (_ prompt: String, _ asAgent: Bool) -> Void = { _, _ in }
     var onSessionChange: (String?) -> Void = { _ in }
@@ -20,6 +28,8 @@ final class DesignModel {
 
     @ObservationIgnored private var watcher: FileWatcher?
     @ObservationIgnored private var fingerprint = ""
+    @ObservationIgnored var undoStack: [DesignUndoStep] = []
+    @ObservationIgnored var redoStack: [DesignUndoStep] = []
 
     static let welcome = ClaudeChatWelcome(
         title: "Design it before you build it",
@@ -53,11 +63,16 @@ final class DesignModel {
         fingerprint = Self.fingerprint(folder)
     }
 
+    /// The kit-first way of working, separate so the original brief stays as written.
+    static var kitBrief: String {
+        Bundle.main.url(forResource: "DesignKit", withExtension: "md").flatMap { try? String(contentsOf: $0, encoding: .utf8) } ?? ""
+    }
+
     /// What this chat is allowed without asking: its own folder and looking at the result. Anything
     /// else, like editing the app, stops to ask.
     private static var claudeArguments: [String] {
         let brief = Bundle.main.url(forResource: "DesignBrief", withExtension: "md").flatMap { try? String(contentsOf: $0, encoding: .utf8) } ?? ""
-        return ["--append-system-prompt", brief, "--allowedTools",
+        return ["--append-system-prompt", brief + kitBrief, "--allowedTools",
                 "Write(./\(DesignDocument.folderName)/**)", "Edit(./\(DesignDocument.folderName)/**)", "mcp__vibex__design_screenshot"]
     }
 
@@ -79,11 +94,16 @@ final class DesignModel {
         fingerprint = Self.fingerprint(folder)
         let new = DesignDocument.load(folder: folder)
         if new != document { document = new }
-        if let selection, !document.screens.contains(where: { $0.id == selection }) { select(nil) }
+        if let selection, root(of: selection) == nil, !document.screens.contains(where: { $0.id == selection }) { select(nil) }
+        if let selection, let element, root(of: selection)?.node(at: element) == nil { self.element = nil }
     }
 
     private func reloadIfChanged() {
-        if Self.fingerprint(folder) != fingerprint { reload() }
+        guard Self.fingerprint(folder) != fingerprint else { return }
+        // Someone else changed the files, so going back to an earlier copy would lose their work.
+        undoStack = []
+        redoStack = []
+        reload()
     }
 
     /// Names, sizes and dates: enough to skip the project's many unrelated changes without reading anything.
@@ -100,15 +120,38 @@ final class DesignModel {
 
     func select(_ id: String?) {
         selection = id
-        chat.contextLabel = selectedScreen.map(\.name)
+        element = nil
+        styleOnlyHere = false
+        updateContextLabel()
         if id != nil { chat.focusComposer() }
+    }
+
+    /// Picks one element, without taking the keyboard: arrows, ⌘D and Delete act on it.
+    func select(element path: [Int]?, in id: String) {
+        if selection != id { styleOnlyHere = false }
+        selection = id
+        element = path
+        showsStyle = false
+        updateContextLabel()
+    }
+
+    private func updateContextLabel() {
+        let place = selectedScreen?.name ?? kitSelection?.name
+        let layer = selectedNode.flatMap { $0.path.isEmpty ? nil : $0.layerName }
+        chat.contextLabel = [place, layer].compactMap(\.self).joined(separator: " › ").nilIfEmpty
     }
 
     var selectedScreen: DesignScreen? { document.screens.first { $0.id == selection } }
 
     /// Tells Claude which screen is selected, without cluttering what the user sees they said.
     private var selectionContext: String? {
-        selectedScreen.map { "\(ClaudeEvent.selectionNotePrefix) the screen \"\($0.name)\" on the canvas: \(DesignDocument.folderName)/screens/\($0.id). This message is about it.]" }
+        let layer = selectedNode.flatMap { node in
+            node.path.isEmpty ? nil : ", its element \"\(node.layerName)\" at child position \(node.path.map(String.init).joined(separator: "/"))"
+        } ?? ""
+        if let kit = kitSelection {
+            return "\(ClaudeEvent.selectionNotePrefix) the UI kit component \"\(kit.name)\"\(kit.variant.map { ", variant \($0)" } ?? "") in \(DesignDocument.folderName)/design.json\(layer). This message is about it.]"
+        }
+        return selectedScreen.map { "\(ClaudeEvent.selectionNotePrefix) the screen \"\($0.name)\" on the canvas: \(DesignDocument.folderName)/screens/\($0.id)\(layer). This message is about it.]" }
     }
 
     func fix(_ screen: DesignScreen) {
@@ -131,11 +174,17 @@ final class DesignModel {
     var buildPrompt: String {
         """
         Build the design in \(folder.path). Read design.json and every file in screens/. design.json has the \
-        tokens, styles and shared components; each screen file describes the layout in device points. Icons are SF \
-        Symbols. Follow this project's existing stack and conventions, or pick a sensible one for the device if it's \
+        tokens, styles and the UI kit: components with `props` filling `{{name}}` and `variants`; `$name` numbers come \
+        from tokens.radii and tokens.spacing. Each screen file describes the layout in device points, and `overrides` \
+        change one element inside a use by child position. Icons are SF Symbols. Follow this project's existing stack and conventions, or pick a sensible one for the device if it's \
         empty. Turn tokens and components into real theme values and reusable views rather than copying numbers around. \
         Match the design closely, then run it and compare it against the canvas with the design_screenshot tool.
         """
+    }
+
+    /// Asks Claude to pull a kit out of screens designed without one.
+    func makeKit() {
+        chat.send("Make a UI kit from this design, following \"Making a kit from an existing design\". Keep every screen looking the same.")
     }
 
     func startOver() {
@@ -149,14 +198,14 @@ final class DesignModel {
 /// Design's work in the words of designing, rather than as a list of file operations.
 nonisolated enum DesignActivity {
     private enum Step: Equatable {
-        case look, screen(String, isNew: Bool), check, read, other(String)
+        case kit, screen(String, isNew: Bool), check, read, other(String)
     }
 
     private static func kind(_ tool: ClaudeToolUse) -> Step {
         let path = tool.input["file_path"]
         if tool.name == "mcp__vibex__design_screenshot" { return .check }
         if tool.name == "Write" || tool.name == "Edit" || tool.name == "MultiEdit", let path, path.contains("\(DesignDocument.folderName)/") {
-            if path.hasSuffix("/design.json") { return .look }
+            if path.hasSuffix("/design.json") { return .kit }
             return .screen(DesignDocument.title(fromFile: URL(fileURLWithPath: path)), isNew: tool.name == "Write")
         }
         if tool.name == "Read" || tool.name == "Glob" || tool.name == "Grep" { return .read }
@@ -168,7 +217,7 @@ nonisolated enum DesignActivity {
         guard let tool else { return "Thinking…" }
         if tool.input["file_path"] == nil, tool.name == "Write" || tool.name == "Edit" { return "Drawing…" }
         switch kind(tool) {
-        case .look: return "Setting the look…"
+        case .kit: return "Building the UI kit…"
         case let .screen(name, isNew): return isNew ? "Drawing \(name)…" : "Updating \(name)…"
         case .check: return "Checking how it looks…"
         case .read: return "Reading the project…"
@@ -178,7 +227,7 @@ nonisolated enum DesignActivity {
 
     static func step(_ tool: ClaudeToolUse) -> String {
         switch kind(tool) {
-        case .look: "Set the look"
+        case .kit: "Built the UI kit"
         case let .screen(name, isNew): isNew ? "Drew \(name)" : "Updated \(name)"
         case .check: "Checked how it looks"
         case .read: "Read the project"
@@ -206,7 +255,7 @@ nonisolated enum DesignActivity {
         }
         let parts = [phrase("Drew", drawn), phrase(drawn.isEmpty ? "Updated" : "updated", updated)].compactMap(\.self)
         if !parts.isEmpty { return parts.joined(separator: ", ") }
-        if tools.contains(where: { kind($0) == .look }) { return "Set the look" }
+        if tools.contains(where: { kind($0) == .kit }) { return "Built the UI kit" }
         if tools.contains(where: { kind($0) == .check }) { return "Checked how it looks" }
         return "Read the project"
     }
@@ -221,15 +270,61 @@ struct DesignTabView: View {
             ClaudeChatView(model: model.chat, welcome: DesignModel.welcome)
                 .frame(width: 360)
             Rectangle().fill(Theme.line).frame(width: 1)
-            ZStack {
-                DesignCanvasContainer(model: model)
-                if !model.hasDesign { emptyCanvas }
+            GeometryReader { geometry in
+                ZStack {
+                    DesignCanvasContainer(model: model)
+                    if !model.hasDesign { emptyCanvas }
+                }
+                .overlay(alignment: .top) { toolbar }
+                .overlay(alignment: .bottomTrailing) {
+                    if model.hasDesign { zoomControls.padding(.trailing, showsInspector(in: geometry.size) ? 278 : 0) }
+                }
+                .overlay(alignment: .topLeading) {
+                    if model.hasDesign, model.showsLayers, geometry.size.width >= 760 {
+                        DesignLayersPanel(model: model).padding(.top, 52).padding([.leading, .bottom], 10)
+                    }
+                }
+                .overlay(alignment: .topTrailing) {
+                    if showsInspector(in: geometry.size) {
+                        DesignInspector(model: model).padding(.top, 52).padding([.trailing, .bottom], 10)
+                            .transition(.opacity.combined(with: .offset(x: 12)))
+                    }
+                }
+                .overlay(alignment: .bottom) { if model.hasDesign, model.document.kit.isEmpty, !model.chat.isBusy { kitOffer } }
+                .animation(.spring(response: 0.3, dampingFraction: 1), value: showsInspector(in: geometry.size))
+                .onChange(of: panelInsets(in: geometry.size), initial: true) { _, insets in
+                    model.canvas.leadingInset = insets.width
+                    model.canvas.trailingInset = insets.height
+                    if !model.canvas.hasMoved { model.canvas.fit() }
+                }
             }
-            .overlay(alignment: .top) { toolbar }
-            .overlay(alignment: .bottomTrailing) { if model.hasDesign { zoomControls } }
         }
         .background(Theme.background)
         .onAppear(perform: model.start)
+    }
+
+    /// What fitting keeps clear: leading as width, trailing as height. The inspector's room is kept
+    /// whether it's open or not, so selecting something never moves the board under the pointer. A
+    /// narrow pane can't spare it, and the panel floats over the board instead.
+    private func panelInsets(in size: CGSize) -> CGSize {
+        CGSize(width: model.hasDesign && model.showsLayers && size.width >= 760 ? 234 : 0, height: model.hasDesign && size.width >= 1100 ? 278 : 0)
+    }
+
+    private func showsInspector(in size: CGSize) -> Bool {
+        model.hasDesign && (model.showsStyle || model.selectedNode != nil) && size.width >= 480
+    }
+
+    /// Screens designed before the kit, or without one: restyling them means editing each by hand.
+    private var kitOffer: some View {
+        HStack(spacing: 10) {
+            Text("This design has no UI kit, so each screen has to be restyled by hand.")
+                .font(.vibex(size: 12)).foregroundStyle(Theme.muted)
+            Button("Make UI Kit", action: model.makeKit).buttonStyle(.borderedProminent).controlSize(.small)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 8)
+        .card(fill: Theme.card, radius: 10)
+        .padding(.bottom, 12)
     }
 
     private var emptyCanvas: some View {
@@ -248,8 +343,8 @@ struct DesignTabView: View {
                 Text(name).font(.vibex(size: 13, weight: .semibold)).foregroundStyle(Theme.text).lineLimit(1)
             }
             if model.hasDesign {
-                let count = model.document.screens.count
-                Text("\(count) screen\(count == 1 ? "" : "s")").font(.vibex(size: 12)).foregroundStyle(Theme.faint)
+                let count = model.document.screens.count, kit = model.document.kit.count
+                Text("\(count) screen\(count == 1 ? "" : "s")\(kit > 0 ? " · \(kit) component\(kit == 1 ? "" : "s")" : "")").font(.vibex(size: 12)).foregroundStyle(Theme.faint)
             }
             if model.chat.isBusy, model.hasDesign {
                 ProgressView().controlSize(.mini)
@@ -257,8 +352,15 @@ struct DesignTabView: View {
             }
             Spacer()
             if model.hasDesign {
+                ToolbarIconButton(icon: .layers, help: "Layers", isActive: model.showsLayers) { model.showsLayers.toggle() }
+                ToolbarIconButton(icon: .palette, help: "Style: colors, type and corners", isActive: model.showsStyle) { model.showsStyle.toggle() }
                 Menu {
-                    Button("Copy Selected Screen") { model.copySelected() }.disabled(model.selection == nil)
+                    Button("Undo Edit") { model.undo() }.disabled(model.undoStack.isEmpty)
+                    Button("Redo Edit") { model.redo() }.disabled(model.redoStack.isEmpty)
+                    Divider()
+                    Button("Make UI Kit", action: model.makeKit).disabled(model.chat.isBusy)
+                    Divider()
+                    Button("Copy Selected Screen") { model.copySelected() }.disabled(model.selectedScreen == nil)
                     Button("Show in Finder") { NSWorkspace.shared.activateFileViewerSelecting([model.folder]) }
                     Button("Build as an Agent") { model.build(model.buildPrompt, true) }
                     Divider()

@@ -116,7 +116,7 @@ struct DesignNodeView: View {
     var stretch: Axis?
 
     var body: some View {
-        styled(content)
+        styled(content).modifier(DesignHitArea(node: node))
     }
 
     @ViewBuilder
@@ -135,18 +135,19 @@ struct DesignNodeView: View {
             }
         case .layer:
             ZStack(alignment: .topLeading) {
-                ForEach(Array(node.children.enumerated()), id: \.offset) { _, child in
+                ForEach(Array(node.visibleChildren.enumerated()), id: \.offset) { _, child in
                     DesignNodeView(node: child, theme: theme)
                         .frame(maxWidth: child.place == nil ? nil : .infinity, maxHeight: child.place == nil ? nil : .infinity, alignment: Self.placement(child.place))
                 }
             }
         case .grid:
             let count = max(node.columns ?? 2, 1)
+            let cells = node.visibleChildren
             Grid(horizontalSpacing: node.gap ?? 0, verticalSpacing: node.gap ?? 0) {
-                ForEach(Array(stride(from: 0, to: node.children.count, by: count)), id: \.self) { start in
+                ForEach(Array(stride(from: 0, to: cells.count, by: count)), id: \.self) { start in
                     GridRow {
-                        ForEach(start..<min(start + count, node.children.count), id: \.self) { index in
-                            DesignNodeView(node: node.children[index], theme: theme, stretch: .horizontal)
+                        ForEach(start..<min(start + count, cells.count), id: \.self) { index in
+                            DesignNodeView(node: cells[index], theme: theme, stretch: .horizontal)
                         }
                     }
                 }
@@ -198,10 +199,11 @@ struct DesignNodeView: View {
         let justify = node.justify?.lowercased()
         let isBetween = justify == "between" || justify == "space-between"
         let isAround = justify == "around" || justify == "space-around" || justify == "evenly" || justify == "space-evenly"
+        let shown = node.visibleChildren
         if isAround { Spacer(minLength: 0) }
-        ForEach(Array(node.children.enumerated()), id: \.offset) { index, child in
+        ForEach(Array(shown.enumerated()), id: \.offset) { index, child in
             DesignNodeView(node: child, theme: theme, stretch: isStretching ? cross : nil)
-            if isBetween || isAround, index < node.children.count - 1 { Spacer(minLength: 0) }
+            if isBetween || isAround, index < shown.count - 1 { Spacer(minLength: 0) }
         }
         if isAround { Spacer(minLength: 0) }
     }
