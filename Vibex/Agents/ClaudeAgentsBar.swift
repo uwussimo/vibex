@@ -1,9 +1,9 @@
 import SwiftUI
 
-/// What the window does for the Agents sidebar: chat tabs, Source Control, confirmations.
+/// What the window does for agents: chat tabs, Source Control, confirmations.
 struct AgentActions {
     /// Creates an agent and opens its Claude chat, starting on the task when there is one.
-    var create: (_ name: String, _ task: String?) -> Void
+    var create: (_ name: String, _ task: String?, _ attachments: [ClaudeAttachment]) -> Void
     var open: (AgentsModel.Agent) -> Void
     var review: (AgentsModel.Agent) -> Void
     var merge: (AgentsModel.Agent) -> Void
@@ -17,111 +17,93 @@ struct AgentActions {
     var isWorking: (AgentsModel.Agent) -> Bool
 }
 
-/// The Agents sidebar: parallel Claude Code attempts, each on its own branch and worktree.
-struct AgentsSidebar: View {
-    @Bindable var model: AgentsModel
-    let attention: AttentionCenter
+/// Agents and what's done to them, for a Claude chat to show.
+struct ClaudeAgentsContext {
+    let model: AgentsModel
     let actions: AgentActions
+}
+
+/// Agents live inside Claude, because an agent is a Claude chat on its own branch. This strip tops
+/// each chat once there are any: one pill per agent to jump between them, with Review and Merge right
+/// there in the agent's own chat. It takes no room until the first agent exists.
+struct ClaudeAgentsBar: View {
+    @Bindable var model: AgentsModel
+    let actions: AgentActions
+    /// The folder of the chat this strip is in, to mark its agent.
+    let folder: String
+    @State private var isExpanded = false
+
+    private var current: AgentsModel.Agent? {
+        model.agents.first { $0.path.standardizedFileURL.path == URL(fileURLWithPath: folder).standardizedFileURL.path }
+    }
 
     var body: some View {
         VStack(spacing: 0) {
-            header
-            ScrollView {
-                VStack(alignment: .leading, spacing: 10) {
-                    if model.isComposing { NewAgentForm(model: model, create: create, cancel: { model.isComposing = false }) }
-                    if let problem = model.problem { message(problem.message, icon: .alert, tint: Theme.red) { model.problem = nil } }
-                    if case let .merged(name, base) = model.notice {
-                        mergedNotice(name: name, base: base)
+            if !model.agents.isEmpty || model.busy != nil {
+                strip
+                if isExpanded {
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 8) {
+                            ForEach(model.agents) { agent in
+                                AgentCard(agent: agent, base: model.baseBranch, waiting: actions.waiting(agent), isOpen: actions.isOpen(agent), isBusy: model.busy != nil, actions: actions)
+                                    .transition(.opacity.combined(with: .move(edge: .top)))
+                            }
+                        }
+                        .padding(10)
                     }
-                    content
+                    .frame(maxHeight: 300)
+                    .fixedSize(horizontal: false, vertical: true)
                 }
-                .padding(12)
+                Rectangle().fill(Theme.line).frame(height: 1)
             }
-            .scrollIndicators(.automatic)
+            if let problem = model.problem {
+                message(problem.message, icon: .alert, tint: Theme.red) { model.problem = nil }.padding(8)
+            }
+            if case let .merged(name, base) = model.notice {
+                mergedNotice(name: name, base: base).padding(8)
+            }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .background(Theme.surface)
         .onAppear(perform: model.refresh)
         .task {
-            // Agents work in their own tabs; keep their numbers fresh while the panel is open.
+            // Agents work in their own tabs; keep their numbers fresh while this is showing.
             while !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(4))
                 model.refresh()
             }
         }
         .animation(.spring(response: 0.3, dampingFraction: 1), value: model.agents)
-        .animation(.spring(response: 0.3, dampingFraction: 1), value: model.isComposing)
+        .animation(.spring(response: 0.3, dampingFraction: 1), value: isExpanded)
     }
 
-    private var header: some View {
+    private var strip: some View {
         HStack(spacing: 6) {
-            Text("Agents")
-                .font(.vibex(size: 12, weight: .semibold))
-                .foregroundStyle(Theme.muted)
-            if let busy = model.busy {
-                ProgressView().controlSize(.mini)
-                Text(busy).font(.vibex(size: 11)).foregroundStyle(Theme.faint).lineLimit(1)
-            }
-            Spacer()
-            if model.state == .ready {
-                ToolbarIconButton(icon: .plus, help: "New Agent (⌥⌘N)", isEnabled: model.busy == nil) { model.isComposing = true }
-            }
-        }
-        .padding(.leading, 14)
-        .padding(.trailing, 8)
-        .frame(height: 38)
-    }
-
-    @ViewBuilder
-    private var content: some View {
-        switch model.state {
-        case .loading:
-            ProgressView().controlSize(.small).frame(maxWidth: .infinity).padding(.top, 30)
-        case .notRepository:
-            emptyState(
-                title: "Agents need Git",
-                detail: "Each agent works on its own branch. Initialize a repository in Source Control first.",
-                button: nil
-            )
-        case .ready where model.agents.isEmpty && !model.isComposing:
-            emptyState(
-                title: "Run Claude in parallel",
-                detail: "Each agent gets its own branch and folder, so attempts never collide. Compare them in Source Control and merge the best one.",
-                button: "New Agent"
-            )
-        case .ready:
-            ForEach(model.agents) { agent in
-                AgentCard(agent: agent, base: model.baseBranch, waiting: actions.waiting(agent), isOpen: actions.isOpen(agent), isBusy: model.busy != nil, actions: actions)
-                    .transition(.opacity.combined(with: .move(edge: .top)))
-            }
-        }
-    }
-
-    private func create(name: String, task: String?) {
-        model.isComposing = false
-        actions.create(name, task)
-    }
-
-    private func emptyState(title: String, detail: String, button: String?) -> some View {
-        VStack(spacing: 10) {
-            IconView(.users, size: 28).foregroundStyle(Theme.faint)
-            Text(title).font(.vibex(size: 13.5, weight: .semibold)).foregroundStyle(Theme.text)
-            Text(detail)
-                .font(.vibex(size: 12))
-                .foregroundStyle(Theme.muted)
-                .multilineTextAlignment(.center)
-                .fixedSize(horizontal: false, vertical: true)
-            if let button {
-                Button { model.isComposing = true } label: {
-                    Text(button).font(.vibex(size: 12.5, weight: .medium)).frame(minWidth: 110)
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 4) {
+                    ForEach(model.agents) { agent in
+                        AgentPill(agent: agent, isCurrent: agent.id == current?.id, waiting: actions.waiting(agent), isWorking: actions.isWorking(agent), actions: actions)
+                    }
+                    if let busy = model.busy {
+                        ProgressView().controlSize(.mini)
+                        Text(busy).font(.vibex(size: 11)).foregroundStyle(Theme.faint).lineLimit(1)
+                    }
                 }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.regular)
-                .padding(.top, 4)
+                .padding(.leading, 8)
             }
+            if let current {
+                Button("Review") { actions.review(current) }
+                    .disabled(current.stats.isEmpty)
+                    .help("Show this agent's changes in Source Control")
+                Button("Merge") { actions.merge(current) }
+                    .disabled(current.stats.isEmpty || model.busy != nil)
+                    .help("Commit what's left and merge \(current.branch) into \(model.baseBranch ?? "the base branch")")
+            }
+            ToolbarIconButton(icon: isExpanded ? .chevronUp : .chevronDown, help: isExpanded ? "Hide agent details" : "Show agent details") { isExpanded.toggle() }
+                .padding(.trailing, 4)
         }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 28)
-        .padding(.horizontal, 8)
+        .buttonStyle(.bordered)
+        .controlSize(.small)
+        .frame(height: 36)
     }
 
     private func mergedNotice(name: String, base: String) -> some View {
@@ -154,6 +136,48 @@ struct AgentsSidebar: View {
     }
 }
 
+/// One agent in the strip: how it's doing, and a click away from its chat.
+private struct AgentPill: View {
+    let agent: AgentsModel.Agent
+    let isCurrent: Bool
+    let waiting: String?
+    let isWorking: Bool
+    let actions: AgentActions
+    @State private var isHovering = false
+
+    var body: some View {
+        Button { actions.open(agent) } label: {
+            HStack(spacing: 6) {
+                if isWorking, waiting == nil {
+                    ProgressView().controlSize(.mini).scaleEffect(0.7).frame(width: 8, height: 8)
+                } else {
+                    Circle().fill(waiting != nil ? Theme.orange : (actions.isOpen(agent) ? Theme.green : Theme.faint)).frame(width: 7, height: 7)
+                }
+                Text(agent.name).font(.vibex(size: 11.5, weight: isCurrent ? .semibold : .medium)).foregroundStyle(isCurrent ? Theme.text : Theme.muted).lineLimit(1)
+                if agent.stats.insertions > 0 { Text("+\(agent.stats.insertions)").foregroundStyle(Theme.green) }
+                if agent.stats.deletions > 0 { Text("−\(agent.stats.deletions)").foregroundStyle(Theme.red) }
+            }
+            .font(.vibex(size: 10.5, weight: .medium))
+            .monospacedDigit()
+            .padding(.horizontal, 9)
+            .frame(height: 26)
+            .background(RoundedRectangle(cornerRadius: 7, style: .continuous).fill(Color.white.opacity(isCurrent ? 0.09 : (isHovering ? 0.05 : 0))))
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .onHover { isHovering = $0 }
+        .help(waiting ?? agent.task ?? agent.branch)
+        .contextMenu {
+            Button("Open Chat") { actions.open(agent) }
+            Button("Review Changes") { actions.review(agent) }.disabled(agent.stats.isEmpty)
+            Button("Merge…") { actions.merge(agent) }.disabled(agent.stats.isEmpty)
+            Button("Show in Finder") { actions.reveal(agent) }
+            Divider()
+            Button("Remove Agent…", role: .destructive) { actions.remove(agent) }
+        }
+    }
+}
+
 private struct DismissButton: View {
     let action: () -> Void
     var body: some View {
@@ -162,59 +186,6 @@ private struct DismissButton: View {
         }
         .buttonStyle(PressFeedbackButtonStyle())
         .help("Dismiss")
-    }
-}
-
-/// The inline form for a new agent: the task first (it names the agent), the name editable after.
-private struct NewAgentForm: View {
-    let model: AgentsModel
-    let create: (String, String?) -> Void
-    let cancel: () -> Void
-    @State private var task = ""
-    @State private var name = ""
-    @State private var nameEdited = false
-    @FocusState private var taskFocused: Bool
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("New agent").font(.vibex(size: 13, weight: .semibold)).foregroundStyle(Theme.text)
-            TextField("What should Claude do? (optional)", text: $task, axis: .vertical)
-                .textFieldStyle(.plain)
-                .font(.vibex(size: 12.5))
-                .lineLimit(2...6)
-                .focused($taskFocused)
-                .padding(8)
-                .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Theme.raised))
-                .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).strokeBorder(taskFocused ? Theme.accent.opacity(0.7) : Theme.line))
-                .onChange(of: task) { _, text in if !nameEdited { name = text.isEmpty ? "" : AgentsModel.slug(text) } }
-            HStack(spacing: 6) {
-                IconView(.branch, size: 13).foregroundStyle(Theme.faint)
-                Text(AgentsModel.branchPrefix).font(.vibexCode(size: 11.5)).foregroundStyle(Theme.faint)
-                TextField("name", text: Binding(get: { name }, set: { name = $0; nameEdited = true }))
-                    .textFieldStyle(.plain)
-                    .font(.vibexCode(size: 11.5))
-            }
-            Text("Starts from \(model.baseBranch ?? "the current branch")'s last commit, in its own folder.")
-                .font(.vibex(size: 11))
-                .foregroundStyle(Theme.faint)
-            HStack {
-                Spacer()
-                Button("Cancel", action: cancel).buttonStyle(.bordered).controlSize(.regular)
-                Button {
-                    create(name.isEmpty ? (task.isEmpty ? "agent" : task) : name, task.trimmingCharacters(in: .whitespacesAndNewlines))
-                } label: {
-                    Text(task.isEmpty ? "Create" : "Create and Start").font(.vibex(size: 12.5, weight: .medium))
-                }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.regular)
-                .keyboardShortcut(.defaultAction)
-                .disabled(model.busy != nil)
-            }
-        }
-        .padding(12)
-        .card(fill: Theme.card, radius: 12)
-        .onAppear { taskFocused = true }
-        .onExitCommand(perform: cancel)
     }
 }
 

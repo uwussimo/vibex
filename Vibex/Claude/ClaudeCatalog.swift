@@ -143,6 +143,7 @@ nonisolated enum ClaudeCompleter {
         ClaudeCommand(name: "ask", summary: "Ask mode: Claude asks before edits and commands"),
         ClaudeCommand(name: "accept-edits", summary: "Accept edits: file changes go ahead, commands ask"),
         ClaudeCommand(name: "new", summary: "Start a new chat"),
+        ClaudeCommand(name: "agent", summary: "Start a parallel agent on its own branch", argumentHint: "<task>"),
         ClaudeCommand(name: "resume", summary: "Pick up an earlier conversation", argumentHint: "<conversation>"),
         ClaudeCommand(name: "skills", summary: "Open the Skills panel"),
         ClaudeCommand(name: "mcp", summary: "Open the MCP Servers panel"),
@@ -150,7 +151,7 @@ nonisolated enum ClaudeCompleter {
     ]
 
     /// Shown first when nothing is typed yet: what people reach for most.
-    private static let common = ["plan", "auto", "model", "compact", "clear", "context", "usage", "resume", "effort", "init"]
+    private static let common = ["plan", "auto", "agent", "model", "compact", "clear", "context", "usage", "resume", "effort", "init"]
     private static let effortLevels = ["low", "medium", "high", "xhigh", "max"]
     /// Commands whose argument has its own menu, so picking the command opens that.
     private static let opensMenu: Set = ["model", "effort", "resume"]

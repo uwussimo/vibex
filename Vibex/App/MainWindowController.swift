@@ -58,8 +58,6 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
             sidebar: sidebar,
             sourceControl: sourceControl,
             skills: skills,
-            agents: agents,
-            agentActions: agentActions(),
             mcpServers: mcpServers,
             explorer: explorer,
             openFile: { [weak self] url, keep in self?.openFile(url, keep: keep) },
@@ -108,6 +106,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
         agents.refresh()
         workspace.simulatorPane.openDevices = { [weak self] in self?.showDevices(nil) }
         workspace.terminalPane.openFile = { [weak self] url in self?.openFile(url, keep: true) }
+        workspace.terminalPane.agents = ClaudeAgentsContext(model: agents, actions: agentActions())
         workspace.terminalPane.showSkills = { [weak self] in self?.showSidebar(.skills) }
         workspace.terminalPane.showMCP = { [weak self] in self?.showSidebar(.mcp) }
         workspace.editor.onFileShown = { [weak self] url in if let url { self?.explorer.selection = url.standardizedFileURL } }
@@ -130,7 +129,6 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
                 showSimulator: { [weak self] in self?.workspace.focusSimulator(nil) },
                 showBrowser: { [weak self] in self?.workspace.focusBrowser(nil) },
                 toggleSourceControl: { [weak self] in self?.toggleSourceControl(nil) },
-                toggleAgents: { [weak self] in self?.toggleAgents(nil) },
                 toggleSkills: { [weak self] in self?.toggleSkills(nil) },
                 toggleExplorer: { [weak self] in self?.toggleExplorer(nil) },
                 toggleMCP: { [weak self] in self?.toggleMCPServers(nil) },
@@ -197,12 +195,11 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
     }
 
     @objc func toggleSourceControl(_ sender: Any?) { toggleSidebar(.sourceControl) }
-    @objc func toggleAgents(_ sender: Any?) { toggleSidebar(.agents) }
     @objc func showDevices(_ sender: Any?) { workspace.editor.openDevices(model: deviceMatrix, runner: runner) }
 
-    /// File › New Agent: the Agents sidebar with its form open.
+    /// File › New Agent: Claude's composer, ready to start one.
     @objc func newAgent(_ sender: Any?) {
-        showSidebar(.agents)
+        showClaude()
         agents.isComposing = true
     }
 
@@ -210,11 +207,11 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
 
     private func agentActions() -> AgentActions {
         AgentActions(
-            create: { [weak self] name, task in
+            create: { [weak self] name, task, attachments in
                 guard let self else { return }
                 Task {
                     guard let folder = await self.agents.create(name: name, task: task) else { return }
-                    self.workspace.showTerminalTab(self.workspace.terminalPane.openAgentChat(in: folder, name: name, task: task))
+                    self.workspace.showTerminalTab(self.workspace.terminalPane.openAgentChat(in: folder, name: name, task: task, attachments: attachments))
                 }
             },
             open: { [weak self] agent in

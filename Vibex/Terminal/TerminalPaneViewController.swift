@@ -58,6 +58,8 @@ final class TerminalPaneViewController: NSViewController {
     private var emptyHost: NSHostingView<PaneEmptyState>?
     /// Opens a file from a chat's tool card.
     var openFile: (URL) -> Void = { _ in }
+    /// Set before the first chat opens: agents live inside each chat.
+    var agents: ClaudeAgentsContext?
     /// /skills and /mcp in a chat.
     var showSkills: () -> Void = {}
     var showMCP: () -> Void = {}
@@ -222,11 +224,12 @@ final class TerminalPaneViewController: NSViewController {
     /// A chat for an agent, in its worktree. Edits there can't touch the project until it's merged,
     /// so they don't stop to ask; commands still do.
     @discardableResult
-    func openAgentChat(in folder: URL, name: String, task: String?, resuming sessionID: String? = nil) -> UUID {
+    func openAgentChat(in folder: URL, name: String, task: String?, attachments: [ClaudeAttachment] = [], resuming sessionID: String? = nil) -> UUID {
         let id = openChat(in: folder.path, name: name, resuming: sessionID)
         if let chat = tabs.first(where: { $0.id == id })?.chat {
             chat.mode = .acceptEdits
-            if let task { chat.send(task) }
+            chat.attachments = attachments
+            if let task, !task.isEmpty || !attachments.isEmpty { chat.send(task) }
         }
         return id
     }
@@ -243,7 +246,7 @@ final class TerminalPaneViewController: NSViewController {
         if session.state.terminalClosed == true { session.update { $0.terminalClosed = false } }
         let model = ClaudeChatModel(folder: folder ?? session.project.path, environment: session.terminalEnvironment, resuming: sessionID, name: name)
         model.actions = chatActions(for: model)
-        let host = NSHostingView(rootView: ClaudeChatView(model: model))
+        let host = NSHostingView(rootView: ClaudeChatView(model: model, agents: agents))
         host.sizingOptions = []
         host.autoresizingMask = [.width, .height]
         let tab = Tab(chat: model, content: host)
@@ -277,7 +280,10 @@ final class TerminalPaneViewController: NSViewController {
                 if let replaced { close(replaced) }
             },
             showSkills: { [weak self] in self?.showSkills() },
-            showMCP: { [weak self] in self?.showMCP() }
+            showMCP: { [weak self] in self?.showMCP() },
+            startAgent: { [weak self] task in
+                self?.agents?.actions.create(AgentsModel.slug(task), task, [])
+            }
         )
     }
 

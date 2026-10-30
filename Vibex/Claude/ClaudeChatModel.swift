@@ -12,6 +12,8 @@ struct ClaudeChatActions {
     var resume: (String) -> Void = { _ in }
     var showSkills: () -> Void = {}
     var showMCP: () -> Void = {}
+    /// A new agent on its own branch, starting on this task.
+    var startAgent: (String) -> Void = { _ in }
 }
 
 /// One Claude Code session without a terminal: runs `claude` in stream-json mode and turns what it
@@ -179,6 +181,12 @@ final class ClaudeChatModel {
         case "ask": switchMode(.ask)
         case "accept-edits": switchMode(.acceptEdits)
         case "new": actions.newChat()
+        case "agent":
+            if argument.isEmpty {
+                items.append(Item(kind: .notice("Type /agent and a task to start it on its own branch, or press ⌘Return to send any message that way.", isError: false)))
+            } else {
+                actions.startAgent(argument)
+            }
         case "skills": actions.showSkills()
         case "mcp": actions.showMCP()
         case "help":

@@ -174,7 +174,7 @@ import Testing
 
     @Test func `slash lists commands, common ones first, and finds them by any part`() {
         let all = rows("/")
-        #expect(all.prefix(4).map(\.id) == ["plan", "auto", "model", "compact"])
+        #expect(all.prefix(4).map(\.id) == ["plan", "auto", "agent", "model"])
         #expect(all.contains { $0.id == "ux-laws" })
         #expect(rows("/com").first?.id == "compact")
         #expect(rows("/laws").first?.id == "ux-laws")

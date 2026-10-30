@@ -26,8 +26,9 @@ struct ActivityBar: View {
                 label: "Claude",
                 help: chatsWaiting > 0
                     ? "Claude needs you in \(chatsWaiting) chat\(chatsWaiting == 1 ? "" : "s")"
-                    : "Claude (⌃⇧C for a new chat)",
+                    : "Claude (⌃⇧C for a new chat)" + (agents.agents.isEmpty ? "" : ", with \(agents.agents.count) agent\(agents.agents.count == 1 ? "" : "s")"),
                 isSelected: panes.terminal && leftTabs.isClaudeSelected,
+                badge: agents.agents.count,
                 attention: chatsWaiting,
                 action: actions.showClaude
             )
@@ -71,14 +72,6 @@ struct ActivityBar: View {
                 isSelected: sidebar.isShowing(.sourceControl),
                 badge: sourceControl.status.changeCount,
                 action: actions.toggleSourceControl
-            )
-            ActivityButton(
-                icon: .users,
-                label: "Agents",
-                help: "Agents: parallel Claude attempts in their own branches (⌃⇧N)",
-                isSelected: sidebar.isShowing(.agents),
-                badge: agents.agents.count,
-                action: actions.toggleAgents
             )
             ActivityButton(
                 icon: .skills,
@@ -142,7 +135,6 @@ struct ActivityBarActions {
     var showSimulator: () -> Void
     var showBrowser: () -> Void
     var toggleSourceControl: () -> Void
-    var toggleAgents: () -> Void
     var toggleSkills: () -> Void
     var toggleExplorer: () -> Void
     var toggleMCP: () -> Void
