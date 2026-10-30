@@ -2,6 +2,18 @@ import AppKit
 import Observation
 import os
 
+/// What a chat asks of the window around it.
+struct ClaudeChatActions {
+    var openFile: (URL) -> Void = { _ in }
+    var openTerminal: () -> Void = {}
+    /// Opens a terminal tab and types this, for what only works there.
+    var runInTerminal: (String) -> Void = { _ in }
+    var newChat: () -> Void = {}
+    var resume: (String) -> Void = { _ in }
+    var showSkills: () -> Void = {}
+    var showMCP: () -> Void = {}
+}
+
 /// One Claude Code session without a terminal: runs `claude` in stream-json mode and turns what it
 /// says into items for `ClaudeChatView`. It's the real Claude Code, so CLAUDE.md, skills, hooks and
 /// MCP servers (Vibex's own too) all apply, and a session can be continued with `claude --resume`.
@@ -14,6 +26,8 @@ final class ClaudeChatModel {
             case text(String)
             case tool(ClaudeToolUse, ClaudeToolResult?)
             case notice(String, isError: Bool)
+            /// A command only Claude Code's terminal interface has.
+            case needsTerminal(String)
             case done(seconds: Double)
         }
 
@@ -22,34 +36,55 @@ final class ClaudeChatModel {
         static func == (a: Item, b: Item) -> Bool { a.id == b.id && a.kind == b.kind }
     }
 
+    /// How much Claude does before asking, in Claude Code's own terms. ⇧⇥ steps through them.
     enum Mode: String, CaseIterable, Identifiable {
-        case ask = "default", acceptEdits, plan
+        case ask = "default", acceptEdits, plan, auto
 
         var id: String { rawValue }
         var title: String {
             switch self {
-            case .ask: "Ask before changes"
+            case .ask: "Ask"
             case .acceptEdits: "Accept edits"
-            case .plan: "Plan first"
+            case .plan: "Plan"
+            case .auto: "Auto"
             }
+        }
+        var summary: String {
+            switch self {
+            case .ask: "Asks before edits and commands"
+            case .acceptEdits: "Edits files freely, asks before commands"
+            case .plan: "Reads and proposes a plan, changes nothing"
+            case .auto: "Works on its own, stops only for risky actions"
+            }
+        }
+        var next: Mode {
+            let all = Self.allCases
+            return all[(all.firstIndex(of: self)! + 1) % all.count]
         }
     }
 
-    enum Model: String, CaseIterable, Identifiable {
-        case automatic = "", opus, sonnet, haiku
-
-        var id: String { rawValue }
-        var title: String { self == .automatic ? "Default model" : rawValue.capitalized }
-    }
-
     let folder: String
-    private let environment: [String: String]
+    let environment: [String: String]
     private(set) var items: [Item] = []
     private(set) var isBusy = false
     /// Waiting on the user, oldest first.
     private(set) var permissions: [ClaudePermissionRequest] = []
     private(set) var sessionID: String?
     private(set) var slashCommands: [String] = []
+    /// The model in use right now, as Claude Code reports it.
+    private(set) var activeModel: String?
+    /// How full the conversation is, once Claude Code has said.
+    private(set) var contextPercent: Int?
+    /// What Claude Code is busy with beyond thinking, such as compacting.
+    private(set) var status: String?
+    private(set) var turnStarted: Date?
+    /// For /resume and the empty state.
+    private(set) var recentSessions: [ClaudeSessionSummary] = []
+    /// Extra `claude` arguments, for a chat with a job of its own (Design).
+    var extraArguments: [String] = []
+    /// Added to what's sent but not to what's shown, such as the screen selected on the canvas.
+    var messageContext: () -> String? = { nil }
+    var actions = ClaudeChatActions()
     private(set) var title = "Claude"
     private(set) var isLoadingHistory = false
     /// Added to the next message.
@@ -59,8 +94,9 @@ final class ClaudeChatModel {
     var mode = Mode.ask {
         didSet { if mode != oldValue { write(ClaudeMessage.control("set_permission_mode", ["mode": mode.rawValue])) } }
     }
-    var model = Model.automatic {
-        didSet { if model != oldValue { write(ClaudeMessage.control("set_model", ["model": model == .automatic ? "default" : model.rawValue])) } }
+    /// What `--model` takes; empty is Claude Code's default.
+    var model = "" {
+        didSet { if model != oldValue { write(ClaudeMessage.control("set_model", ["model": model.isEmpty ? "default" : model])) } }
     }
     /// Bumped to put the cursor in the composer.
     private(set) var focusRequest = 0
@@ -96,6 +132,7 @@ final class ClaudeChatModel {
         let text = text.trimmingCharacters(in: .whitespacesAndNewlines)
         let attached = attachments
         guard !text.isEmpty || !attached.isEmpty else { return }
+        if attached.isEmpty, runLocally(text) { return }
         attachments = []
         if title == "Claude" {
             noteTitle(text.isEmpty ? "Attachment" : text)
@@ -113,10 +150,80 @@ final class ClaudeChatModel {
             items.append(Item(kind: .attachments(images: images.map(\.data), files: files.map(\.lastPathComponent))))
         }
         if !text.isEmpty { items.append(Item(kind: .user(text))) }
-        isBusy = true
         streaming = nil
         if process?.isRunning != true { start() }
-        write(ClaudeMessage.user(Self.message(text, files: files), images: images))
+        isBusy = true
+        turnStarted = Date()
+        let context = text.hasPrefix("/") ? nil : messageContext()
+        write(ClaudeMessage.user(Self.message(context.map { "\($0)\n\n\(text)" } ?? text, files: files), images: images))
+    }
+
+    /// Commands Vibex answers itself: the ones about its own controls, and the ones that need a
+    /// terminal Claude Code doesn't have here. Returns false for everything Claude Code handles.
+    private func runLocally(_ text: String) -> Bool {
+        guard text.hasPrefix("/") else { return false }
+        let parts = text.dropFirst().split(separator: " ", maxSplits: 1).map(String.init)
+        guard let name = parts.first else { return false }
+        let argument = parts.count > 1 ? parts[1].trimmingCharacters(in: .whitespaces) : ""
+        func switchMode(_ new: Mode) {
+            mode = new
+            if argument.isEmpty {
+                items.append(Item(kind: .notice("\(new.title) mode. \(new.summary).", isError: false)))
+            } else {
+                send(argument)
+            }
+        }
+        switch name {
+        case "plan": switchMode(.plan)
+        case "auto": switchMode(.auto)
+        case "ask": switchMode(.ask)
+        case "accept-edits": switchMode(.acceptEdits)
+        case "new": actions.newChat()
+        case "skills": actions.showSkills()
+        case "mcp": actions.showMCP()
+        case "help":
+            items.append(Item(kind: .notice("Type / for every command and skill, with what each one does. @ adds a file. ⇧⇥ changes the mode.", isError: false)))
+        case "resume":
+            if argument.isEmpty {
+                items.append(Item(kind: .notice("Type /resume and a space to pick a conversation.", isError: false)))
+            } else {
+                actions.resume(argument)
+            }
+        case "model":
+            if argument.isEmpty {
+                items.append(Item(kind: .notice("Using \(modelTitle). Type /model and a space to pick another.", isError: false)))
+            } else {
+                let option = capabilities.models.first { $0.value == argument || $0.title.lowercased() == argument.lowercased() }
+                model = option?.value == "default" ? "" : option?.value ?? argument
+                items.append(Item(kind: .notice("Using \(modelTitle).", isError: false)))
+            }
+        default:
+            guard terminalCommands.contains(name) else { return false }
+            items.append(Item(kind: .needsTerminal(name)))
+        }
+        return true
+    }
+
+    /// Claude Code's commands for its terminal interface, which do nothing in this mode.
+    private var terminalCommands: Set<String> = ["color", "focus", "reload-plugins"]
+
+    var capabilities: ClaudeCapabilities { ClaudeCatalog.shared.capabilities(folder: folder) }
+
+    /// "Opus 5.5", or the default model by the name Claude Code gives it now.
+    var modelTitle: String {
+        if model.isEmpty {
+            guard let option = capabilities.models.first(where: { $0.value == "default" }) else { return "Default model" }
+            return option.summary.split(separator: "·").first.map { $0.trimmingCharacters(in: .whitespaces) } ?? option.title
+        }
+        return capabilities.models.first { $0.value == model }?.title ?? model
+    }
+
+    func loadRecentSessions() {
+        let folder = folder
+        Task { [weak self] in
+            let sessions = await ClaudeTranscript.recentSessions(folder: folder)
+            self?.recentSessions = sessions.filter { $0.id != self?.sessionID }
+        }
     }
 
     /// Files reach Claude as paths, which it reads with its own tools.
@@ -162,10 +269,29 @@ final class ClaudeChatModel {
 
     func apply(_ event: ClaudeEvent) {
         switch event {
-        case let .started(session, _, commands):
+        case let .started(session, model, commands):
             sessionID = session
             slashCommands = commands
+            activeModel = model
             onChange()
+        case let .conversationReset(session):
+            sessionID = session
+            items = []
+            toolItems = [:]
+            streaming = nil
+            contextPercent = nil
+            if name == nil { title = "Claude" }
+            onChange()
+        case let .status(status):
+            self.status = status
+        case .compacted:
+            items.append(Item(kind: .notice("Compacted the conversation.", isError: false)))
+        case let .commandsChanged(commands):
+            ClaudeCatalog.shared.update(folder: folder, commands: commands)
+        case let .contextUsage(percent):
+            contextPercent = percent
+        case let .controlFailed(message):
+            items.append(Item(kind: .notice(message, isError: true)))
         case let .textDelta(text):
             if let streaming, let index = items.firstIndex(where: { $0.id == streaming }), case let .text(current) = items[index].kind {
                 items[index].kind = .text(current + text)
@@ -175,6 +301,11 @@ final class ClaudeChatModel {
                 streaming = item.id
             }
         case let .text(text):
+            if let command = Self.terminalOnlyCommand(text) {
+                terminalCommands.insert(command)
+                items.append(Item(kind: .needsTerminal(command)))
+                return
+            }
             if let streaming, let index = items.firstIndex(where: { $0.id == streaming }) {
                 items[index].kind = .text(text)
             } else if items.last?.kind != .text(text) {
@@ -212,33 +343,50 @@ final class ClaudeChatModel {
             streaming = nil
             isBusy = false
             permissions = []
+            status = nil
+            turnStarted = nil
             if isError, let message { items.append(Item(kind: .notice(message, isError: true))) }
-            items.append(Item(kind: .done(seconds: seconds)))
+            // Commands answer at once; only real work is worth a line about how long it took.
+            if seconds >= 1, !items.isEmpty { items.append(Item(kind: .done(seconds: seconds))) }
             onChange()
+            write(ClaudeMessage.control("get_context_usage"))
         }
     }
 
     // MARK: - The process
 
+    /// "/resume isn't available in this environment." → "resume"
+    nonisolated static func terminalOnlyCommand(_ text: String) -> String? {
+        guard text.hasPrefix("/"), text.hasSuffix("isn't available in this environment."), let word = text.dropFirst().split(separator: " ").first else { return nil }
+        return String(word)
+    }
+
     /// Everything goes in one command for the user's login shell, so Claude's tools get their PATH.
-    nonisolated static func commandLine(binary: String = "claude", resume: String?, mode: Mode, model: Model) -> String {
+    nonisolated static func commandLine(binary: String = "claude", resume: String?, mode: Mode, model: String, extra: [String] = []) -> String {
         var arguments = ["-p", "--input-format", "stream-json", "--output-format", "stream-json", "--verbose",
                          "--include-partial-messages", "--permission-prompt-tool", "stdio", "--permission-mode", mode.rawValue]
         if let resume { arguments += ["--resume", resume] }
-        if model != .automatic { arguments += ["--model", model.rawValue] }
-        return "exec '\(binary)' " + arguments.map { "'\($0)'" }.joined(separator: " ")
+        if !model.isEmpty { arguments += ["--model", model] }
+        return "exec " + ([binary] + arguments + extra).map { "'\($0.replacingOccurrences(of: "'", with: "'\\''"))'" }.joined(separator: " ")
     }
 
-    private func start() {
+    /// `claude` in the user's login shell, in `folder`, not yet started.
+    static func process(folder: String, environment: [String: String], command: String) -> Process {
         let login = TerminalSession.login(directory: folder, environment: environment)
         let process = Process()
         process.executableURL = URL(fileURLWithPath: login.shell)
-        process.arguments = ["-l", "-c", Self.commandLine(binary: ClaudeCodeRegistrar.findClaude() ?? "claude", resume: sessionID, mode: mode, model: model)]
+        process.arguments = ["-l", "-c", command]
         process.currentDirectoryURL = URL(fileURLWithPath: folder)
         process.environment = Dictionary(login.environment.compactMap { pair -> (String, String)? in
             guard let equals = pair.firstIndex(of: "=") else { return nil }
             return (String(pair[..<equals]), String(pair[pair.index(after: equals)...]))
         }, uniquingKeysWith: { $1 })
+        return process
+    }
+
+    private func start() {
+        let process = Self.process(folder: folder, environment: environment, command: Self.commandLine(
+            binary: ClaudeCodeRegistrar.findClaude() ?? "claude", resume: sessionID, mode: mode, model: model, extra: extraArguments))
         let stdin = Pipe(), stdout = Pipe(), stderr = Pipe()
         process.standardInput = stdin
         process.standardOutput = stdout
@@ -308,7 +456,7 @@ final class ClaudeChatModel {
             guard let self else { return }
             for event in events {
                 switch event {
-                case .turnEnded, .permission, .permissionCancelled, .started: continue
+                case .turnEnded, .permission, .permissionCancelled, .started, .status, .contextUsage, .controlFailed, .commandsChanged: continue
                 default: apply(event)
                 }
             }

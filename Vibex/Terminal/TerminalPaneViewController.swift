@@ -58,6 +58,9 @@ final class TerminalPaneViewController: NSViewController {
     private var emptyHost: NSHostingView<PaneEmptyState>?
     /// Opens a file from a chat's tool card.
     var openFile: (URL) -> Void = { _ in }
+    /// /skills and /mcp in a chat.
+    var showSkills: () -> Void = {}
+    var showMCP: () -> Void = {}
 
     init(session: ProjectSession) {
         self.session = session
@@ -239,11 +242,8 @@ final class TerminalPaneViewController: NSViewController {
         hasRestored = true
         if session.state.terminalClosed == true { session.update { $0.terminalClosed = false } }
         let model = ClaudeChatModel(folder: folder ?? session.project.path, environment: session.terminalEnvironment, resuming: sessionID, name: name)
-        let host = NSHostingView(rootView: ClaudeChatView(
-            model: model,
-            openFile: { [weak self] url in self?.openFile(url) },
-            openTerminal: { [weak self] in self?.newTab(nil) }
-        ))
+        model.actions = chatActions(for: model)
+        let host = NSHostingView(rootView: ClaudeChatView(model: model))
         host.sizingOptions = []
         host.autoresizingMask = [.width, .height]
         let tab = Tab(chat: model, content: host)
@@ -258,6 +258,27 @@ final class TerminalPaneViewController: NSViewController {
         syncTabBar()
         select(tab.id)
         return tab.id
+    }
+
+    private func chatActions(for model: ClaudeChatModel) -> ClaudeChatActions {
+        ClaudeChatActions(
+            openFile: { [weak self] url in self?.openFile(url) },
+            openTerminal: { [weak self] in self?.newTab(nil) },
+            runInTerminal: { [weak self, weak model] command in
+                guard let self else { return }
+                runCommandInNewTab(command, directory: model?.folder ?? session.project.path)
+            },
+            newChat: { [weak self] in self?.newClaudeChat(nil) },
+            resume: { [weak self, weak model] id in
+                guard let self else { return }
+                // An untouched chat gives way to the conversation it's reopening.
+                let replaced = tabs.first { $0.chat === model && $0.chat?.items.isEmpty == true }?.id
+                openChat(in: model?.folder, name: model?.name, resuming: id)
+                if let replaced { close(replaced) }
+            },
+            showSkills: { [weak self] in self?.showSkills() },
+            showMCP: { [weak self] in self?.showMCP() }
+        )
     }
 
     /// A chat's approvals go through the same inbox as Claude's hooks in a terminal: the tab's dot, the

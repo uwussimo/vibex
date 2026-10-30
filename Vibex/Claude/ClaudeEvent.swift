@@ -37,6 +37,15 @@ nonisolated enum ClaudeEvent: Equatable, Sendable {
     case permission(ClaudePermissionRequest)
     case permissionCancelled(String)
     case turnEnded(seconds: Double, isError: Bool, message: String?)
+    /// `/clear`: a new conversation with a new id.
+    case conversationReset(sessionID: String)
+    /// What Claude Code is busy with beyond thinking, such as compacting; nil when it's done.
+    case status(String?)
+    case compacted
+    case commandsChanged([ClaudeCommand])
+    case contextUsage(percent: Int)
+    /// Claude Code turned down something Vibex asked of it.
+    case controlFailed(String)
 
     static func parse(_ line: String) -> [ClaudeEvent] {
         guard let data = line.data(using: .utf8),
@@ -46,8 +55,27 @@ nonisolated enum ClaudeEvent: Equatable, Sendable {
         if object["parent_tool_use_id"] is String || object["isSidechain"] as? Bool == true { return [] }
         switch type {
         case "system":
-            guard object["subtype"] as? String == "init", let session = object["session_id"] as? String else { return [] }
-            return [.started(sessionID: session, model: object["model"] as? String, slashCommands: object["slash_commands"] as? [String] ?? [])]
+            switch object["subtype"] as? String {
+            case "init":
+                guard let session = object["session_id"] as? String else { return [] }
+                return [.started(sessionID: session, model: object["model"] as? String, slashCommands: object["slash_commands"] as? [String] ?? [])]
+            case "status":
+                let status = object["status"] as? String
+                return status == nil || status == "compacting" ? [.status(status)] : []
+            case "compact_boundary":
+                return [.compacted]
+            case "commands_changed":
+                return [.commandsChanged(ClaudeCapabilities.commands(object["commands"]))]
+            default:
+                return []
+            }
+        case "conversation_reset":
+            return (object["new_conversation_id"] as? String).map { [.conversationReset(sessionID: $0)] } ?? []
+        case "control_response":
+            guard let response = object["response"] as? [String: Any] else { return [] }
+            if response["subtype"] as? String == "error" { return (response["error"] as? String).map { [.controlFailed($0)] } ?? [] }
+            guard let reply = response["response"] as? [String: Any], reply["totalTokens"] != nil, let percent = reply["percentage"] as? Int else { return [] }
+            return [.contextUsage(percent: percent)]
         case "stream_event":
             guard let event = object["event"] as? [String: Any], event["type"] as? String == "content_block_delta",
                   let delta = event["delta"] as? [String: Any], delta["type"] as? String == "text_delta",
@@ -194,6 +222,30 @@ nonisolated enum ClaudeTranscript {
                 return dates[0] < dates[1]
             }?
             .deletingPathExtension().lastPathComponent
+    }
+
+    /// Earlier conversations here, newest first, titled by what was asked first.
+    @concurrent static func recentSessions(folder: String, limit: Int = 12) async -> [ClaudeSessionSummary] {
+        let directory = file(session: "x", folder: folder).deletingLastPathComponent()
+        let files = (try? FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: [.contentModificationDateKey])) ?? []
+        let dated = files.filter { $0.pathExtension == "jsonl" }.map { url in
+            (url, (try? url.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate) ?? .distantPast)
+        }
+        return dated.sorted { $0.1 > $1.1 }.prefix(limit * 2).compactMap { url, date in
+            title(ofTranscript: url).map { ClaudeSessionSummary(id: url.deletingPathExtension().lastPathComponent, title: $0, date: date) }
+        }.prefix(limit).map(\.self)
+    }
+
+    /// The first thing the user typed. Only the top of the file is read: transcripts get large.
+    private static func title(ofTranscript url: URL) -> String? {
+        guard let handle = try? FileHandle(forReadingFrom: url), let head = try? handle.read(upToCount: 256_000) else { return nil }
+        try? handle.close()
+        for line in String(decoding: head, as: UTF8.self).split(separator: "\n") {
+            for case let .userText(text) in ClaudeEvent.parse(String(line)) where !text.hasPrefix("/") {
+                return String(text.prefix(70)).replacingOccurrences(of: "\n", with: " ")
+            }
+        }
+        return nil
     }
 
     @concurrent static func load(session: String, folder: String) async -> [ClaudeEvent] {

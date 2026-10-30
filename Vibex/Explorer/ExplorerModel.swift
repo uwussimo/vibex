@@ -137,7 +137,7 @@ final class ExplorerModel {
         }
     }
 
-    @concurrent private static func projectFiles(_ root: URL) async -> [String] {
+    @concurrent static func projectFiles(_ root: URL) async -> [String] {
         guard let data = try? Shell.run("/usr/bin/git", ["-C", root.path, "ls-files", "--cached", "--others", "--exclude-standard"]),
               let text = String(data: data, encoding: .utf8) else { return [] }
         return Array(text.split(separator: "\n").prefix(20_000).map(String.init))

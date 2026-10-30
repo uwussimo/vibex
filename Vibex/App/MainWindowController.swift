@@ -108,6 +108,8 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
         agents.refresh()
         workspace.simulatorPane.openDevices = { [weak self] in self?.showDevices(nil) }
         workspace.terminalPane.openFile = { [weak self] url in self?.openFile(url, keep: true) }
+        workspace.terminalPane.showSkills = { [weak self] in self?.showSidebar(.skills) }
+        workspace.terminalPane.showMCP = { [weak self] in self?.showSidebar(.mcp) }
         workspace.editor.onFileShown = { [weak self] url in if let url { self?.explorer.selection = url.standardizedFileURL } }
     }
 

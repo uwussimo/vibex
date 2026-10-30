@@ -69,10 +69,10 @@ import Testing
     }
 
     @Test func `the command line and transcript path`() {
-        let line = ClaudeChatModel.commandLine(resume: "abc", mode: .plan, model: .haiku)
+        let line = ClaudeChatModel.commandLine(resume: "abc", mode: .plan, model: "haiku")
         #expect(line.hasPrefix("exec 'claude' '-p'"))
         #expect(line.contains("'--resume' 'abc'") && line.contains("'--permission-mode' 'plan'") && line.contains("'--model' 'haiku'"))
-        #expect(!ClaudeChatModel.commandLine(resume: nil, mode: .ask, model: .automatic).contains("--model"))
+        #expect(!ClaudeChatModel.commandLine(resume: nil, mode: .ask, model: "").contains("--model"))
         let file = ClaudeTranscript.file(session: "s", folder: "/Users/a/my.app", home: URL(fileURLWithPath: "/h"))
         #expect(file.path == "/h/.claude/projects/-Users-a-my-app/s.jsonl")
     }
@@ -135,5 +135,131 @@ import Testing
         }
         #expect(await ClaudeTranscript.latestSession(folder: folder) == "newer")
         #expect(await ClaudeTranscript.latestSession(folder: "/tmp/nothing-\(UUID().uuidString)") == nil)
+    }
+}
+
+@MainActor @Suite struct ClaudeCommandsTests {
+    private let commands = [
+        ClaudeCommand(name: "compact", summary: "Free up context"),
+        ClaudeCommand(name: "model", summary: "Choose a model"),
+        ClaudeCommand(name: "clear", summary: "Start over"),
+        ClaudeCommand(name: "review-pr", summary: "Review a pull request", argumentHint: "<number>"),
+        ClaudeCommand(name: "ux-laws", summary: "Usability heuristics"),
+    ]
+    private let models = [
+        ClaudeModelOption(value: "default", title: "Default (recommended)", summary: "Sonnet 5.5 · Efficient for routine tasks"),
+        ClaudeModelOption(value: "opus", title: "Opus 5.5", summary: "For complex work", effortLevels: ["low", "high"]),
+        ClaudeModelOption(value: "claude-opus-4-8", title: "Opus 4.8", summary: "Older"),
+    ]
+
+    private func rows(_ text: String, sessions: [ClaudeSessionSummary] = [], files: [String] = []) -> [ClaudeSuggestion] {
+        ClaudeCompleter.suggestions(for: text, commands: commands, models: models, sessions: sessions, files: files)
+    }
+
+    @Test func `the initialize reply gives commands and models with versions`() {
+        let reply: [String: Any] = [
+            "commands": [
+                ["name": "ux-laws", "description": "Apply the laws. Use whenever. (user)", "argumentHint": ""],
+                ["name": "__secret", "description": "internal"],
+                ["name": "effort", "description": "Set effort", "argumentHint": "<level>"],
+            ],
+            "models": [["value": "opus", "displayName": "Opus 5.5", "description": "For complex work", "supportedEffortLevels": ["low", "max"]]],
+        ]
+        let capabilities = ClaudeCapabilities(reply: reply)
+        #expect(capabilities.commands.map(\.name) == ["ux-laws", "effort"])
+        #expect(capabilities.commands[0].summary == "Apply the laws")
+        #expect(capabilities.commands[1].argumentHint == "<level>")
+        #expect(capabilities.models == [ClaudeModelOption(value: "opus", title: "Opus 5.5", summary: "For complex work", effortLevels: ["low", "max"])])
+    }
+
+    @Test func `slash lists commands, common ones first, and finds them by any part`() {
+        let all = rows("/")
+        #expect(all.prefix(4).map(\.id) == ["plan", "auto", "model", "compact"])
+        #expect(all.contains { $0.id == "ux-laws" })
+        #expect(rows("/com").first?.id == "compact")
+        #expect(rows("/laws").first?.id == "ux-laws")
+        #expect(rows("/heuristics").first?.id == "ux-laws")
+    }
+
+    @Test func `return runs a bare command and waits for a required argument`() {
+        #expect(rows("/compact").first?.action == .run("/compact"))
+        #expect(rows("/review").first?.action == .insert("/review-pr "))
+        #expect(rows("/mod").first?.action == .insert("/model "))
+        #expect(rows("/compact").first?.completion == "/compact ")
+    }
+
+    @Test func `arguments open their own menus`() {
+        #expect(rows("/model ").map(\.title) == ["Default (recommended)", "Opus 5.5", "Opus 4.8"])
+        #expect(rows("/model 4.8").first?.action == .run("/model claude-opus-4-8"))
+        #expect(rows("/effort h").map(\.action) == [.run("/effort high")])
+        let session = ClaudeSessionSummary(id: "s1", title: "Fix the login", date: .now)
+        #expect(rows("/resume log", sessions: [session]).first?.action == .run("/resume s1"))
+        #expect(rows("/compact now").isEmpty)
+        #expect(rows("hello").isEmpty)
+    }
+
+    @Test func `at finds files and keeps what was typed`() {
+        let suggestions = rows("look at @chat", files: ["README.md", "Vibex/Claude/ClaudeChatView.swift"])
+        #expect(suggestions.map(\.title) == ["Vibex/Claude/ClaudeChatView.swift"])
+        #expect(suggestions.first?.action == .insert("look at @Vibex/Claude/ClaudeChatView.swift "))
+    }
+
+    @Test func `commands Vibex answers itself never reach Claude`() {
+        let model = ClaudeChatModel(folder: "/tmp", environment: [:])
+        model.send("/plan")
+        #expect(model.mode == .plan)
+        model.send("/auto")
+        #expect(model.mode == .auto)
+        model.send("/model opus")
+        #expect(model.model == "opus")
+        var shown = false
+        model.actions.showMCP = { shown = true }
+        model.send("/mcp")
+        #expect(shown)
+        model.send("/color")
+        #expect(model.items.last?.kind == .needsTerminal("color"))
+        #expect(!model.isBusy)
+    }
+
+    @Test func `new events do what they say`() {
+        #expect(ClaudeEvent.parse(#"{"type":"conversation_reset","new_conversation_id":"n1","session_id":"o"}"#) == [.conversationReset(sessionID: "n1")])
+        #expect(ClaudeEvent.parse(#"{"type":"system","subtype":"status","status":"compacting"}"#) == [.status("compacting")])
+        #expect(ClaudeEvent.parse(#"{"type":"control_response","response":{"subtype":"success","request_id":"a","response":{"totalTokens":5,"percentage":62}}}"#) == [.contextUsage(percent: 62)])
+        #expect(ClaudeEvent.parse(#"{"type":"control_response","response":{"subtype":"error","request_id":"a","error":"Auto mode is off"}}"#) == [.controlFailed("Auto mode is off")])
+
+        let model = ClaudeChatModel(folder: "/tmp", environment: [:])
+        model.apply(.textDelta("Hi"))
+        model.apply(.conversationReset(sessionID: "n1"))
+        #expect(model.items.isEmpty)
+        #expect(model.sessionID == "n1")
+        model.apply(.text("/resume isn't available in this environment."))
+        #expect(model.items.last?.kind == .needsTerminal("resume"))
+    }
+
+    @Test func `quick commands don't claim to have finished work`() {
+        let model = ClaudeChatModel(folder: "/tmp", environment: [:])
+        model.apply(.text("Set model"))
+        model.apply(.turnEnded(seconds: 0.01, isError: false, message: nil))
+        #expect(model.items.count == 1)
+        model.apply(.turnEnded(seconds: 4, isError: false, message: nil))
+        #expect(model.items.last?.kind == .done(seconds: 4))
+    }
+
+    @Test func `the command line quotes arguments safely`() {
+        let line = ClaudeChatModel.commandLine(binary: "/x/claude", resume: nil, mode: .auto, model: "opus", extra: ["--append-system-prompt", "It's fine"])
+        #expect(line.contains("'--permission-mode' 'auto'"))
+        #expect(line.contains(#"'It'\''s fine'"#))
+    }
+
+    @Test func `transcripts give recent sessions titled by the first question`() async throws {
+        let folder = "/tmp/vibex-recent-\(UUID().uuidString)"
+        let file = ClaudeTranscript.file(session: "s1", folder: folder)
+        try FileManager.default.createDirectory(at: file.deletingLastPathComponent(), withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: file.deletingLastPathComponent()) }
+        try #"""
+        {"type":"user","message":{"role":"user","content":"/clear"}}
+        {"type":"user","message":{"role":"user","content":"Fix the login"}}
+        """#.write(to: file, atomically: true, encoding: .utf8)
+        #expect(await ClaudeTranscript.recentSessions(folder: folder).map(\.title) == ["Fix the login"])
     }
 }
