@@ -48,6 +48,8 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
         window.isReleasedWhenClosed = false
         super.init(window: window)
         window.delegate = self
+        // Before the window loads its views, which is when a saved tab comes back.
+        workspace.editor.restoreDesign = { [weak self] in self?.openDesignTab() }
         // A plain container holds the activity bar and the split views, so overlays (toast, palette)
         // float above them instead of becoming extra split panes.
         let root = NSViewController()
@@ -107,7 +109,6 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
         workspace.simulatorPane.openDevices = { [weak self] in self?.showDevices(nil) }
         workspace.terminalPane.openFile = { [weak self] url in self?.openFile(url, keep: true) }
         workspace.terminalPane.agents = ClaudeAgentsContext(model: agents, actions: agentActions())
-        workspace.editor.restoreDesign = { [weak self] in self?.openDesignTab() }
         workspace.terminalPane.showSkills = { [weak self] in self?.showSidebar(.skills) }
         workspace.terminalPane.showMCP = { [weak self] in self?.showSidebar(.mcp) }
         workspace.editor.onFileShown = { [weak self] url in if let url { self?.explorer.selection = url.standardizedFileURL } }
@@ -234,6 +235,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
             }
         )
         design.onSessionChange = { [weak self] id in self?.session.update { $0.designSession = id } }
+        design.onAttentionChange = { [weak self] waiting in self?.workspace.editor.tabs.designNeedsAttention = waiting }
         design.build = { [weak self] prompt, asAgent in
             guard let self else { return }
             if asAgent {

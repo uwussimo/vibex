@@ -15,6 +15,8 @@ final class DesignModel {
     /// Sends a finished design to be built: `asAgent` starts it on its own branch.
     var build: (_ prompt: String, _ asAgent: Bool) -> Void = { _, _ in }
     var onSessionChange: (String?) -> Void = { _ in }
+    /// Claude is waiting on the user, whichever tab is in front.
+    var onAttentionChange: (Bool) -> Void = { _ in }
 
     @ObservationIgnored private var watcher: FileWatcher?
     @ObservationIgnored private var fingerprint = ""
@@ -24,13 +26,13 @@ final class DesignModel {
         detail: "Describe an app or a site. Claude draws it on the canvas, screen by screen, in a format it can build from later.",
         placeholder: "Describe what to design…",
         starters: [
-            ("Design the main screens of this project's iOS app", .phone),
-            ("Design a landing page for this project", .globe),
-            ("Look at what's here and propose a better design", .search),
+            ("Design this project's iOS app", .phone),
+            ("Design a landing page for it", .globe),
+            ("Propose a better design for it", .search),
         ],
         showsTerminal: false,
         showsRecent: false,
-        showsModes: false
+        activity: ClaudeActivityStyle(working: DesignActivity.working, summary: DesignActivity.summary, step: DesignActivity.step)
     )
 
     init(project: URL, environment: [String: String], resuming session: String?) {
@@ -39,10 +41,13 @@ final class DesignModel {
         document = DesignDocument.load(folder: folder)
         chat = ClaudeChatModel(folder: project.path, environment: environment, resuming: session, name: "Design")
         chat.extraArguments = Self.claudeArguments
+        // Designing is safe to leave running: its files are all this chat is meant to touch.
+        chat.mode = .auto
         chat.messageContext = { [weak self] in self?.selectionContext }
         chat.onChange = { [weak self] in
             guard let self else { return }
             onSessionChange(chat.sessionID)
+            onAttentionChange(chat.needsAttention)
         }
         chat.clearContext = { [weak self] in self?.select(nil) }
         fingerprint = Self.fingerprint(folder)
@@ -103,7 +108,7 @@ final class DesignModel {
 
     /// Tells Claude which screen is selected, without cluttering what the user sees they said.
     private var selectionContext: String? {
-        selectedScreen.map { "[The user has selected the screen \"\($0.name)\" on the canvas: \(DesignDocument.folderName)/screens/\($0.id). This message is about it.]" }
+        selectedScreen.map { "\(ClaudeEvent.selectionNotePrefix) the screen \"\($0.name)\" on the canvas: \(DesignDocument.folderName)/screens/\($0.id). This message is about it.]" }
     }
 
     func fix(_ screen: DesignScreen) {
@@ -139,6 +144,72 @@ final class DesignModel {
     }
 
     var hasDesign: Bool { !document.isEmpty }
+}
+
+/// Design's work in the words of designing, rather than as a list of file operations.
+nonisolated enum DesignActivity {
+    private enum Step: Equatable {
+        case look, screen(String, isNew: Bool), check, read, other(String)
+    }
+
+    private static func kind(_ tool: ClaudeToolUse) -> Step {
+        let path = tool.input["file_path"]
+        if tool.name == "mcp__vibex__design_screenshot" { return .check }
+        if tool.name == "Write" || tool.name == "Edit" || tool.name == "MultiEdit", let path, path.contains("\(DesignDocument.folderName)/") {
+            if path.hasSuffix("/design.json") { return .look }
+            return .screen(DesignDocument.title(fromFile: URL(fileURLWithPath: path)), isNew: tool.name == "Write")
+        }
+        if tool.name == "Read" || tool.name == "Glob" || tool.name == "Grep" { return .read }
+        return .other(ClaudeToolSummary(tool).title)
+    }
+
+    /// What Claude is doing now. A brand-new call doesn't have its file yet, so it reads as drawing.
+    static func working(_ tool: ClaudeToolUse?) -> String? {
+        guard let tool else { return "Thinking…" }
+        if tool.input["file_path"] == nil, tool.name == "Write" || tool.name == "Edit" { return "Drawing…" }
+        switch kind(tool) {
+        case .look: return "Setting the look…"
+        case let .screen(name, isNew): return isNew ? "Drawing \(name)…" : "Updating \(name)…"
+        case .check: return "Checking how it looks…"
+        case .read: return "Reading the project…"
+        case .other: return "Working…"
+        }
+    }
+
+    static func step(_ tool: ClaudeToolUse) -> String {
+        switch kind(tool) {
+        case .look: "Set the look"
+        case let .screen(name, isNew): isNew ? "Drew \(name)" : "Updated \(name)"
+        case .check: "Checked how it looks"
+        case .read: "Read the project"
+        case let .other(title): title
+        }
+    }
+
+    /// "Drew 3 screens", "Updated Today", or whatever fits when nothing was drawn.
+    static func summary(_ tools: [ClaudeToolUse]) -> String {
+        var drawn: [String] = [], updated: [String] = []
+        for tool in tools {
+            guard case let .screen(name, isNew) = kind(tool) else { continue }
+            if isNew {
+                if !drawn.contains(name) { drawn.append(name) }
+            } else if !updated.contains(name), !drawn.contains(name) {
+                updated.append(name)
+            }
+        }
+        func phrase(_ verb: String, _ names: [String]) -> String? {
+            switch names.count {
+            case 0: nil
+            case 1: "\(verb) \(names[0])"
+            default: "\(verb) \(names.count) screens"
+            }
+        }
+        let parts = [phrase("Drew", drawn), phrase(drawn.isEmpty ? "Updated" : "updated", updated)].compactMap(\.self)
+        if !parts.isEmpty { return parts.joined(separator: ", ") }
+        if tools.contains(where: { kind($0) == .look }) { return "Set the look" }
+        if tools.contains(where: { kind($0) == .check }) { return "Checked how it looks" }
+        return "Read the project"
+    }
 }
 
 /// Chat on the left, canvas on the right. What's asked for and what it looks like stay side by side.
@@ -182,7 +253,7 @@ struct DesignTabView: View {
             }
             if model.chat.isBusy, model.hasDesign {
                 ProgressView().controlSize(.mini)
-                Text("Designing…").font(.vibex(size: 12)).foregroundStyle(Theme.muted)
+                Text(DesignActivity.working(model.chat.pendingTool) ?? "Designing…").font(.vibex(size: 12)).foregroundStyle(Theme.muted).lineLimit(1)
             }
             Spacer()
             if model.hasDesign {

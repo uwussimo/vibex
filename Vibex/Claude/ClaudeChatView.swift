@@ -18,7 +18,7 @@ struct ClaudeChatView: View {
             } else {
                 transcript
             }
-            ClaudeComposer(model: model, placeholder: welcome.placeholder, showsModes: welcome.showsModes, agents: agents)
+            ClaudeComposer(model: model, placeholder: welcome.placeholder, agents: agents)
         }
         .background(Theme.background)
         .task { ClaudeCatalog.shared.load(folder: model.folder, environment: model.environment) }
@@ -39,16 +39,50 @@ struct ClaudeChatView: View {
     }
 
     private var transcript: some View {
+        ClaudeConversation(model: model, activity: welcome.activity)
+    }
+}
+
+// MARK: - Conversation
+
+/// The scrolling transcript. It follows the newest content, however much arrives at once, until the
+/// user scrolls up to read; then it stays put and offers a way back down.
+private struct ClaudeConversation: View {
+    let model: ClaudeChatModel
+    let activity: ClaudeActivityStyle?
+    @State private var position = ScrollPosition(edge: .bottom)
+    @State private var isFollowing = true
+
+    private struct Metrics: Equatable {
+        var offset: CGFloat
+        var content: CGFloat
+        var container: CGFloat
+        var distanceToBottom: CGFloat { content - container - offset }
+    }
+
+    var body: some View {
         ScrollView {
-            LazyVStack(alignment: .leading, spacing: 14) {
-                ForEach(model.items) { item in
-                    if !isAwaitingApproval(item) { row(item) }
+            // Not lazy: a lazy stack guesses the height of rows it hasn't drawn, and a jump to the
+            // bottom then lands on nothing until the user scrolls. Rows skip redrawing when unchanged.
+            VStack(alignment: .leading, spacing: 14) {
+                ForEach(ClaudeChatModel.rows(model.items, folding: activity != nil)) { row in
+                    switch row {
+                    case let .item(item):
+                        if !isAwaitingApproval(item) {
+                            ClaudeItemRow(item: item, isBusy: model.isBusy, folder: model.folder, actions: model.actions).equatable()
+                        }
+                    case let .activity(items):
+                        if let activity { ClaudeActivityGroup(items: items, style: activity) }
+                    }
                 }
                 ForEach(model.permissions) { request in
                     ClaudePermissionCard(request: request, model: model)
                 }
                 if model.isBusy, model.permissions.isEmpty {
-                    ClaudeWorkingLine(status: model.status, started: model.turnStarted)
+                    ClaudeWorkingLine(
+                        label: model.status == "compacting" ? "Compacting the conversation…" : workingLabel,
+                        started: model.turnStarted
+                    )
                 }
             }
             .frame(maxWidth: 820, alignment: .leading)
@@ -56,7 +90,51 @@ struct ClaudeChatView: View {
             .padding(.vertical, 18)
             .frame(maxWidth: .infinity)
         }
-        .defaultScrollAnchor(.bottom, for: .sizeChanges)
+        .scrollPosition($position)
+        // A short conversation starts at the top; a long one opens on its latest message.
+        .defaultScrollAnchor(.top, for: .alignment)
+        .defaultScrollAnchor(.bottom, for: .initialOffset)
+        .onScrollGeometryChange(for: Metrics.self) { geometry in
+            Metrics(offset: geometry.contentOffset.y, content: geometry.contentSize.height, container: geometry.containerSize.height)
+        } action: { old, new in
+            if new.distanceToBottom < 40 {
+                isFollowing = true
+            } else if new.content == old.content, new.container == old.container, new.offset < old.offset {
+                // Only the user moves the view up without the content changing.
+                isFollowing = false
+            } else if isFollowing, new.content != old.content || new.container != old.container {
+                position.scrollTo(edge: .bottom)
+            }
+        }
+        .overlay(alignment: .bottom) {
+            if !isFollowing {
+                Button {
+                    isFollowing = true
+                    withAnimation(.spring(response: 0.35, dampingFraction: 1)) { position.scrollTo(edge: .bottom) }
+                } label: {
+                    HStack(spacing: 5) {
+                        IconView(.arrowDown, size: 12)
+                        Text(model.isBusy ? "Follow Along" : "Latest").font(.vibex(size: 11.5, weight: .medium))
+                    }
+                    .foregroundStyle(Theme.text)
+                    .padding(.horizontal, 11)
+                    .frame(height: 28)
+                    .background(Capsule().fill(Theme.raised))
+                    .overlay(Capsule().strokeBorder(Theme.lineStrong))
+                    .contentShape(Capsule())
+                }
+                .buttonStyle(PressFeedbackButtonStyle())
+                .padding(.bottom, 8)
+                .transition(.opacity.combined(with: .scale(scale: 0.9)))
+            }
+        }
+        .animation(.spring(response: 0.25, dampingFraction: 1), value: isFollowing)
+    }
+
+    private var workingLabel: String {
+        if let label = activity?.working(model.pendingTool) { return label }
+        if let path = model.pendingTool?.input["file_path"] { return "Writing \((path as NSString).lastPathComponent)…" }
+        return "Claude is working…"
     }
 
     /// The approval card already says what this call is.
@@ -64,9 +142,23 @@ struct ClaudeChatView: View {
         guard case let .tool(tool, _) = item.kind else { return false }
         return model.permissions.contains { $0.tool.id == tool.id }
     }
+}
 
-    @ViewBuilder
-    private func row(_ item: ClaudeChatModel.Item) -> some View {
+/// One entry in the conversation. Equatable, so a streaming reply only redraws itself.
+private struct ClaudeItemRow: View, Equatable {
+    let item: ClaudeChatModel.Item
+    let isBusy: Bool
+    let folder: String
+    let actions: ClaudeChatActions
+
+    static func == (a: Self, b: Self) -> Bool {
+        guard a.item == b.item else { return false }
+        // Only a tool card shows whether the turn is still going.
+        if case .tool = a.item.kind { return a.isBusy == b.isBusy }
+        return true
+    }
+
+    var body: some View {
         switch item.kind {
         case let .user(text):
             HStack {
@@ -98,13 +190,13 @@ struct ClaudeChatView: View {
         case let .text(text):
             MarkdownView(document: MarkdownDocument(text))
         case let .tool(tool, result):
-            ClaudeToolCard(tool: tool, result: result, isRunning: model.isBusy, folder: model.folder, openFile: model.actions.openFile)
+            ClaudeToolCard(tool: tool, result: result, isRunning: isBusy, folder: folder, openFile: actions.openFile)
         case let .needsTerminal(command):
             HStack(spacing: 8) {
                 IconView(.terminal, size: 14).foregroundStyle(Theme.muted)
                 Text("/\(command) needs Claude Code's terminal view.").font(.vibex(size: 12.5)).foregroundStyle(Theme.text)
                 Spacer(minLength: 6)
-                Button("Open in Terminal") { model.actions.runInTerminal("claude /\(command)") }
+                Button("Open in Terminal") { actions.runInTerminal("claude /\(command)") }
                     .buttonStyle(.bordered)
                     .controlSize(.small)
             }
@@ -130,19 +222,80 @@ struct ClaudeChatView: View {
     }
 }
 
+/// How a chat with one job describes its work, instead of showing every tool call.
+struct ClaudeActivityStyle {
+    /// What to say while this call is being written, or nil for the usual line.
+    var working: (ClaudeToolUse?) -> String?
+    /// The whole turn's work, in a few words.
+    var summary: ([ClaudeToolUse]) -> String
+    /// One finished step.
+    var step: (ClaudeToolUse) -> String
+}
+
+/// A turn's work as one quiet line, which opens to a plain list of what was done.
+private struct ClaudeActivityGroup: View {
+    let items: [ClaudeChatModel.Item]
+    let style: ClaudeActivityStyle
+    @State private var isExpanded = false
+
+    private var tools: [(ClaudeToolUse, ClaudeToolResult?)] {
+        items.compactMap { item in
+            if case let .tool(tool, result) = item.kind { (tool, result) } else { nil }
+        }
+    }
+
+    var body: some View {
+        let failed = tools.contains { $0.1?.isError == true }
+        VStack(alignment: .leading, spacing: 6) {
+            Button { withAnimation(.spring(response: 0.25, dampingFraction: 1)) { isExpanded.toggle() } } label: {
+                HStack(spacing: 7) {
+                    IconView(.checkCircle, size: 13).foregroundStyle(Theme.green)
+                    Text(style.summary(tools.map(\.0)))
+                        .font(.vibex(size: 12.5))
+                        .foregroundStyle(Theme.muted)
+                        .lineLimit(1)
+                    if failed { IconView(.alert, size: 12).foregroundStyle(Theme.orange).help("Some steps had to be retried") }
+                    IconView(isExpanded ? .chevronUp : .chevronDown, size: 10).foregroundStyle(Theme.faint)
+                    Spacer(minLength: 0)
+                }
+                .frame(height: 22)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            if isExpanded {
+                VStack(alignment: .leading, spacing: 5) {
+                    ForEach(items) { item in
+                        if case let .tool(tool, result) = item.kind {
+                            HStack(spacing: 7) {
+                                IconView(ClaudeToolSummary(tool).icon, size: 12).foregroundStyle(result?.isError == true ? Theme.orange : Theme.faint)
+                                Text(style.step(tool)).font(.vibex(size: 12)).foregroundStyle(Theme.muted).lineLimit(1)
+                            }
+                        } else if case let .text(text) = item.kind {
+                            Text(text).font(.vibex(size: 12)).foregroundStyle(Theme.faint).lineLimit(3).textSelection(.enabled)
+                        }
+                    }
+                }
+                .padding(.leading, 20)
+                .transition(.opacity)
+            }
+        }
+    }
+}
+
 // MARK: - Working line
 
 /// What's going on, and for how long, so a long turn doesn't look stuck.
 private struct ClaudeWorkingLine: View {
-    let status: String?
+    let label: String
     let started: Date?
 
     var body: some View {
         HStack(spacing: 8) {
             ProgressView().controlSize(.mini)
-            Text(status == "compacting" ? "Compacting the conversation…" : "Claude is working…")
+            Text(label)
                 .font(.vibex(size: 12))
                 .foregroundStyle(Theme.muted)
+                .lineLimit(1)
             if let started {
                 TimelineView(.periodic(from: started, by: 1)) { context in
                     let seconds = max(0, Int(context.date.timeIntervalSince(started)))
@@ -169,7 +322,8 @@ struct ClaudeChatWelcome {
     var showsTerminal = true
     var showsRecent = true
     var tip: String?
-    var showsModes = true
+    /// Set for a chat with one job, which folds its work into a line per turn.
+    var activity: ClaudeActivityStyle?
 
     static let standard = ClaudeChatWelcome(
         title: "What should we build?",
@@ -263,7 +417,6 @@ private struct ClaudeChatEmptyState: View {
 private struct ClaudeComposer: View {
     let model: ClaudeChatModel
     let placeholder: String
-    let showsModes: Bool
     let agents: ClaudeAgentsContext?
     @State private var text = ""
     @State private var pasteMonitor: Any?
@@ -353,7 +506,7 @@ private struct ClaudeComposer: View {
                 }
                 .buttonStyle(.plain)
                 .help("Attach images or files. You can also drop them here, or paste a screenshot.")
-                if showsModes { modeMenu }
+                modeMenu
                 modelMenu
                 Spacer()
                 contextMeter

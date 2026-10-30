@@ -44,8 +44,15 @@ nonisolated enum ClaudeEvent: Equatable, Sendable {
     case compacted
     case commandsChanged([ClaudeCommand])
     case contextUsage(percent: Int)
+    /// The permission mode Claude Code actually started in, which isn't always the one asked for.
+    case permissionMode(String)
+    /// Claude has begun writing a tool call; its input follows piece by piece.
+    case toolStarting(String)
+    case toolInputDelta(String)
     /// Claude Code turned down something Vibex asked of it.
     case controlFailed(String)
+
+    static let selectionNotePrefix = "[The user has selected"
 
     static func parse(_ line: String) -> [ClaudeEvent] {
         guard let data = line.data(using: .utf8),
@@ -58,7 +65,8 @@ nonisolated enum ClaudeEvent: Equatable, Sendable {
             switch object["subtype"] as? String {
             case "init":
                 guard let session = object["session_id"] as? String else { return [] }
-                return [.started(sessionID: session, model: object["model"] as? String, slashCommands: object["slash_commands"] as? [String] ?? [])]
+                let started = ClaudeEvent.started(sessionID: session, model: object["model"] as? String, slashCommands: object["slash_commands"] as? [String] ?? [])
+                return [started] + ((object["permissionMode"] as? String).map { [.permissionMode($0)] } ?? [])
             case "status":
                 let status = object["status"] as? String
                 return status == nil || status == "compacting" ? [.status(status)] : []
@@ -77,10 +85,17 @@ nonisolated enum ClaudeEvent: Equatable, Sendable {
             guard let reply = response["response"] as? [String: Any], reply["totalTokens"] != nil, let percent = reply["percentage"] as? Int else { return [] }
             return [.contextUsage(percent: percent)]
         case "stream_event":
-            guard let event = object["event"] as? [String: Any], event["type"] as? String == "content_block_delta",
-                  let delta = event["delta"] as? [String: Any], delta["type"] as? String == "text_delta",
-                  let text = delta["text"] as? String else { return [] }
-            return [.textDelta(text)]
+            guard let event = object["event"] as? [String: Any] else { return [] }
+            if event["type"] as? String == "content_block_start" {
+                guard let block = event["content_block"] as? [String: Any], block["type"] as? String == "tool_use", let name = block["name"] as? String else { return [] }
+                return [.toolStarting(name)]
+            }
+            guard event["type"] as? String == "content_block_delta", let delta = event["delta"] as? [String: Any] else { return [] }
+            switch delta["type"] as? String {
+            case "text_delta": return (delta["text"] as? String).map { [.textDelta($0)] } ?? []
+            case "input_json_delta": return (delta["partial_json"] as? String).map { [.toolInputDelta($0)] } ?? []
+            default: return []
+            }
         case "assistant":
             return blocks(of: object).compactMap(assistantEvent)
         case "user":
@@ -148,6 +163,10 @@ nonisolated enum ClaudeEvent: Equatable, Sendable {
     private static func userEvent(_ text: String) -> [ClaudeEvent] {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty, !trimmed.hasPrefix("<"), !trimmed.hasPrefix("[Request interrupted") else { return [] }
+        // What the user typed, without the note Design adds about the selected screen.
+        if trimmed.hasPrefix(selectionNotePrefix), let end = trimmed.range(of: "]\n\n") {
+            return [.userText(String(trimmed[end.upperBound...]))]
+        }
         return [.userText(trimmed)]
     }
 

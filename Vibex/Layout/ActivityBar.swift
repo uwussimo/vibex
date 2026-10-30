@@ -62,6 +62,7 @@ struct ActivityBar: View {
                 label: "Design",
                 help: "Vibex Design: Claude draws apps and sites on a canvas (⌘4)",
                 isSelected: isEditorShowing(.design),
+                attention: tabs.designNeedsAttention ? 1 : 0,
                 action: actions.showDesign
             )
             groupDivider

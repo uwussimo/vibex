@@ -65,6 +65,18 @@ final class ClaudeChatModel {
         }
     }
 
+    enum TranscriptRow: Identifiable, Equatable {
+        case item(Item)
+        case activity([Item])
+
+        var id: UUID {
+            switch self {
+            case let .item(item): item.id
+            case let .activity(items): items[0].id
+            }
+        }
+    }
+
     let folder: String
     let environment: [String: String]
     private(set) var items: [Item] = []
@@ -77,6 +89,10 @@ final class ClaudeChatModel {
     private(set) var activeModel: String?
     /// How full the conversation is, once Claude Code has said.
     private(set) var contextPercent: Int?
+    /// The tool call Claude is writing right now, with whatever of its input can be read so far.
+    /// A big file takes a while to write, and this is the only sign of it until it's finished.
+    private(set) var pendingTool: ClaudeToolUse?
+    @ObservationIgnored private var pendingInput = ""
     /// What Claude Code is busy with beyond thinking, such as compacting.
     private(set) var status: String?
     private(set) var turnStarted: Date?
@@ -295,6 +311,19 @@ final class ClaudeChatModel {
             onChange()
         case let .status(status):
             self.status = status
+        case let .permissionMode(reported):
+            // Auto needs an account and a model that allow it; say so rather than seem to be on it.
+            if mode == .auto, reported != Mode.auto.rawValue {
+                mode = Mode(rawValue: reported) ?? .ask
+                items.append(Item(kind: .notice("Auto mode isn't available here, so Claude will ask before acting.", isError: false)))
+            }
+        case let .toolStarting(name):
+            pendingTool = ClaudeToolUse(id: "", name: name, input: [:])
+            pendingInput = ""
+        case let .toolInputDelta(piece):
+            guard pendingTool != nil, pendingTool?.input["file_path"] == nil, pendingInput.count < 4000 else { return }
+            pendingInput += piece
+            if let path = Self.filePath(inPartialInput: pendingInput) { pendingTool?.input["file_path"] = path }
         case .compacted:
             items.append(Item(kind: .notice("Compacted the conversation.", isError: false)))
         case let .commandsChanged(commands):
@@ -304,6 +333,7 @@ final class ClaudeChatModel {
         case let .controlFailed(message):
             items.append(Item(kind: .notice(message, isError: true)))
         case let .textDelta(text):
+            pendingTool = nil
             if let streaming, let index = items.firstIndex(where: { $0.id == streaming }), case let .text(current) = items[index].kind {
                 items[index].kind = .text(current + text)
             } else {
@@ -325,6 +355,7 @@ final class ClaudeChatModel {
             streaming = nil
         case let .toolUse(tool):
             streaming = nil
+            pendingTool = nil
             // These are the user's turn, not work: the question card or plan card stands in for them.
             if tool.name == "AskUserQuestion" || tool.name == "ExitPlanMode" { return }
             if let id = toolItems[tool.id], let index = items.firstIndex(where: { $0.id == id }) {
@@ -356,6 +387,7 @@ final class ClaudeChatModel {
             permissions = []
             status = nil
             turnStarted = nil
+            pendingTool = nil
             if isError, let message { items.append(Item(kind: .notice(message, isError: true))) }
             // Commands answer at once; only real work is worth a line about how long it took.
             if seconds >= 1, !items.isEmpty { items.append(Item(kind: .done(seconds: seconds))) }
@@ -365,6 +397,41 @@ final class ClaudeChatModel {
     }
 
     // MARK: - The process
+
+    /// The file a tool call is about, from JSON that's still arriving: `{"file_path":"/a/b.json","con`
+    nonisolated static func filePath(inPartialInput text: String) -> String? {
+        guard let match = text.firstMatch(of: /"file_path"\s*:\s*"([^"]+)"/) else { return nil }
+        return String(match.1)
+    }
+
+    /// What the transcript shows, in order. `folding` folds the work of each turn into one line
+    /// and leaves what Claude says at the end of it.
+    nonisolated static func rows(_ items: [Item], folding: Bool) -> [TranscriptRow] {
+        guard folding else { return items.map(TranscriptRow.item) }
+        var rows: [TranscriptRow] = []
+        /// The turn's work so far, and any words since its last tool call.
+        var work: [Item] = [], words: [Item] = []
+        func flush() {
+            if !work.isEmpty { rows.append(.activity(work)) }
+            rows += words.map(TranscriptRow.item)
+            work = []
+            words = []
+        }
+        for item in items {
+            switch item.kind {
+            case .tool:
+                work += words + [item]
+                words = []
+            case .text:
+                words.append(item)
+            default:
+                flush()
+                rows.append(.item(item))
+            }
+        }
+        flush()
+        return rows
+    }
 
     /// "/resume isn't available in this environment." → "resume"
     nonisolated static func terminalOnlyCommand(_ text: String) -> String? {

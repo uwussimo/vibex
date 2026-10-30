@@ -49,6 +49,8 @@ final class EditorTabsModel {
 
     var items: [Item] = []
     var selected: Tab?
+    /// The Design chat is waiting on the user.
+    var designNeedsAttention = false
     /// No tabs at all: the workspace collapses the editor column.
     var isEmpty: Bool { items.isEmpty }
 }

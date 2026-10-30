@@ -151,3 +151,95 @@ import Testing
         #expect(try #require(DesignSnapshot.jpeg(image, maxWidth: 200)).count > 100)
     }
 }
+
+@MainActor @Suite struct DesignActivityTests {
+    private func tool(_ name: String, _ path: String? = nil) -> ClaudeToolUse {
+        ClaudeToolUse(id: UUID().uuidString, name: name, input: path.map { ["file_path": $0] } ?? [:])
+    }
+    private let root = "/p/vibex-design"
+
+    @Test func `design runs on auto, without changing its brief`() throws {
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent("design-auto-\(UUID().uuidString)")
+        let model = DesignModel(project: folder, environment: [:], resuming: nil)
+        #expect(model.chat.mode == .auto)
+        let line = ClaudeChatModel.commandLine(resume: nil, mode: model.chat.mode, model: "", extra: model.chat.extraArguments)
+        #expect(line.contains("'--permission-mode' 'auto'"))
+        #expect(line.contains("--append-system-prompt"))
+        #expect(line.contains("Write(./vibex-design/**)"))
+    }
+
+    @Test func `work is described in design's own words`() {
+        #expect(DesignActivity.working(nil) == "Thinking…")
+        #expect(DesignActivity.working(tool("Write")) == "Drawing…")
+        #expect(DesignActivity.working(tool("Write", "\(root)/screens/01-today.json")) == "Drawing Today…")
+        #expect(DesignActivity.working(tool("Edit", "\(root)/screens/02-plant-detail.json")) == "Updating Plant Detail…")
+        #expect(DesignActivity.working(tool("Write", "\(root)/design.json")) == "Setting the look…")
+        #expect(DesignActivity.working(tool("mcp__vibex__design_screenshot")) == "Checking how it looks…")
+        #expect(DesignActivity.summary([tool("Read", "/p/a"), tool("Write", "\(root)/design.json"), tool("Write", "\(root)/screens/a.json"), tool("Write", "\(root)/screens/b.json"), tool("Edit", "\(root)/screens/a.json")]) == "Drew 2 screens")
+        #expect(DesignActivity.summary([tool("Edit", "\(root)/screens/01-today.json")]) == "Updated Today")
+        #expect(DesignActivity.summary([tool("Read", "/p/a")]) == "Read the project")
+    }
+
+    @Test func `a turn folds into one line and keeps what Claude says at the end`() {
+        typealias Item = ClaudeChatModel.Item
+        let items = [Item(kind: .user("Go")), Item(kind: .text("First I'll set the look.")), Item(kind: .tool(tool("Write"), nil)), Item(kind: .text("Now the screen.")), Item(kind: .tool(tool("Write"), nil)), Item(kind: .text("All done.")), Item(kind: .done(seconds: 3)), Item(kind: .user("Again"))]
+        let rows = ClaudeChatModel.rows(items, folding: true)
+        #expect(rows.count == 5)
+        guard case let .activity(work) = rows[1] else { Issue.record("not folded"); return }
+        #expect(work.count == 4)
+        #expect(rows[2] == .item(items[5]))
+        #expect(ClaudeChatModel.rows(items, folding: false).count == items.count)
+    }
+
+    @Test func `the file being written can be read before it's finished`() {
+        #expect(ClaudeChatModel.filePath(inPartialInput: #"{"file_path":"/a/b.json","con"#) == "/a/b.json")
+        #expect(ClaudeChatModel.filePath(inPartialInput: #"{"file_path":"/a/b"#) == nil)
+        #expect(ClaudeEvent.parse(#"{"type":"stream_event","event":{"type":"content_block_start","content_block":{"type":"tool_use","name":"Write"}}}"#) == [.toolStarting("Write")])
+        #expect(ClaudeEvent.parse(#"{"type":"stream_event","event":{"type":"content_block_delta","delta":{"type":"input_json_delta","partial_json":"{"}}}"#) == [.toolInputDelta("{")])
+
+        let chat = ClaudeChatModel(folder: "/tmp", environment: [:])
+        chat.apply(.toolStarting("Write"))
+        chat.apply(.toolInputDelta(#"{"file_path":"/x/"#))
+        #expect(chat.pendingTool?.input["file_path"] == nil)
+        chat.apply(.toolInputDelta(#"y.json","content":"#))
+        #expect(chat.pendingTool?.input["file_path"] == "/x/y.json")
+        chat.apply(.toolUse(tool("Write", "/x/y.json")))
+        #expect(chat.pendingTool == nil)
+    }
+
+    @Test func `auto falls back openly when Claude Code starts in another mode`() {
+        let chat = ClaudeChatModel(folder: "/tmp", environment: [:])
+        chat.mode = .auto
+        chat.apply(.permissionMode("auto"))
+        #expect(chat.mode == .auto)
+        #expect(chat.items.isEmpty)
+        chat.apply(.permissionMode("default"))
+        #expect(chat.mode == .ask)
+        #expect(chat.items.count == 1)
+        #expect(ClaudeEvent.parse(#"{"type":"system","subtype":"init","session_id":"s","permissionMode":"auto"}"#).contains(.permissionMode("auto")))
+    }
+
+    @Test func `the note about a selected screen stays out of a reloaded chat`() {
+        let line = #"{"type":"user","message":{"role":"user","content":"[The user has selected the screen \"Home\" on the canvas: x.json. This message is about it.]\n\nMake it bolder"}}"#
+        #expect(ClaudeEvent.parse(line) == [.userText("Make it bolder")])
+    }
+
+    @Test func `a design tab comes back with its project`() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("vibex-restore-\(UUID().uuidString)")
+        let folder = root.appendingPathComponent("habits")
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let store = ProjectStore(directory: root.appendingPathComponent("state"))
+        let project = Project(url: folder)
+        var state = ProjectState()
+        state.editorTab = "design"
+        state.terminalClosed = true
+        store.save(state, for: project)
+        let controller = MainWindowController(session: ProjectSession(project: project, store: store))
+        controller.window?.setFrame(NSRect(x: -6000, y: 200, width: 1500, height: 820), display: false)
+        controller.showWindow(nil)
+        defer { controller.close() }
+        try await Task.sleep(for: .seconds(0.5))
+        #expect(controller.workspace.editor.tabs.selected == .design)
+    }
+}
