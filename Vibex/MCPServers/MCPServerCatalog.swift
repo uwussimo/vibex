@@ -32,6 +32,10 @@ nonisolated struct MCPServerSpec: Equatable, Sendable, Identifiable {
     var kind: Kind
     /// Where it came from, for "More info".
     var homepage: URL?
+    /// The registry's full name, e.g. "com.stripe/mcp".
+    var registryName: String?
+    /// The maker's site, when neither the URL nor the homepage gives it away.
+    var site: String?
     var id: String { name }
 
     var inputs: [MCPInputField] {
@@ -91,7 +95,7 @@ nonisolated enum MCPFeatured {
         MCPServerSpec(name: "playwright", title: "Playwright", summary: "Drive a real browser: navigate, click, fill forms and read pages.",
                       kind: .stdio(command: ["npx", "-y", "@playwright/mcp@latest"], environment: []), homepage: URL(string: "https://github.com/microsoft/playwright-mcp")),
         MCPServerSpec(name: "context7", title: "Context7", summary: "Up-to-date library docs and code examples, pulled into the prompt.",
-                      kind: .stdio(command: ["npx", "-y", "@upstash/context7-mcp"], environment: []), homepage: URL(string: "https://github.com/upstash/context7")),
+                      kind: .stdio(command: ["npx", "-y", "@upstash/context7-mcp"], environment: []), homepage: URL(string: "https://github.com/upstash/context7"), site: "context7.com"),
         MCPServerSpec(name: "chrome-devtools", title: "Chrome DevTools", summary: "Inspect, debug and profile pages in Chrome.",
                       kind: .stdio(command: ["npx", "-y", "chrome-devtools-mcp@latest"], environment: []), homepage: URL(string: "https://github.com/ChromeDevTools/chrome-devtools-mcp")),
         MCPServerSpec(name: "github", title: "GitHub", summary: "Issues, pull requests, code search and Actions on GitHub.",
@@ -151,7 +155,8 @@ nonisolated enum MCPRegistry {
                 title: (server["title"] as? String) ?? name,
                 summary: (server["description"] as? String) ?? "",
                 kind: kind,
-                homepage: ((server["websiteUrl"] as? String) ?? repository).flatMap(URL.init(string:))
+                homepage: ((server["websiteUrl"] as? String) ?? repository).flatMap(URL.init(string:)),
+                registryName: registryName
             ))
         }
         return specs

@@ -1,4 +1,5 @@
 import Foundation
+import AppKit
 import Testing
 @testable import Vibex
 
@@ -108,5 +109,57 @@ import Testing
         for name in ["github", "weather"] { try await MCPServersStore.claude(["mcp", "remove", name, "--scope", "project"], in: folder) }
         try await MCPServersStore.claude(["mcp", "remove", "sentry", "--scope", "project"], in: folder)
         #expect(MCPServersStore.installed(project: folder, claudeJSON: folder.appendingPathComponent("none.json")).isEmpty)
+    }
+}
+
+@MainActor @Suite struct ServerFaviconTests {
+    @Test func `root domains come from urls and commands`() {
+        #expect(ServerDomain.root(in: "https://mcp.clickup.com/mcp") == "clickup.com")
+        #expect(ServerDomain.root(in: "https://mcp.posthog.com/mcp") == "posthog.com")
+        #expect(ServerDomain.root(in: "npx -y mcp-remote https://api.example.co.uk/sse") == "example.co.uk")
+        #expect(ServerDomain.root(in: "https://my-tool.vercel.app/mcp") == "my-tool.vercel.app")
+    }
+
+    @Test func `local servers and plain commands have no domain`() {
+        #expect(ServerDomain.root(in: "http://127.0.0.1:5150/mcp") == nil)
+        #expect(ServerDomain.root(in: "http://localhost:3000/mcp") == nil)
+        #expect(ServerDomain.root(in: "npx -y @upstash/context7-mcp") == nil)
+    }
+
+    @Test func `marketplace entries skip code hosts and read verified registry names`() {
+        func spec(_ kind: MCPServerSpec.Kind, homepage: String?, registry: String? = nil) -> MCPServerSpec {
+            MCPServerSpec(name: "x", title: "x", summary: "", kind: kind, homepage: homepage.flatMap(URL.init(string:)), registryName: registry)
+        }
+        let npm = MCPServerSpec.Kind.stdio(command: ["npx", "x"], environment: [])
+        #expect(ServerDomain.root(for: spec(.remote(transport: "http", url: "https://mcp.sentry.dev/mcp", headers: []), homepage: "https://docs.sentry.io")) == "sentry.dev")
+        #expect(ServerDomain.root(for: spec(npm, homepage: "https://github.com/acme/x")) == nil)
+        #expect(ServerDomain.root(for: spec(npm, homepage: "https://docs.acme.io/mcp")) == "acme.io")
+        #expect(ServerDomain.root(for: spec(npm, homepage: "https://github.com/acme/x", registry: "com.stripe/mcp")) == "stripe.com")
+        #expect(ServerDomain.root(for: spec(npm, homepage: nil, registry: "io.github.acme/x")) == nil)
+    }
+
+    @Test func `page icons are ranked with the sharpest first`() throws {
+        let page = """
+        <link rel="icon" href="/small.png" sizes="16x16"><link rel="mask-icon" href="/mask.svg">
+        <link href='/touch.png' rel='apple-touch-icon' sizes='180x180'/><link rel="stylesheet" href="/a.css">
+        <link rel="shortcut icon" href="https://cdn.x.com/a.png?w=96&amp;h=96" sizes="96x96">
+        """
+        let urls = FaviconStore.links(inPage: page, base: try #require(URL(string: "https://x.com/home")))
+        #expect(urls.map(\.absoluteString) == ["https://x.com/touch.png", "https://cdn.x.com/a.png?w=96&h=96", "https://x.com/small.png"])
+    }
+
+    @Test func `dark marks get a light plate and opaque squares fill the tile`() {
+        func image(_ fill: NSColor, inset: CGFloat) -> NSImage {
+            NSImage(size: NSSize(width: 32, height: 32), flipped: false) { rect in
+                fill.setFill()
+                rect.insetBy(dx: inset, dy: inset).fill()
+                return true
+            }
+        }
+        let mark = FaviconStore.favicon(image(.black, inset: 8))
+        #expect(mark.isDark && !mark.fillsTile)
+        let tile = FaviconStore.favicon(image(.systemBlue, inset: 0))
+        #expect(!tile.isDark && tile.fillsTile)
+        #expect(!FaviconStore.favicon(image(.white, inset: 8)).isDark)
     }
 }

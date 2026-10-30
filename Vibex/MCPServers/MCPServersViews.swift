@@ -94,7 +94,7 @@ private struct InstalledServerRow: View {
 
     var body: some View {
         HStack(spacing: 10) {
-            ServerLogo(name: server.displayName, size: 26)
+            ServerLogo(name: server.displayName, domain: ServerDomain.root(in: server.detail), size: 26)
                 .overlay(alignment: .bottomTrailing) {
                     if let health {
                         Circle().fill(color(health)).frame(width: 8, height: 8)
@@ -124,14 +124,22 @@ private struct InstalledServerRow: View {
         .frame(height: 44)
         .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Color.white.opacity(isHovering ? 0.05 : 0)))
         .onHover { isHovering = $0 }
-        .help(server.isVibex ? "Vibex's own server; it registers itself" : server.detail)
+        .help(server.isVibex ? "Vibex's own server; it registers itself" : helpText)
+    }
+
+    private var helpText: String {
+        switch health {
+        case .needsSignIn: "\(server.detail)\nOpen Claude Code and type /mcp to sign in."
+        case .waitingForApproval: "\(server.detail)\nOpen Claude Code to approve it."
+        default: server.detail
+        }
     }
 
     /// Only said when something is wrong; a working server shows its command or URL.
     private var status: String? {
         switch health {
-        case .needsSignIn: "Needs sign-in · /mcp in Claude Code"
-        case .waitingForApproval: "Waiting for approval in Claude Code"
+        case .needsSignIn: "Needs sign-in"
+        case .waitingForApproval: "Waiting for approval"
         case .failed: "Couldn't connect"
         case .connected, nil: nil
         }
@@ -152,22 +160,40 @@ private struct InstalledServerRow: View {
     }
 }
 
-/// A server's logo, or its initial on a tinted tile when there is none.
+/// A server's logo: a known brand's, else the favicon of its site, else its initial on a tile.
 struct ServerLogo: View {
     let name: String
+    /// The site's root domain, when the server has one.
+    var domain: String?
     var size: CGFloat = 28
 
+    private var favicon: ServerFavicon? { domain.flatMap { FaviconStore.shared.icons[$0] } }
+
     var body: some View {
+        let shape = RoundedRectangle(cornerRadius: size * 0.28, style: .continuous)
         Group {
             if let logo = BrandLogo.forServer(name) {
                 BrandLogoView(logo, size: size * 0.6)
+            } else if name == "vibex" {
+                Image(nsImage: NSApp.applicationIconImage).resizable().frame(width: size, height: size)
+            } else if let favicon {
+                Image(nsImage: favicon.image)
+                    .resizable()
+                    .interpolation(.high)
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: favicon.fillsTile ? size : size * 0.62, height: favicon.fillsTile ? size : size * 0.62)
+                    .transition(.opacity)
             } else {
                 Text(name.prefix(1).uppercased()).font(.vibex(size: size * 0.45, weight: .semibold)).foregroundStyle(Theme.text)
             }
         }
         .frame(width: size, height: size)
-        .background(RoundedRectangle(cornerRadius: size * 0.28, style: .continuous).fill(Theme.raised))
-        .overlay(RoundedRectangle(cornerRadius: size * 0.28, style: .continuous).strokeBorder(Theme.line))
+        .background(shape.fill(favicon?.isDark == true && BrandLogo.forServer(name) == nil ? Color.white.opacity(0.92) : Theme.raised))
+        .clipShape(shape)
+        .overlay(shape.strokeBorder(Theme.line))
+        .animation(.easeOut(duration: 0.15), value: favicon)
+        .onAppear { if let domain, BrandLogo.forServer(name) == nil { FaviconStore.shared.load(domain) } }
+        .onChange(of: domain) { _, domain in if let domain, BrandLogo.forServer(name) == nil { FaviconStore.shared.load(domain) } }
     }
 }
 
@@ -254,7 +280,7 @@ private struct ServerCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 10) {
-                ServerLogo(name: spec.name, size: 34)
+                ServerLogo(name: spec.name, domain: ServerDomain.root(for: spec), size: 34)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(spec.title).font(.vibex(size: 13.5, weight: .semibold)).foregroundStyle(Theme.text).lineLimit(1)
                     Text(spec.kindLabel + (spec.inputs.contains(where: \.isRequired) ? " · needs a key" : ""))
@@ -321,7 +347,7 @@ private struct InstallFieldsSheet: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack(spacing: 10) {
-                ServerLogo(name: spec.name, size: 34)
+                ServerLogo(name: spec.name, domain: ServerDomain.root(for: spec), size: 34)
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Install \(spec.title)").font(.vibex(size: 15, weight: .semibold))
                     Text("Claude Code keeps these in its own config.").font(.vibex(size: 12)).foregroundStyle(Theme.muted)
