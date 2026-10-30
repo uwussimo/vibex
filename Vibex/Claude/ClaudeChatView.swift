@@ -975,7 +975,9 @@ nonisolated struct ClaudeToolSummary: Equatable {
                 let area = words.first ?? ""
                 let rest = words.dropFirst().joined(separator: " ")
                 let icon: Icon = area == "simulator" ? .phone : (area == "browser" ? .globe : (area == "terminal" ? .terminal : .zap))
-                self.init(icon: icon, title: "\(area.capitalized): \(rest)")
+                // What it acted on is the interesting part: "Simulator: tap element “Pay”".
+                let target = tool.input["label"] ?? tool.input["text"] ?? tool.input["url"] ?? tool.input["name"]
+                self.init(icon: icon, title: "\(area.capitalized): \(rest)" + (target.map { " “\($0)”" } ?? ""))
             } else {
                 self.init(icon: .server, title: "\(server): \(action)")
             }

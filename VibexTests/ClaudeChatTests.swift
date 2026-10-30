@@ -254,6 +254,12 @@ import Testing
         #expect(model.items.last?.kind == .done(seconds: 4))
     }
 
+    @Test func `a tool card says what Claude acted on`() {
+        let tap = ClaudeToolUse(id: "1", name: "mcp__vibex__simulator_tap_element", input: ["label": "Pay"])
+        #expect(ClaudeToolSummary(tap).title == "Simulator: tap element “Pay”")
+        #expect(ClaudeToolSummary(ClaudeToolUse(id: "2", name: "mcp__vibex__simulator_screenshot", input: [:])).title == "Simulator: screenshot")
+    }
+
     @Test func `the command line quotes arguments safely`() {
         let line = ClaudeChatModel.commandLine(binary: "/x/claude", resume: nil, mode: .auto, model: "opus", extra: ["--append-system-prompt", "It's fine"])
         #expect(line.contains("'--permission-mode' 'auto'"))
