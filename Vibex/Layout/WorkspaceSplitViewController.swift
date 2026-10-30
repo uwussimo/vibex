@@ -115,6 +115,8 @@ final class WorkspaceSplitViewController: NSSplitViewController, NSMenuItemValid
         }
     }
 
+    func updatePanesAfterTabChange() { updatePanes() }
+
     private func isShowing(_ item: NSSplitViewItem) -> Bool { splitViewItems.contains(item) }
 
     private func syncPanes() {

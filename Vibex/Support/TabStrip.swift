@@ -7,12 +7,15 @@ struct TabStripItem: Identifiable, Equatable {
     var isLoading: Bool = false
     /// Claude in this tab is waiting for an approval or an answer.
     var needsAttention = false
+    /// A native Claude chat rather than a terminal.
+    var isClaude = false
 }
 
 struct TabStripActions {
     var select: (UUID) -> Void
     var close: (UUID) -> Void
     var new: () -> Void
+    var newClaude: () -> Void
 }
 
 /// The tab row shared by the terminal and the browser. `dark` forces the terminal's always-dark look;
@@ -45,6 +48,13 @@ struct TabStrip: View {
             if items.count > tabListThreshold {
                 TabListMenu(tabs: items.map { ($0.id, $0.title, $0.id == selectedID) }, select: actions.select)
             }
+            Button(action: actions.newClaude) {
+                BrandLogoView(.claude, size: 14)
+                    .frame(width: 26, height: 26)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(PressFeedbackButtonStyle())
+            .help("New Claude Chat (⌃⇧C)")
             Button(action: actions.new) {
                 IconView(.plus, size: 15)
                     .frame(width: 26, height: 26)
@@ -52,7 +62,7 @@ struct TabStrip: View {
                     .contentShape(Rectangle())
             }
             .buttonStyle(PressFeedbackButtonStyle())
-            .help("New Tab (⌘T)")
+            .help("New Terminal Tab (⌘T)")
             .padding(.trailing, 6)
         }
         .frame(height: 36)
@@ -95,6 +105,8 @@ private struct TabStripCell: View {
                     .transition(.scale.combined(with: .opacity))
             } else if item.isLoading {
                 ProgressView().controlSize(.mini)
+            } else if item.isClaude {
+                BrandLogoView(.claude, size: 13)
             } else {
                 IconView(.terminal, size: 13).foregroundStyle(textColor)
             }

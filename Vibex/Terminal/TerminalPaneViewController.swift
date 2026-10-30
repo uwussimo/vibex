@@ -3,11 +3,15 @@ import os
 import SwiftTerm
 import SwiftUI
 
-/// Tabs of real PTY-backed terminals. Lives on the left, where Claude Code runs.
+/// The left column, where Claude runs: tabs of native Claude chats and real PTY-backed terminals.
 final class TerminalPaneViewController: NSViewController {
     private final class Tab {
         let id: UUID
-        let terminal: LocalProcessTerminalView
+        /// Nil for a Claude chat.
+        let terminal: LocalProcessTerminalView?
+        let chat: ClaudeChatModel?
+        /// What the tab shows.
+        let content: NSView
         var title: String
         var directory: String?
         var hasExited = false
@@ -18,8 +22,19 @@ final class TerminalPaneViewController: NSViewController {
         init(id: UUID = UUID(), terminal: LocalProcessTerminalView, title: String, directory: String?) {
             self.id = id
             self.terminal = terminal
+            chat = nil
+            content = terminal
             self.title = title
             self.directory = directory
+        }
+
+        init(chat: ClaudeChatModel, content: NSView) {
+            id = UUID()
+            terminal = nil
+            self.chat = chat
+            self.content = content
+            title = chat.title
+            directory = chat.folder
         }
     }
 
@@ -27,7 +42,7 @@ final class TerminalPaneViewController: NSViewController {
     private var tabs: [Tab] = []
     private var selectedID: UUID?
     var selectedTabID: UUID? { selectedID }
-    private let tabBarModel = TerminalTabBarModel()
+    let tabBarModel = TerminalTabBarModel()
     private let container = NSView()
     private var hasRestored = false
     private var clickMonitor: Any?
@@ -41,6 +56,8 @@ final class TerminalPaneViewController: NSViewController {
         didSet { emptyHost?.rootView = PaneEmptyState(actions: emptyActions) }
     }
     private var emptyHost: NSHostingView<PaneEmptyState>?
+    /// Opens a file from a chat's tool card.
+    var openFile: (URL) -> Void = { _ in }
 
     init(session: ProjectSession) {
         self.session = session
@@ -57,7 +74,8 @@ final class TerminalPaneViewController: NSViewController {
         let actions = TabStripActions(
             select: { [weak self] id in self?.select(id) },
             close: { [weak self] id in self?.close(id) },
-            new: { [weak self] in self?.newTab(nil) }
+            new: { [weak self] in self?.newTab(nil) },
+            newClaude: { [weak self] in self?.newClaudeChat(nil) }
         )
         let tabBar = NSHostingView(rootView: TerminalTabStrip(model: tabBarModel, actions: actions))
         tabBar.sizingOptions = []
@@ -132,10 +150,12 @@ final class TerminalPaneViewController: NSViewController {
         guard !hasRestored else { return }
         hasRestored = true
         let directories = session.state.terminalDirectories.filter { FileManager.default.fileExists(atPath: $0) }
-        if directories.isEmpty {
-            if session.state.terminalClosed != true { openTab(directory: session.project.path) }
-        } else {
-            for directory in directories { openTab(directory: directory) }
+        let chats = session.state.claudeSessions ?? []
+        for directory in directories { openTab(directory: directory) }
+        for chat in chats { openChat(resuming: chat) }
+        if directories.isEmpty, chats.isEmpty, session.state.terminalClosed != true {
+            // A new project starts with Claude if it's here; otherwise with a shell to install it from.
+            if ClaudeCodeRegistrar.findClaude() != nil { openChat() } else { openTab(directory: session.project.path) }
         }
         syncTabBar()
         focusCurrentTerminal()
@@ -180,6 +200,42 @@ final class TerminalPaneViewController: NSViewController {
         return tab
     }
 
+    // MARK: - Claude chats
+
+    /// Shows the Claude chat this project already has, or starts one.
+    func showClaude() {
+        hasRestored = true
+        if let chat = tabs.first(where: { $0.chat != nil }) { select(chat.id) } else { openChat() }
+        focusCurrentTerminal()
+    }
+
+    @objc func newClaudeChat(_ sender: Any?) { openChat() }
+
+    @discardableResult
+    private func openChat(resuming sessionID: String? = nil) -> UUID {
+        hasRestored = true
+        if session.state.terminalClosed == true { session.update { $0.terminalClosed = false } }
+        let model = ClaudeChatModel(folder: session.project.path, environment: session.terminalEnvironment, resuming: sessionID)
+        let host = NSHostingView(rootView: ClaudeChatView(
+            model: model,
+            openFile: { [weak self] url in self?.openFile(url) },
+            openTerminal: { [weak self] in self?.newTab(nil) }
+        ))
+        host.sizingOptions = []
+        host.autoresizingMask = [.width, .height]
+        let tab = Tab(chat: model, content: host)
+        model.onChange = { [weak self, weak tab, weak model] in
+            guard let self, let tab, let model else { return }
+            tab.title = model.title
+            syncTabBar()
+            persistTabs()
+        }
+        tabs.append(tab)
+        syncTabBar()
+        select(tab.id)
+        return tab.id
+    }
+
     private func makeTerminalView() -> LocalProcessTerminalView {
         let terminal = LocalProcessTerminalView(frame: container.bounds)
         terminal.autoresizingMask = [.width, .height]
@@ -196,12 +252,12 @@ final class TerminalPaneViewController: NSViewController {
     private func select(_ id: UUID) {
         guard let tab = tabs.first(where: { $0.id == id }) else { return }
         selectedID = id
-        for subview in container.subviews where subview !== tab.terminal {
+        for subview in container.subviews where subview !== tab.content {
             subview.removeFromSuperview()
         }
-        if tab.terminal.superview == nil {
-            tab.terminal.frame = container.bounds
-            container.addSubview(tab.terminal)
+        if tab.content.superview == nil {
+            tab.content.frame = container.bounds
+            container.addSubview(tab.content)
         }
         syncTabBar()
         focusCurrentTerminal()
@@ -211,9 +267,10 @@ final class TerminalPaneViewController: NSViewController {
         guard let index = tabs.firstIndex(where: { $0.id == id }) else { return }
         let tab = tabs[index]
         if !tab.hasExited {
-            tab.terminal.terminate()
+            tab.terminal?.terminate()
         }
-        tab.terminal.removeFromSuperview()
+        tab.chat?.terminate()
+        tab.content.removeFromSuperview()
         tabs.remove(at: index)
         if tabs.isEmpty {
             // Closing the last tab closes the terminal; the activity bar brings it back.
@@ -231,7 +288,7 @@ final class TerminalPaneViewController: NSViewController {
 
     private func syncTabBar() {
         let attention = AttentionCenter.shared
-        tabBarModel.tabs = tabs.map { TabStripItem(id: $0.id, title: $0.title, needsAttention: attention.isWaiting(tab: $0.id)) }
+        tabBarModel.tabs = tabs.map { TabStripItem(id: $0.id, title: $0.title, isLoading: false, needsAttention: attention.isWaiting(tab: $0.id) || $0.chat?.needsAttention == true, isClaude: $0.chat != nil) }
         attention.forget(tabs: Set(tabs.map(\.id)), inWindow: session.windowID)
         tabBarModel.selectedID = selectedID
         emptyHost?.isHidden = !tabs.isEmpty
@@ -260,7 +317,7 @@ final class TerminalPaneViewController: NSViewController {
     func runCommandInNewTab(_ command: String, directory: String? = nil) -> UUID {
         let tab = openTab(directory: directory)
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { [weak tab] in
-            tab?.terminal.send(txt: command + "\n")
+            tab?.terminal?.send(txt: command + "\n")
         }
         return tab.id
     }
@@ -290,7 +347,7 @@ final class TerminalPaneViewController: NSViewController {
     func hasTab(_ id: UUID) -> Bool { tabs.contains { $0.id == id } }
 
     /// Shell process ids of every tab, for finding which window an MCP caller runs in.
-    var shellPIDs: [pid_t] { tabs.compactMap { $0.terminal.process?.shellPid } }
+    var shellPIDs: [pid_t] { tabs.compactMap { $0.terminal?.process?.shellPid ?? $0.chat?.processID } }
 
     // MARK: - Process tabs
 
@@ -332,7 +389,7 @@ final class TerminalPaneViewController: NSViewController {
         guard let tab = tabs.first(where: { $0.id == id }) else { return }
         if !tab.hasExited {
             tab.onExit = shouldClose ? nil : tab.onExit
-            tab.terminal.terminate()
+            tab.terminal?.terminate()
         }
         if shouldClose { close(id) }
     }
@@ -352,13 +409,20 @@ final class TerminalPaneViewController: NSViewController {
     }
 
     func focusCurrentTerminal() {
-        guard let terminal = selectedTab?.terminal else { return }
-        view.window?.makeFirstResponder(terminal)
+        if let chat = selectedTab?.chat {
+            chat.focusComposer()
+        } else if let terminal = selectedTab?.terminal {
+            view.window?.makeFirstResponder(terminal)
+        }
     }
 
     func persistTabs() {
-        let directories = tabs.filter { $0.fixedTitle == nil }.compactMap(\.directory)
-        session.update { $0.terminalDirectories = directories }
+        let directories = tabs.filter { $0.fixedTitle == nil && $0.terminal != nil }.compactMap(\.directory)
+        let chats = tabs.compactMap { $0.chat?.sessionID }
+        session.update {
+            $0.terminalDirectories = directories
+            $0.claudeSessions = chats
+        }
     }
 
     // MARK: - Menu actions
@@ -382,7 +446,7 @@ final class TerminalPaneViewController: NSViewController {
 
     @objc func clearTerminal(_ sender: Any?) {
         // Same as the shell's clear: scroll the screen away and reset the cursor.
-        selectedTab?.terminal.send(txt: "\u{1b}[2J\u{1b}[3J\u{1b}[H")
+        selectedTab?.terminal?.send(txt: "\u{1b}[2J\u{1b}[3J\u{1b}[H")
     }
 }
 
@@ -416,7 +480,7 @@ extension TerminalPaneViewController: LocalProcessTerminalViewDelegate {
             tab.onExit = nil
             let code = exitCode ?? -1
             let color = code == 0 ? "32" : "31"
-            tab.terminal.feed(text: "\r\n\u{1b}[\(color)m● exited with code \(code)\u{1b}[0m — ⌘W closes this tab\r\n")
+            tab.terminal?.feed(text: "\r\n\u{1b}[\(color)m● exited with code \(code)\u{1b}[0m — ⌘W closes this tab\r\n")
             tab.title = "\(tab.fixedTitle ?? "Run") \(code == 0 ? "✓" : "✗")"
             syncTabBar()
             onExit(exitCode)

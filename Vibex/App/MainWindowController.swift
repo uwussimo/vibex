@@ -107,6 +107,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
         sourceControl.start()
         agents.refresh()
         workspace.simulatorPane.openDevices = { [weak self] in self?.showDevices(nil) }
+        workspace.terminalPane.openFile = { [weak self] url in self?.openFile(url, keep: true) }
         workspace.editor.onFileShown = { [weak self] url in if let url { self?.explorer.selection = url.standardizedFileURL } }
     }
 
@@ -116,11 +117,13 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
             sourceControl: sourceControl,
             tabs: workspace.editor.tabs,
             panes: workspace.panes,
+            leftTabs: workspace.terminalPane.tabBarModel,
             simulator: workspace.simulatorPane.model,
             attention: .shared,
             agents: agents,
             windowID: session.windowID,
             actions: ActivityBarActions(
+                showClaude: { [weak self] in self?.showClaude() },
                 showTerminal: { [weak self] in self?.showTerminalOrWaiting() },
                 showSimulator: { [weak self] in self?.workspace.focusSimulator(nil) },
                 showBrowser: { [weak self] in self?.workspace.focusBrowser(nil) },
@@ -282,6 +285,11 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
     @objc func toggleMCPServers(_ sender: Any?) { toggleSidebar(.mcp) }
 
     /// A terminal tab running Claude Code in the project, e.g. to sign in to MCP servers with /mcp.
+    func showClaude() {
+        workspace.terminalPane.showClaude()
+        workspace.updatePanesAfterTabChange()
+    }
+
     func openClaudeCode() {
         let id = workspace.terminalPane.runCommandInNewTab("claude", directory: session.project.path)
         workspace.showTerminalTab(id)

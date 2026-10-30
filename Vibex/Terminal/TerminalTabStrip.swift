@@ -4,6 +4,7 @@ import SwiftUI
 final class TerminalTabBarModel {
     var tabs: [TabStripItem] = []
     var selectedID: UUID?
+    var isClaudeSelected: Bool { tabs.first { $0.id == selectedID }?.isClaude == true }
 }
 
 /// The terminal's always-dark tab row, a thin wrapper over the shared `TabStrip`.

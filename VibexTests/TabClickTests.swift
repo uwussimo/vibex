@@ -52,4 +52,44 @@ import Testing
         #expect(!isInside(hit(NSPoint(x: middle, y: frame.maxY - 25), in: content), workspace.view))
         #expect(isInside(hit(NSPoint(x: middle, y: frame.maxY - 120), in: content), workspace.view))
     }
+
+    @Test func `Claude opens as a tab in the left column and comes back after closing`() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("vibex-chat-\(UUID().uuidString)")
+        let folder = root.appendingPathComponent("habits")
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let store = ProjectStore(directory: root.appendingPathComponent("state"))
+        let project = Project(url: folder)
+        var state = ProjectState()
+        state.browserTabURLs = ["about:blank"]
+        state.terminalDirectories = [folder.path]
+        state.claudeSessions = ["restored-session"]
+        store.save(state, for: project)
+        let session = ProjectSession(project: project, store: store)
+        let controller = MainWindowController(session: session)
+        let window = try #require(controller.window)
+        window.setFrame(NSRect(x: -6000, y: 200, width: 1500, height: 820), display: false)
+        controller.showWindow(nil)
+        defer { controller.close() }
+        try await Task.sleep(for: .seconds(1.5))
+        let pane = controller.workspace.terminalPane
+
+        // A saved chat comes back beside the saved terminal, and both stay saved.
+        #expect(pane.tabBarModel.tabs.map(\.isClaude) == [false, true])
+        pane.persistTabs()
+        #expect(session.state.claudeSessions == ["restored-session"])
+        #expect(session.state.terminalDirectories.count == 1)
+
+        pane.selectTab(pane.tabBarModel.tabs[0].id)
+        #expect(!pane.tabBarModel.isClaudeSelected)
+        controller.showClaude()
+        #expect(pane.tabBarModel.isClaudeSelected)
+        // Closing everything still leaves Claude one click away.
+        while !pane.isEmpty { pane.closeTab(nil) }
+        try await Task.sleep(for: .seconds(0.5))
+        controller.showClaude()
+        try await Task.sleep(for: .seconds(0.5))
+        #expect(pane.tabBarModel.isClaudeSelected)
+        #expect(controller.workspace.panes.terminal)
+    }
 }

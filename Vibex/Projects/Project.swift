@@ -50,6 +50,8 @@ nonisolated struct ProjectState: Codable, Equatable, Sendable {
     var editorTab: String?
     /// The user closed every tab of the pane; it stays closed until reopened from the activity bar.
     var terminalClosed: Bool?
+    /// Claude chat tabs, by Claude Code session id.
+    var claudeSessions: [String]?
     var browserClosed: Bool?
     /// The simulators in the Devices tab, by UDID.
     var matrixDevices: [String]?

@@ -8,6 +8,8 @@ struct ActivityBar: View {
     let sourceControl: SourceControlModel
     let tabs: EditorTabsModel
     let panes: PaneVisibility
+    /// The left column's tabs, to tell Claude from Terminal.
+    let leftTabs: TerminalTabBarModel
     let simulator: SimulatorModel
     let attention: AttentionCenter
     let agents: AgentsModel
@@ -19,12 +21,20 @@ struct ActivityBar: View {
     var body: some View {
         VStack(spacing: 2) {
             ActivityButton(
+                icon: .sparkles,
+                logo: .claude,
+                label: "Claude",
+                help: "Claude (⌃⇧C for a new chat)",
+                isSelected: panes.terminal && leftTabs.isClaudeSelected,
+                action: actions.showClaude
+            )
+            ActivityButton(
                 icon: .terminal,
                 label: "Terminal",
                 help: waiting > 0
                     ? "Claude is waiting in \(waiting) tab\(waiting == 1 ? "" : "s") (⌘1)"
                     : (panes.terminal ? "Terminal (⌘1)" : "Open Terminal (⌘1)"),
-                isSelected: panes.terminal,
+                isSelected: panes.terminal && !leftTabs.isClaudeSelected,
                 attention: waiting,
                 action: actions.showTerminal
             )
@@ -122,6 +132,7 @@ struct ActivityBar: View {
 }
 
 struct ActivityBarActions {
+    var showClaude: () -> Void
     var showTerminal: () -> Void
     var showSimulator: () -> Void
     var showBrowser: () -> Void
@@ -136,6 +147,8 @@ struct ActivityBarActions {
 
 struct ActivityButton: View {
     let icon: Icon
+    /// A tool's own logo, shown instead of the icon.
+    var logo: BrandLogo?
     /// A word under the icon, so each section says what it is without a tooltip.
     let label: String
     let help: String
@@ -150,7 +163,7 @@ struct ActivityButton: View {
     var body: some View {
         Button(action: action) {
             VStack(spacing: 3) {
-                IconView(icon, size: 18)
+                if let logo { BrandLogoView(logo, size: 18) } else { IconView(icon, size: 18) }
                 Text(label)
                     .font(.vibex(size: 9.5, weight: isSelected ? .medium : .regular))
                     .lineLimit(1)
