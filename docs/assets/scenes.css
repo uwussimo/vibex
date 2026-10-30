@@ -1,0 +1,171 @@
+/* What's particular to each scene on the home page. The vocabulary lives in site.css. */
+.stay { opacity: calc(1 - var(--x, 0)); }
+
+/* Hero: the window rises and flattens as the headline leaves. */
+.hero-pin { display: block; padding-top: 0; }
+.hero-copy { position: absolute; inset: 104px 0 auto; margin-inline: auto; z-index: 2; transform: translateY(calc(var(--x, 0) * -80px)); }
+.hero-rise { position: absolute; inset: 72px 24px 16px; display: grid; place-items: center; perspective: 1800px; transform: translateY(calc((1 - var(--t, 1)) * 52svh)); }
+.hero-rise vx-art { width: min(1240px, 100%); height: 100%; }
+.hero-tilt { transform: rotateX(calc((1 - var(--t, 1)) * 20deg)) scale(calc(.88 + var(--t, 1) * .12)); transform-origin: 50% 100%; width: 100%; height: 100%; }
+.hero-tilt vx-window { width: 100%; height: 100%; }
+vx-scene[static] .hero-pin, html:not(.js) .hero-pin { display: grid; gap: 40px; }
+vx-scene[static] .hero-copy, html:not(.js) .hero-copy { position: static; }
+vx-scene[static] .hero-rise, html:not(.js) .hero-rise { position: static; width: min(1240px, 100% - 48px); margin-inline: auto; transform: none; }
+vx-scene[static] .hero-rise vx-art { height: auto; }
+.hero-chat { width: 470px; border-right: 1px solid var(--line); justify-content: flex-end; }
+.hero-side { flex: 1; display: grid; place-items: center; background: #101014; position: relative; }
+.hero-side vx-phone { zoom: .98; }
+.tap { position: absolute; width: 44px; height: 44px; border-radius: 50%; background: rgba(129,148,255,.35); border: 2px solid var(--accent); transform: scale(calc(.5 + var(--t, 1) * .7)); }
+.habit { display: flex; align-items: center; gap: 10px; padding: 11px; border-radius: 13px; background: #fff; font-size: 13px; font-weight: 500; }
+.habit i { width: 22px; height: 22px; border-radius: 50%; border: 2px solid #c9c9d2; flex: none; }
+.habit i.on { background: #30b56f; border-color: #30b56f; }
+.ph-title { font-size: 25px; font-weight: 700; letter-spacing: -.02em; }
+.ph-cta { margin-top: auto; height: 44px; display: grid; place-items: center; border-radius: 13px; background: #2f6bff; color: #fff; font-weight: 600; font-size: 14px; }
+
+/* The old way: scattered windows collapse into one. */
+.mess { position: absolute; width: 270px; height: 180px; transform: translate(calc(var(--t, 1) * var(--dx)), calc(var(--t, 1) * var(--dy))) rotate(calc((1 - var(--t, 1)) * var(--r))) scale(calc(1 - var(--t, 1) * .55)); }
+.mess vx-window { width: 100%; height: 100%; }
+.mess .pane { font-size: 12px; color: var(--muted); }
+.mess .mono { font-size: 11px; }
+.one { position: absolute; inset: 40px 30px; transform: scale(calc(.7 + var(--t, 1) * .3)); }
+.one vx-window { width: 100%; height: 100%; }
+.mini-col { flex: 1; border-right: 1px solid var(--line); display: flex; flex-direction: column; gap: 9px; padding: 14px; }
+.mini-col:last-child { border: 0; }
+.line { height: 8px; border-radius: 4px; background: rgba(255,255,255,.1); }
+html:not(.js) .mess { display: none; }
+
+/* The loop: a ring that closes around the app. */
+.ring-wrap { position: absolute; left: 10px; top: 60px; width: 440px; height: 440px; }
+.ring-wrap svg { width: 100%; height: 100%; overflow: visible; }
+.node { position: absolute; transform: translate(-50%, -50%) scale(calc(.8 + var(--t, 1) * .2)); display: flex; align-items: center; gap: 7px; height: 38px; padding: 0 15px; border-radius: 19px; background: var(--surface-2); border: 1px solid var(--line-strong); font-size: 14px; font-weight: 600; white-space: nowrap; }
+.ring-mid { position: absolute; inset: 0; display: grid; place-items: center; font-size: 15px; color: var(--muted); text-align: center; line-height: 1.35; }
+.ring-mid b { display: block; color: var(--text); font-size: 24px; letter-spacing: -.02em; }
+.loop-phone { position: absolute; right: 26px; top: 15px; }
+.overflow { position: absolute; left: 14px; right: -46px; bottom: 26px; height: 44px; display: grid; place-items: center; border-radius: 13px; background: #2f6bff; color: #fff; font-weight: 600; font-size: 14px; outline: 2px dashed var(--red); outline-offset: 3px; }
+.flag { position: absolute; right: 6px; bottom: 84px; padding: 4px 9px; border-radius: 8px; background: var(--red); color: #fff; font-size: 11px; font-weight: 600; }
+.fixed { position: absolute; left: 14px; right: 14px; bottom: 26px; height: 44px; display: grid; place-items: center; border-radius: 13px; background: #2f6bff; color: #fff; font-weight: 600; font-size: 14px; }
+
+/* Design: JSON turns into screens. */
+.json { position: absolute; left: 0; top: 34px; width: 260px; height: 490px; padding: 16px; border-radius: 14px; background: var(--term, #0a0a0d); border: 1px solid var(--line-strong); font: 11.5px/1.7 var(--mono); color: #c7c7d2; overflow: hidden; white-space: pre; }
+.json b { color: #8fb0ff; font-weight: 400; }
+.json em { color: #7fdca9; font-style: normal; }
+.d-phone { position: absolute; top: 34px; --ph-bg: #f4f5ef; zoom: .92; }
+.d-phone .ph-content { gap: 9px; }
+.d-card { border-radius: 12px; background: #fff; padding: 10px; display: flex; gap: 9px; align-items: center; font-size: 11.5px; font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,.06); }
+.d-card i { width: 32px; height: 32px; border-radius: 9px; background: #dfe7da; flex: none; }
+.d-hero { border-radius: 13px; background: linear-gradient(120deg, #2f7d57, #4fa77c); color: #fff; padding: 12px; font-size: 13px; font-weight: 650; line-height: 1.25; }
+.d-hero small { display: block; font-size: 10.5px; font-weight: 500; opacity: .85; margin-top: 2px; }
+.d-tabs { margin-top: auto; display: flex; justify-content: space-around; padding: 9px 0; border-top: 1px solid #e3e5dc; }
+.d-tabs i { width: 22px; height: 22px; border-radius: 7px; background: #ccd3c4; }
+.d-tabs i:first-child { background: #2f7d57; }
+.d-photo { height: 150px; border-radius: 12px; background: linear-gradient(160deg, #cfdcc6, #a9c1a2); }
+.d-big { font-size: 22px; font-weight: 700; letter-spacing: -.02em; color: #1b2a20; }
+.d-bars { display: flex; align-items: flex-end; gap: 5px; height: 62px; }
+.d-bars i { flex: 1; background: #4d9bd8; border-radius: 3px; }
+.d-btn { margin-top: auto; height: 40px; display: grid; place-items: center; border-radius: 12px; background: #2f7d57; color: #fff; font-size: 13px; font-weight: 600; }
+.build-this { position: absolute; right: 8px; top: -2px; }
+
+/* Chat: the composer does the talking. */
+.chat-win { position: absolute; inset: 14px 0; }
+.chat-win vx-window { width: 100%; height: 100%; }
+.composer { position: absolute; left: 22px; right: 22px; bottom: 20px; border-radius: 16px; background: var(--card); border: 1px solid var(--line-strong); }
+.c-field { padding: 14px 16px 8px; font-size: 16px; min-height: 46px; }
+.c-tools { display: flex; align-items: center; gap: 8px; padding: 0 12px 12px; position: relative; height: 42px; }
+.c-send { margin-left: auto; width: 30px; height: 30px; border-radius: 50%; background: var(--accent); }
+.menu { position: absolute; left: 22px; right: 22px; bottom: 134px; border-radius: 14px; background: var(--surface-2); border: 1px solid var(--line-strong); padding: 6px; box-shadow: 0 18px 40px -14px #000; }
+.menu div { display: flex; gap: 12px; align-items: baseline; padding: 8px 10px; border-radius: 8px; font-size: 13.5px; color: var(--faint); white-space: nowrap; overflow: hidden; }
+.menu div b { font: 500 13.5px var(--mono); color: var(--text); }
+.menu div.hi { background: rgba(255,255,255,.08); }
+.mode { position: absolute; left: 12px; top: 0; }
+.mode.plan { color: var(--violet); background: rgba(167,139,250,.16); }
+.mode.auto { color: var(--green); background: rgba(61,214,140,.16); }
+.chat-feed { position: absolute; left: 22px; right: 22px; top: 18px; display: flex; flex-direction: column; gap: 10px; }
+
+/* Agents: branches leave main and one comes home. */
+.tree { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.tree path { fill: none; stroke-width: 3; stroke-linecap: round; }
+.agent { position: absolute; left: 420px; width: 340px; padding: 14px 16px; border-radius: 15px; background: var(--card); border: 1px solid var(--line-strong); }
+.agent h3 { font-size: 15px; display: flex; align-items: center; gap: 8px; }
+.agent p { margin-top: 5px; font-size: 13px; color: var(--muted); }
+.agent .plus { color: var(--green); font-weight: 600; }
+.agent .minus { color: var(--red); font-weight: 600; }
+.main-label { position: absolute; left: 0; top: 248px; font: 500 13px var(--mono); color: var(--muted); }
+.merged { position: absolute; left: 420px; top: 240px; width: 340px; }
+
+/* Simulator: one device becomes three. */
+.sim-c { position: absolute; left: 285px; top: 15px; }
+.sim-l { position: absolute; left: 20px; top: 70px; zoom: .82; transform: translateX(calc((1 - var(--t, 1)) * 220px)) rotate(calc((1 - var(--t, 1)) * 6deg)); }
+.sim-r { position: absolute; right: 10px; top: 85px; width: 300px; height: 410px; border-radius: 24px; padding: 9px; background: #0a0a0c; border: 1.5px solid rgba(255,255,255,.17); transform: translateX(calc((1 - var(--t, 1)) * -220px)) rotate(calc((1 - var(--t, 1)) * -6deg)); }
+.sim-r > div { height: 100%; border-radius: 16px; background: #f5f5f7; padding: 26px 16px; color: #16161a; display: flex; flex-direction: column; gap: 9px; }
+.label-tag { position: absolute; padding: 5px 10px; border-radius: 8px; background: var(--accent); color: #fff; font: 500 11.5px var(--mono); white-space: nowrap; }
+
+/* Browser: the route is the star. */
+.b-win { position: absolute; inset: 14px 0; }
+.b-win vx-window { width: 100%; height: 100%; }
+.b-col { flex: 1; display: flex; flex-direction: column; min-width: 0; position: relative; }
+.addr { display: flex; align-items: center; height: 40px; margin: 10px 14px 0; padding: 0 14px; border-radius: 10px; background: rgba(255,255,255,.07); font-size: 15px; flex: none; }
+.addr .host { color: var(--muted); }
+.addr .route { color: var(--text); min-height: 1em; white-space: pre; }
+.page { flex: 1; margin: 12px 14px; border-radius: 10px; background: #fafafb; color: #18181c; padding: 20px; position: relative; overflow: hidden; display: flex; flex-direction: column; gap: 10px; }
+.page h4 { margin: 0; font-size: 22px; letter-spacing: -.02em; }
+.row-card { display: flex; justify-content: space-between; padding: 12px 14px; border-radius: 10px; background: #fff; border: 1px solid #e8e8ee; font-size: 13.5px; }
+.ref { position: absolute; border: 2px solid var(--accent); border-radius: 12px; }
+.ref span { position: absolute; right: -2px; top: -24px; padding: 2px 7px; border-radius: 6px; background: var(--accent); color: #fff; font: 500 11px var(--mono); }
+.console { position: absolute; left: 14px; right: 14px; bottom: 12px; padding: 12px 14px; border-radius: 12px; background: #0a0a0d; border: 1px solid var(--line-strong); font: 12px/1.75 var(--mono); color: #c7c7d2; }
+.console .g { color: var(--green); }
+
+/* Approvals: a tap on the shoulder. */
+.banner { position: absolute; right: 8px; top: 8px; width: 340px; padding: 13px 15px; border-radius: 16px; background: rgba(46,46,54,.82); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--line-strong); box-shadow: 0 20px 40px -12px #000; z-index: 3; display: flex; gap: 11px; font-size: 13px; line-height: 1.35; transform: translateY(calc((1 - var(--t, 1)) * -110px)); }
+.banner img { width: 36px; height: 36px; border-radius: 8px; flex: none; }
+.banner b { display: block; }
+.tabs { display: flex; gap: 4px; padding: 8px 10px 0; flex: none; }
+.tabs span { display: inline-flex; align-items: center; gap: 7px; height: 30px; padding: 0 12px; border-radius: 8px; font-size: 12.5px; color: var(--muted); }
+.tabs span.on { background: rgba(255,255,255,.08); color: var(--text); }
+.tabs .waiting { width: 8px; height: 8px; border-radius: 50%; background: var(--orange); transform: scale(var(--t, 1)); }
+.approve { padding: 15px; border-radius: 14px; background: rgba(129,148,255,.1); border: 1px solid rgba(129,148,255,.5); }
+.approve code { display: block; font-size: 13px; margin: 7px 0 12px; }
+.approve small { color: var(--muted); font-size: 12.5px; }
+.approve-row { display: flex; gap: 8px; }
+.a-btn { height: 34px; padding: 0 15px; border-radius: 9px; display: inline-grid; place-items: center; font-size: 13px; font-weight: 600; background: rgba(255,255,255,.08); }
+.a-btn.yes { background: var(--accent); color: #0c0c0f; transform: scale(calc(1 - var(--t, 0) * .06)); }
+
+/* Review: a wipe, then a drag between two moments. */
+.diff { position: absolute; left: 0; top: 130px; width: 430px; padding-bottom: 10px; border-radius: 14px; background: #0f0f13; border: 1px solid var(--line-strong); overflow: hidden; font: 12px/1.9 var(--mono); }
+.diff-head { padding: 10px 14px; border-bottom: 1px solid var(--line); color: var(--muted); font-family: var(--sans); font-size: 13px; }
+.diff div.l { padding: 0 14px; white-space: pre; }
+.diff .del { background: rgba(255,99,105,.13); color: #ffb3b6; }
+.diff .add { background: rgba(61,214,140,.13); color: #a4edc8; }
+.diff .bar-x { transform-origin: left; }
+.compare { position: absolute; right: 10px; top: 15px; width: 250px; height: 530px; }
+.compare vx-phone { position: absolute; inset: 0; }
+.compare .after { clip-path: inset(0 calc((1 - var(--t, 1)) * 100%) 0 0); }
+.divider { position: absolute; top: -6px; bottom: -6px; width: 3px; border-radius: 2px; background: #fff; left: calc(var(--t, 1) * 100%); box-shadow: 0 0 12px rgba(0,0,0,.6); }
+.divider::after { content: "‹›"; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 30px; height: 30px; border-radius: 50%; background: #fff; color: #111; display: grid; place-items: center; font-size: 14px; font-weight: 700; }
+
+/* Skills and MCP: tiles fly home and lock in. */
+.market-search { position: absolute; left: 60px; right: 60px; top: 12px; height: 48px; display: flex; align-items: center; gap: 10px; padding: 0 18px; border-radius: 14px; background: var(--card); border: 1px solid var(--line-strong); color: var(--muted); font-size: 15px; }
+.tiles { position: absolute; left: 60px; right: 60px; top: 84px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+.m-tile { height: 134px; padding: 14px; border-radius: 16px; background: var(--card); border: 1px solid var(--line); display: flex; flex-direction: column; gap: 8px; font-size: 13.5px; font-weight: 600; position: relative; transform: translate(calc((1 - var(--t, 1)) * var(--dx)), calc((1 - var(--t, 1)) * var(--dy))) rotate(calc((1 - var(--t, 1)) * var(--r, 6deg))); }
+.m-tile img { width: 36px; height: 36px; padding: 6px; border-radius: 10px; background: #fff; }
+.m-tile small { color: var(--faint); font-weight: 400; font-size: 11.5px; }
+.installed { position: absolute; right: 11px; top: 11px; width: 22px; height: 22px; border-radius: 50%; background: var(--green); color: #0c0c0f; display: grid; place-items: center; font-size: 13px; font-weight: 800; transform: scale(var(--t, 1)); }
+
+/* Usage: the gauge fills, then the nudge. */
+.gauge { position: absolute; left: 10px; top: 60px; width: 330px; height: 330px; }
+.gauge svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.gauge circle { fill: none; stroke-width: 22; stroke-linecap: round; }
+.gauge .fill { stroke-dasharray: 1; stroke-dashoffset: calc(1 - var(--t, 1) * .82); }
+.gauge-text { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; color: var(--muted); font-size: 14px; }
+.gauge-text b { display: block; font-size: 66px; line-height: 1; letter-spacing: -.04em; color: var(--text); font-weight: 650; font-variant-numeric: tabular-nums; }
+.bars { position: absolute; right: 0; top: 70px; width: 410px; height: 250px; padding: 16px; border-radius: 16px; background: var(--card); border: 1px solid var(--line); display: flex; align-items: flex-end; gap: 7px; }
+.bars i { flex: 1; border-radius: 4px 4px 0 0; background: var(--accent); height: var(--h); }
+.bars span { position: absolute; left: 16px; top: 12px; font-size: 13px; color: var(--muted); }
+.nudge { position: absolute; right: 0; top: 345px; width: 410px; padding: 15px 17px; border-radius: 16px; background: rgba(240,160,90,.12); border: 1px solid rgba(240,160,90,.5); font-size: 14px; line-height: 1.4; }
+.nudge b { display: block; }
+
+/* On a phone the hero is the live iPhone: a whole desktop window would be too small to read. */
+@media (max-width: 900px) {
+  .hero-tilt vx-window { background: none; border: 0; box-shadow: none; }
+  .hero-tilt .win-bar, .hero-tilt .rail, .hero-chat { display: none; }
+  .hero-side { background: none; }
+}

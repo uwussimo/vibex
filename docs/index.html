@@ -3,1343 +3,539 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Vibex — the agentic workstation where your coding agent sees what it builds</title>
-<meta name="description" content="Vibex closes the loop for coding agents: Claude Code writes the code, runs it, taps through the live iOS Simulator and browser, and checks its own work, all in one native Mac window. Free and open source under the MIT license.">
+<title>Vibex: the Mac workstation where your coding agent sees what it builds</title>
+<meta name="description" content="Stop being your coding agent's eyes. In Vibex, Claude Code runs your app, taps through the live iOS Simulator and browser, and fixes what it finds. Free, open source, one command to install.">
 <meta name="theme-color" content="#0c0c0f">
-<link rel="icon" type="image/png" href="icon.png">
-<link rel="apple-touch-icon" href="icon.png">
-<meta property="og:title" content="Vibex: your coding agent can finally see what it builds">
-<meta property="og:description" content="Claude Code writes, runs, taps through and checks its own work in one native Mac window: terminal, live iOS Simulator, browser and every diff. Free and open source.">
+<link rel="icon" type="image/png" href="/icon.png">
+<link rel="apple-touch-icon" href="/icon.png">
+<meta property="og:title" content="Vibex: your coding agent finally has eyes">
+<meta property="og:description" content="Claude Code runs your app, taps through it and fixes what it finds, all in one native Mac window. Free and open source.">
 <meta property="og:image" content="https://vibex.cc/og.png">
 <meta property="og:image:width" content="2400">
 <meta property="og:image:height" content="1260">
-<meta property="og:image:alt" content="The old way vs. the Vibex way: one window that Claude can see and drive. $0, 50+ MCP tools, MIT.">
+<meta property="og:image:alt" content="The old way vs. the Vibex way: one window that Claude can see and drive.">
 <meta name="twitter:image" content="https://vibex.cc/og.png">
 <meta property="og:url" content="https://vibex.cc/">
 <meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Vibex","operatingSystem":"macOS 26","applicationCategory":"DeveloperApplication","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"license":"https://opensource.org/licenses/MIT","url":"https://vibex.cc/"}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400..700&family=Google+Sans+Code:wght@400..600&display=swap" rel="stylesheet">
-<style>
-  /* Dark only, like the app. */
-  :root {
-    --term-text: #e6e6ea;
-    --term-dim: #8b8c96;
-    --glow-a: #7ea2ff;
-    --glow-b: #a98bff;
-    --glow-c: #ffa1dc;
-    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
-    --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
-    --bg: #0c0c0f;
-    --surface: #151519;
-    --surface-2: #1d1d22;
-    --card: #17171b;
-    --line: rgba(255, 255, 255, 0.08);
-    --line-strong: rgba(255, 255, 255, 0.15);
-    --text: #f1f1f4;
-    --muted: #9b9ba7;
-    --faint: #62626c;
-    --accent: #8194ff;
-    --accent-soft: rgba(129, 148, 255, 0.14);
-    --green: #3dd68c;
-    --green-soft: rgba(61, 214, 140, 0.12);
-    --red: #ff6369;
-    --red-soft: rgba(255, 99, 105, 0.12);
-    --orange: #f0a05a;
-    --orange-soft: rgba(240, 160, 90, 0.13);
-    --violet: #a78bfa;
-    --violet-soft: rgba(167, 139, 250, 0.13);
-    --pink: #f17cc5;
-    --pink-soft: rgba(241, 124, 197, 0.12);
-    --term: #0a0a0d;
-    --btn: #f1f1f4;
-    --btn-text: #0c0c0f;
-    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 10px 30px -12px rgba(0, 0, 0, 0.6);
-    color-scheme: dark;
-  }
-
-  * { box-sizing: border-box; }
-  html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
-  body {
-    margin: 0;
-    background: var(--bg);
-    color: var(--text);
-    font: 16px/1.55 "Google Sans", system-ui, -apple-system, sans-serif;
-    font-optical-sizing: auto;
-    -webkit-font-smoothing: antialiased;
-    overflow-x: hidden;
-  }
-  a { color: inherit; text-decoration: none; }
-  code, pre, kbd, .code { font-family: "Google Sans Code", ui-monospace, monospace; }
-  img, svg { display: block; }
-  button { font: inherit; color: inherit; }
-  .wrap { width: min(1000px, 100% - 32px); margin-inline: auto; }
-  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
-
-  /* Buttons */
-  .btn {
-    display: inline-flex; align-items: center; gap: 8px;
-    height: 40px; padding: 0 16px; border-radius: 10px;
-    font-size: 14.5px; font-weight: 500; letter-spacing: -0.01em;
-    border: 1px solid transparent; cursor: pointer; white-space: nowrap;
-    transition: transform 140ms var(--ease-out), background-color 160ms ease, border-color 160ms ease;
-  }
-  .btn:active { transform: scale(0.97); }
-  .btn > svg, .btn > img { width: 17px; height: 17px; flex: none; margin-left: -2px; }
-  .btn-dark { background: var(--btn); color: var(--btn-text); box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 1px 2px rgba(0,0,0,.2); }
-  .btn-light { background: var(--card); border-color: var(--line-strong); box-shadow: var(--shadow); }
-  .btn-sm { height: 32px; padding: 0 12px; font-size: 13.5px; border-radius: 8px; }
-  @media (hover: hover) and (pointer: fine) {
-    .btn-light:hover { background: var(--surface); }
-    .btn-dark:hover { opacity: .9; }
-  }
-
-  /* Nav */
-  .nav { position: sticky; top: 0; z-index: 20; background: color-mix(in srgb, var(--bg) 82%, transparent); backdrop-filter: saturate(1.4) blur(14px); -webkit-backdrop-filter: saturate(1.4) blur(14px); }
-  .nav .wrap { display: flex; align-items: center; gap: 24px; height: 60px; }
-  .brand { display: flex; align-items: center; gap: 9px; font-weight: 600; font-size: 17px; letter-spacing: -0.02em; }
-  .brand img { width: 26px; height: 26px; }
-  .nav-links { display: flex; gap: 22px; margin-inline: auto; font-size: 14.5px; color: var(--muted); }
-  .nav-links a { transition: color 150ms ease; }
-  .nav-links a:hover { color: var(--text); }
-  .nav-cta { display: flex; gap: 8px; }
-  .star-count { font-variant-numeric: tabular-nums; color: var(--muted); padding-left: 6px; border-left: 1px solid var(--line-strong); }
-  @media (max-width: 760px) { .nav-links { display: none; } .nav-cta { margin-left: auto; } .nav-cta .btn-light { display: none; } }
-
-  /* Type */
-  h1, h2, h3 { margin: 0; font-weight: 500; letter-spacing: -0.035em; }
-  h1 { font-size: clamp(40px, 6.2vw, 64px); line-height: 1.04; }
-  h2 { font-size: clamp(32px, 4.6vw, 48px); line-height: 1.08; }
-  h3 { font-size: 21px; letter-spacing: -0.02em; line-height: 1.25; }
-  p { margin: 0; }
-  .muted { color: var(--muted); }
-  .pill {
-    display: inline-block; padding: 0 .16em .04em; margin: 0 -.02em;
-    border: 1px solid var(--line-strong); border-radius: .2em;
-    background: var(--card); box-shadow: 0 1px 2px rgba(20,20,40,.06), inset 0 -2px 0 var(--surface);
-  }
-  .tag {
-    display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px;
-    border-radius: 7px; font-size: 13px; font-weight: 500; color: #fff;
-  }
-  .tag svg { width: 14px; height: 14px; }
-  .mini-tag {
-    display: inline-flex; align-items: center; gap: 7px; height: 28px; padding: 0 10px;
-    border: 1px solid var(--line); border-radius: 8px; background: var(--card); font-size: 13px; font-weight: 500;
-  }
-  .mini-tag i { width: 16px; height: 16px; border-radius: 4px; display: grid; place-items: center; font-style: normal; font-size: 10px; }
-  svg.ui { width: 1em; height: 1em; flex: none; }
-  .mini-tag i svg.ui { width: 11px; height: 11px; }
-  .chips svg.ui { width: 15px; height: 15px; }
-  .btn-xs svg.ui { width: 14px; height: 14px; margin-left: 4px; margin-right: -2px; }
-  .scm-commit { display: flex !important; justify-content: center; align-items: center; gap: 5px; }
-  .scm-commit svg.ui, .scm-group svg.ui { width: 12px; height: 12px; }
-  .scm-group span { display: inline-flex; align-items: center; gap: 3px; }
-  .url svg.ui { width: 13px; height: 13px; margin-right: -4px; }
-  .brand-ico { width: 13px; height: 13px; }
-  .row2 span svg.ui { width: 14px; height: 14px; vertical-align: -2px; margin-right: 4px; }
-  .stat .stat-ico svg.ui { width: 22px; height: 22px; color: var(--muted); }
-
-  /* Hero */
-  .hero { padding: 64px 0 0; }
-  .hero-grid { display: grid; grid-template-columns: 1.25fr 1fr; gap: 48px; align-items: end; }
-  .hero-lede { font-size: 17px; color: var(--muted); max-width: 400px; padding-bottom: 8px; }
-  .hero-cta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 30px; }
-  .hero-cmd { font-size: 13px; gap: 9px; max-width: 100%; }
-  .hero-cmd code { font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; color: var(--muted); }
-  .hero-cmd .p { color: var(--accent); font-family: "Google Sans Code", monospace; }
-  .hero-cmd .copy-ico { display: grid; color: var(--muted); }
-  .hero-cmd .copy-ico svg.ui { grid-area: 1 / 1; width: 15px; height: 15px; transition: opacity 160ms ease, transform 160ms var(--ease-out); }
-  .hero-cmd .copy-ico svg.ui + svg.ui { opacity: 0; transform: scale(0.8); color: var(--green); }
-  .hero-cmd.copied .copy-ico svg.ui:first-child { opacity: 0; transform: scale(0.8); }
-  .hero-cmd.copied .copy-ico svg.ui + svg.ui { opacity: 1; transform: none; }
-  @media (prefers-reduced-motion: reduce) { .hero-cmd .copy-ico svg.ui { transition: opacity 160ms ease; transform: none !important; } }
-  @media (max-width: 560px) { .hero-cmd { width: 100%; justify-content: flex-start; } .hero-cmd .copy-ico { margin-left: auto; } }
-  @media (max-width: 860px) { .hero-grid { grid-template-columns: 1fr; gap: 18px; } }
-
-  /* App mockup */
-  .stage { margin-top: 48px; position: relative; }
-  .stage-frame { border-radius: 16px; background: var(--surface); padding: 8px; border: 1px solid var(--line); }
-  .stage-scale { position: relative; overflow: hidden; border-radius: 10px; }
-
-  /* Launch film */
-  .film video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; border-radius: 10px; background: #000; }
-  .app {
-    --w: 1080px; --h: 620px;
-    width: var(--w); height: var(--h);
-    transform-origin: top left;
-    background: var(--card); color: var(--text);
-    display: grid; grid-template-rows: 38px 1fr; font-size: 12.5px;
-    border-radius: 10px; border: 1px solid var(--line);
-    user-select: none;
-  }
-  .chrome { display: flex; align-items: center; gap: 8px; padding: 0 12px; border-bottom: 1px solid var(--line); background: var(--surface); border-radius: 10px 10px 0 0; }
-  .lights { display: flex; gap: 7px; }
-  .lights i { width: 11px; height: 11px; border-radius: 50%; background: #ff5f57; }
-  .lights i:nth-child(2) { background: #febc2e; } .lights i:nth-child(3) { background: #28c840; }
-  .chrome-title { margin-inline: auto; font-weight: 500; color: var(--muted); }
-  .run-pill { display: flex; align-items: center; gap: 6px; height: 24px; padding: 0 10px; border-radius: 7px; background: var(--card); border: 1px solid var(--line); font-weight: 500; }
-  .run-pill b { width: 7px; height: 7px; border-radius: 50%; background: var(--green); }
-  .run-pill code { font-size: 11px; font-weight: 500; color: var(--muted); }
-  .body { display: grid; grid-template-columns: 44px auto minmax(0, 1fr) minmax(500px, 1.08fr); min-height: 0; }
-  .act { display: flex; flex-direction: column; align-items: center; gap: 4px; padding-top: 8px; border-right: 1px solid var(--line); background: var(--surface); border-bottom-left-radius: 10px; }
-  .act span { width: 32px; height: 32px; border-radius: 8px; display: grid; place-items: center; color: var(--muted); position: relative; transition: background-color 300ms ease, color 300ms ease; }
-  .act span.on { background: var(--surface-2); color: var(--text); }
-  .act span.on::before { content: ""; position: absolute; left: -6px; top: 8px; bottom: 8px; width: 3px; border-radius: 2px; background: var(--accent); }
-  .act svg { width: 17px; height: 17px; }
-  .act .sep { width: 18px; height: 1px; background: var(--line-strong); margin: 3px 0; }
-  .act .badge.warn { background: var(--orange); }
-  .act .badge { position: absolute; top: 2px; right: 1px; min-width: 14px; height: 14px; border-radius: 7px; background: var(--accent); color: #fff; font-size: 8.5px; font-weight: 700; display: grid; place-items: center; padding: 0 3px; }
-  .act .grow { flex: 1; }
-
-  .scm { width: 0; overflow: hidden; border-right: 1px solid transparent; background: var(--surface); transition: width 600ms var(--ease-in-out), border-color 600ms ease; position: relative; }
-  .app[data-scene="review"] .scm, .app[data-scene="agents"] .scm { width: 210px; border-color: var(--line); }
-  .scm-in { width: 210px; padding: 10px; }
-  .side-p { position: absolute; inset: 0; opacity: 0; transition: opacity 300ms ease; }
-  .app[data-scene="review"] .side-p[data-side="review"], .app[data-scene="agents"] .side-p[data-side="agents"] { opacity: 1; }
-  .scm-h .plus { float: right; color: var(--faint); font-weight: 500; }
-  .agent { border: 1px solid var(--line); background: var(--card); border-radius: 9px; padding: 8px 9px; margin-bottom: 7px; }
-  .agent-h { display: flex; align-items: center; gap: 6px; font-weight: 600; }
-  .agent-h small { margin-left: auto; color: var(--green); font-family: "Google Sans Code", monospace; font-size: 10.5px; font-weight: 500; }
-  .adot { width: 6px; height: 6px; border-radius: 50%; flex: none; }
-  .agent-b { color: var(--faint); font-size: 11px; margin: 4px 0 7px; font-family: "Google Sans Code", monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .wait { display: inline-flex; align-items: center; gap: 4px; color: var(--orange); background: var(--orange-soft); border-radius: 5px; padding: 1px 6px; font-family: "Google Sans", sans-serif; font-weight: 500; }
-  .wait svg.ui { width: 11px; height: 11px; }
-  .agent-a { display: flex; gap: 5px; }
-  .agent-a span { height: 22px; padding: 0 9px; border-radius: 6px; background: var(--surface-2); display: grid; place-items: center; font-weight: 500; font-size: 11px; }
-  .agent-a span.pri { background: var(--accent); color: #fff; }
-  .scm-h { font-weight: 600; color: var(--muted); font-size: 11.5px; margin-bottom: 8px; }
-  .scm-msg { height: 28px; border-radius: 6px; background: var(--card); border: 1px solid var(--line); padding: 0 8px; display: flex; align-items: center; color: var(--faint); }
-  .scm-commit { margin-top: 6px; height: 26px; border-radius: 6px; background: var(--accent); color: #fff; display: grid; place-items: center; font-weight: 500; }
-  .scm-group { margin-top: 12px; color: var(--muted); font-weight: 600; font-size: 11px; display: flex; justify-content: space-between; }
-  .scm-row { display: flex; align-items: center; gap: 6px; height: 24px; padding: 0 6px; border-radius: 5px; margin-top: 2px; }
-  .scm-row.sel { background: var(--accent-soft); }
-  .scm-row em { margin-left: auto; font-style: normal; font-weight: 700; font-family: "Google Sans Code", monospace; font-size: 11px; }
-  .scm-row small { color: var(--faint); font-size: 10.5px; }
-  .file-ico { width: 12px; height: 14px; border-radius: 2px; background: var(--surface-2); border: 1px solid var(--line-strong); flex: none; }
-
-  .term { background: var(--term); color: var(--term-text); display: grid; grid-template-rows: 30px 1fr; min-width: 0; }
-  .term-tabs { display: flex; align-items: center; gap: 4px; padding: 0 8px; background: #1a1b20; }
-  .term-tabs span { height: 22px; padding: 0 10px; border-radius: 6px; display: flex; align-items: center; color: var(--term-dim); font-size: 11.5px; }
-  .term-tabs span.on { background: rgba(255,255,255,.09); color: var(--term-text); }
-  .term-tabs span { gap: 6px; }
-  .tdot { width: 6px; height: 6px; border-radius: 50%; background: var(--orange); }
-  .term-body { position: relative; font-family: "Google Sans Code", monospace; font-size: 11.8px; line-height: 1.65; }
-  .tscene { position: absolute; inset: 0; padding: 12px 14px; opacity: 0; transition: opacity 400ms ease; }
-  .tscene.on { opacity: 1; }
-  .ln { opacity: 0; transform: translateY(4px); transition: opacity 360ms var(--ease-out), transform 360ms var(--ease-out); transition-delay: calc(var(--i, 0) * 260ms); white-space: pre; overflow: hidden; text-overflow: ellipsis; }
-  .tscene.on .ln { opacity: 1; transform: none; }
-  .ln .p { color: #7ea2ff; } .ln .you { color: #fff; } .ln .dim { color: var(--term-dim); }
-  .ln .dot { color: #3dd68c; } .ln .tool { color: #fff; font-weight: 600; } .ln .add { color: #3dd68c; } .ln .del { color: #ff6369; }
-  .caret { display: inline-block; width: 7px; height: 14px; background: var(--term-text); vertical-align: -2px; animation: blink 1.1s steps(1) infinite; }
-  @keyframes blink { 50% { opacity: 0; } }
-
-  .editor { display: grid; grid-template-rows: 34px 1fr; min-width: 0; border-left: 1px solid var(--line); }
-  .etabs { display: flex; align-items: center; gap: 2px; padding: 0 6px; background: var(--surface); border-bottom: 1px solid var(--line); overflow: hidden; }
-  .etab {
-    position: relative; display: flex; align-items: center; gap: 5px; height: 24px; padding: 0 8px; border-radius: 6px; border: 0; background: none; white-space: nowrap; flex: none;
-    font-size: 11.8px; color: var(--muted); cursor: pointer; transition: background-color 200ms ease, color 200ms ease;
-  }
-  .etab svg { width: 12px; height: 12px; }
-  .acard h6 svg.ui { width: 13px; height: 13px; color: var(--green); }
-  .etab.on { background: var(--surface-2); color: var(--text); font-weight: 500; }
-  .etab.italic { font-style: italic; }
-  .etab .bar { position: absolute; left: 8px; right: 8px; bottom: 1px; height: 2px; border-radius: 1px; background: var(--accent); transform: scaleX(0); transform-origin: left; opacity: 0; }
-  .etab.on .bar { opacity: .7; }
-  .panes { position: relative; min-height: 0; overflow: hidden; }
-  .pane { position: absolute; inset: 0; opacity: 0; transform: scale(0.985); transition: opacity 450ms var(--ease-out), transform 450ms var(--ease-out); pointer-events: none; }
-  .pane.on { opacity: 1; transform: none; }
-
-  /* Phone */
-  .pane-sim { display: grid; grid-template-rows: 30px 1fr; background: var(--surface); }
-  .sim-h { display: flex; align-items: center; gap: 6px; padding: 0 10px; border-bottom: 1px solid var(--line); font-weight: 500; }
-  .sim-h b { width: 7px; height: 7px; border-radius: 50%; background: var(--green); }
-  .sim-h small { color: var(--muted); font-weight: 400; }
-  .phone { margin: 14px auto; width: 230px; height: 470px; border-radius: 38px; background: #0b0b0d; padding: 7px; box-shadow: 0 18px 40px -18px rgba(0,0,0,.5); }
-  .screen { height: 100%; border-radius: 32px; background: #f5f5f7; color: #111; padding: 14px 14px; overflow: hidden; font-size: 11.5px; position: relative; }
-  .island { width: 74px; height: 20px; border-radius: 10px; background: #0b0b0d; margin: -6px auto 12px; }
-  .screen h4 { margin: 0 0 2px; font-size: 22px; font-weight: 600; letter-spacing: -.02em; }
-  .screen .sub { color: #8a8a90; margin-bottom: 12px; }
-  .streak { display: inline-flex; align-items: center; gap: 5px; padding: 4px 9px; border-radius: 999px; background: #fff1e6; color: #c2570b; font-weight: 600; font-size: 11px; margin-bottom: 12px; transform: scale(.9); opacity: 0; transition: transform 500ms var(--ease-out) 1.6s, opacity 400ms ease 1.6s; }
-  .pane.on .streak { transform: none; opacity: 1; }
-  .habit { display: flex; align-items: center; gap: 9px; background: #fff; border-radius: 12px; padding: 10px; margin-bottom: 7px; box-shadow: 0 1px 2px rgba(0,0,0,.05); }
-  .habit i { width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid #c7c7cc; flex: none; display: grid; place-items: center; }
-  .habit.done i { background: #34c759; border-color: #34c759; }
-  .habit.done i::after { content: ""; width: 6px; height: 3px; border: 2px solid #fff; border-top: 0; border-right: 0; transform: rotate(-45deg) translate(1px, -1px); }
-  .habit small { margin-left: auto; color: #8a8a90; }
-  .tap { position: absolute; width: 34px; height: 34px; border-radius: 50%; background: rgba(77,99,255,.25); border: 2px solid rgba(77,99,255,.6); left: 16px; top: 214px; opacity: 0; transform: scale(.6); }
-  .pane.on .tap { animation: tap 1.2s var(--ease-out) 1.1s both; }
-  @keyframes tap { 0% { opacity: 0; transform: scale(.6); } 25% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(1.5); } }
-
-  /* Devices */
-  .pane-devices { background: var(--card); display: grid; grid-template-rows: 40px 1fr; }
-  .dev-bar { display: flex; align-items: center; gap: 8px; padding: 0 12px; background: var(--surface); border-bottom: 1px solid var(--line); }
-  .dev-bar b { margin-right: auto; font-weight: 600; }
-  .dev-bar span { height: 24px; padding: 0 9px; border-radius: 6px; display: inline-flex; align-items: center; gap: 5px; font-weight: 500; font-size: 11px; }
-  .dev-bar .ghost { background: var(--surface-2); color: var(--muted); }
-  .dev-bar .pri { background: var(--accent); color: #fff; }
-  .dev-bar svg.ui { width: 11px; height: 11px; }
-  .dev-row { display: flex; align-items: center; justify-content: center; gap: 18px; padding: 10px 14px 20px; }
-  .dev { display: flex; flex-direction: column; align-items: center; gap: 8px; opacity: 0; transform: translateY(8px); transition: opacity 400ms var(--ease-out), transform 400ms var(--ease-out); }
-  .pane.on .dev { opacity: 1; transform: none; }
-  .pane.on .dev:nth-child(2) { transition-delay: 120ms; } .pane.on .dev:nth-child(3) { transition-delay: 240ms; }
-  .dev-h { display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 500; color: var(--muted); white-space: nowrap; }
-  .dev-h b { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
-  .m-phone { width: 128px; height: 270px; border-radius: 24px; background: #0b0b0d; padding: 5px; }
-  .m-phone.small { width: 112px; height: 226px; border-radius: 20px; }
-  .m-pad { width: 228px; height: 300px; border-radius: 18px; background: #0b0b0d; padding: 7px; }
-  .m-scr, .cmp-shot { height: 100%; border-radius: 19px; background: #f5f5f7; color: #111; padding: 9px 9px; overflow: hidden; font-size: 9px; display: flex; flex-direction: column; gap: 5px; }
-  .m-phone.small .m-scr { border-radius: 15px; }
-  .m-scr.pad { border-radius: 12px; display: grid; grid-template-columns: 1fr 1fr; align-content: start; gap: 6px; padding: 14px; }
-  .m-scr.pad b, .m-scr.pad .m-streak { grid-column: span 2; } .m-scr.pad .m-isl { display: none; }
-  .m-isl { width: 38px; height: 10px; border-radius: 5px; background: #0b0b0d; margin: -3px auto 4px; flex: none; }
-  .m-scr b, .cmp-shot b { font-size: 15px; letter-spacing: -.02em; }
-  .m-streak { align-self: flex-start; padding: 2px 7px; border-radius: 99px; background: #fff1e6; color: #c2570b; font-weight: 600; font-size: 8.5px; justify-self: start; }
-  .m-scr i, .cmp-shot i { display: block; height: 22px; border-radius: 7px; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.05); position: relative; flex: none; }
-  .m-scr i::before, .cmp-shot i::before { content: ""; position: absolute; left: 6px; top: 6px; width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid #c7c7cc; box-sizing: border-box; }
-  .m-scr i.d::before, .cmp-shot i.d::before { background: #34c759; border-color: #34c759; }
-
-  /* Compare */
-  .pane-compare { background: var(--surface); display: grid; grid-template-rows: 40px 1fr; }
-  .cmp-h { display: flex; align-items: center; gap: 7px; padding: 0 10px; border-bottom: 1px solid var(--line); font-size: 11px; }
-  .cmp-h svg.ui { width: 12px; height: 12px; color: var(--faint); }
-  .cmp-h .pick { height: 24px; padding: 0 8px; border-radius: 6px; background: var(--surface-2); display: flex; align-items: center; gap: 5px; white-space: nowrap; }
-  .cmp-h .pick em { font-style: normal; color: var(--faint); }
-  .cmp-h .seg { margin-left: auto; white-space: nowrap; display: flex; border-radius: 6px; background: var(--surface-2); padding: 2px; font-size: 10.5px; }
-  .cmp-h .seg > * { padding: 2px 7px; border-radius: 4px; color: var(--muted); font-weight: 500; }
-  .cmp-h .seg b { background: var(--card); color: var(--text); }
-  .cmp-stage { --split: 50%; position: relative; margin: 16px auto; width: 210px; height: 440px; border-radius: 30px; background: #0b0b0d; padding: 6px; }
-  .cmp-shot { position: absolute; inset: 6px; border-radius: 25px; font-size: 10.5px; padding: 12px; gap: 7px; }
-  .cmp-shot b { font-size: 20px; } .cmp-shot i { height: 30px; border-radius: 9px; } .cmp-shot i::before { top: 9px; left: 8px; width: 12px; height: 12px; }
-  .cmp-shot .m-isl { width: 60px; height: 16px; border-radius: 8px; margin-bottom: 6px; }
-  .cmp-shot .m-streak { font-size: 10px; padding: 3px 9px; }
-  .cmp-shot .m-streak.big { align-self: stretch; text-align: center; font-size: 15px; padding: 14px 10px; border-radius: 14px; background: linear-gradient(135deg, #ff9f43, #ff6b6b); color: #fff; box-shadow: 0 8px 18px -8px rgba(255,107,107,.7); }
-  .cmp-shot .m-streak small { display: inline-block; margin-left: 4px; padding: 1px 6px; border-radius: 99px; background: rgba(255,255,255,.25); font-size: 11px; }
-  .cmp-shot.before { clip-path: inset(0 calc(100% - var(--split)) 0 0 round 25px); }
-  .cmp-line { position: absolute; top: 6px; bottom: 6px; left: calc(6px + (100% - 12px) * var(--p, .5)); width: 2px; margin-left: -1px; background: #fff; box-shadow: 0 0 6px rgba(0,0,0,.4); }
-  .cmp-line span { position: absolute; top: 50%; left: 50%; width: 26px; height: 26px; margin: -13px 0 0 -13px; border-radius: 50%; background: #fff; color: #0c0c0f; display: grid; place-items: center; box-shadow: 0 2px 8px rgba(0,0,0,.35); }
-  .cmp-line svg.ui { width: 13px; height: 13px; }
-  .cmp-tag { position: absolute; bottom: 18px; font-size: 9.5px; font-weight: 600; color: #fff; background: rgba(0,0,0,.55); padding: 2px 7px; border-radius: 99px; }
-  .cmp-tag.l { left: 14px; } .cmp-tag.r { right: 14px; }
-  @property --p { syntax: "<number>"; inherits: true; initial-value: 0.5; }
-  .cmp-stage { --split: calc(var(--p) * 100%); }
-  .pane.on .cmp-stage { animation: sweep 4.2s var(--ease-in-out) .6s both; }
-  @keyframes sweep { 0% { --p: .5; } 35% { --p: .82; } 70% { --p: .22; } 100% { --p: .5; } }
-
-  /* Approval toast */
-  .body { position: relative; }
-  .toast { position: absolute; left: 58px; bottom: 14px; z-index: 5; display: flex; align-items: center; gap: 9px; padding: 9px 12px; border-radius: 11px; background: var(--surface-2); border: 1px solid var(--line-strong); box-shadow: 0 12px 30px -10px rgba(0,0,0,.6); opacity: 0; transform: translateY(6px) scale(.98); transition: opacity 300ms var(--ease-out), transform 300ms var(--ease-out); pointer-events: none; }
-  .toast > svg.ui { width: 16px; height: 16px; color: var(--orange); }
-  .toast b { display: block; font-size: 11.5px; } .toast small { color: var(--muted); font-size: 10.5px; }
-  .app[data-scene="usage"] .toast { opacity: 1; transform: none; transition-delay: 1.4s; }
-
-  /* Diff */
-  .pane-diff { background: var(--card); display: grid; grid-template-rows: 46px 1fr; }
-  .diff-h { display: flex; align-items: center; gap: 8px; padding: 0 12px; border-bottom: 1px solid var(--line); }
-  .diff-h strong { font-weight: 600; font-size: 13px; }
-  .chip { height: 18px; padding: 0 7px; border-radius: 9px; font-size: 10.5px; font-weight: 600; display: inline-flex; align-items: center; }
-  .chip.m { color: var(--orange); background: var(--orange-soft); }
-  .diff-h .stats { margin-left: auto; font-family: "Google Sans Code", monospace; font-weight: 600; }
-  .stage-btn { height: 26px; padding: 0 12px; border-radius: 7px; background: var(--accent); color: #fff; font-weight: 500; display: grid; place-items: center; }
-  .code { font-size: 11.2px; line-height: 1.75; overflow: hidden; }
-  .hunk { padding: 3px 12px; background: var(--accent-soft); color: var(--muted); }
-  .row { display: grid; grid-template-columns: 26px 1fr; white-space: pre; }
-  .row .n { color: var(--faint); text-align: right; padding-right: 8px; background: var(--surface); }
-  .row.add { background: var(--green-soft); } .row.add .n { background: transparent; }
-  .row.del { background: var(--red-soft); } .row.del .n { background: transparent; }
-  .row .t { padding-left: 10px; }
-  .kw { color: #c1337c; } .ty { color: #2a7f8f; } .st { color: #c23b2a; } .nu { color: #3a4fd8; } .cm { color: var(--faint); }
-  .kw { color: #ff7ab2; } .ty { color: #6bdfff; } .st { color: #ff8170; } .nu { color: #d9c97c; }
-  .row.add mark { background: rgba(31,157,85,.28); color: inherit; border-radius: 2px; }
-
-  /* Browser */
-  .pane-web { display: grid; grid-template-rows: 34px 1fr 76px; background: var(--card); }
-  .url { display: flex; align-items: center; gap: 8px; padding: 0 10px; border-bottom: 1px solid var(--line); color: var(--faint); }
-  .url span { flex: 1; height: 22px; border-radius: 6px; background: var(--surface); display: flex; align-items: center; padding: 0 9px; color: var(--muted); }
-  .site { padding: 16px 18px; }
-  .site h5 { margin: 0; font-size: 16px; font-weight: 600; letter-spacing: -.02em; }
-  .site .kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 12px 0; }
-  .site .kpis div { border: 1px solid var(--line); border-radius: 9px; padding: 8px 10px; }
-  .site .kpis b { display: block; font-size: 17px; font-weight: 600; letter-spacing: -.02em; }
-  .site .kpis small { color: var(--muted); }
-  .chart path { stroke-dasharray: 600; stroke-dashoffset: 600; transition: stroke-dashoffset 1.4s var(--ease-out) .5s; }
-  .pane.on .chart path { stroke-dashoffset: 0; }
-  .console { border-top: 1px solid var(--line); background: var(--surface); padding: 8px 12px; font-family: "Google Sans Code", monospace; font-size: 10.8px; color: var(--muted); line-height: 1.6; }
-  .console b { color: var(--green); font-weight: 500; }
-
-  /* Agents dashboard (mock and real sections share these) */
-  .pane-agents { background: var(--surface); padding: 10px; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: auto auto auto 1fr; gap: 8px; align-content: start; }
-  .acard { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 11px 12px; min-width: 0; }
-  .acard h6 { margin: 0 0 8px; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
-  .acard h6 .plan { margin-left: auto; color: var(--orange); background: var(--orange-soft); border-radius: 5px; padding: 1px 6px; font-size: 10.5px; }
-  .meter { height: 7px; border-radius: 4px; background: var(--surface-2); overflow: hidden; margin-top: 6px; }
-  .meter b { display: block; height: 100%; width: var(--v); border-radius: 4px; background: var(--orange); transform-origin: left; transform: scaleX(0); transition: transform 1.1s var(--ease-out) .3s; }
-  .pane.on .meter b, .in .meter b { transform: none; }
-  .big { font-size: 22px; font-weight: 600; letter-spacing: -.03em; }
-  .row2 { display: flex; justify-content: space-between; align-items: baseline; }
-  .bars { display: flex; align-items: flex-end; gap: 3px; height: 92px; }
-  .bars i { flex: 1; border-radius: 3px 3px 1px 1px; background: color-mix(in srgb, var(--orange) 55%, var(--surface-2)); height: var(--v); transform-origin: bottom; transform: scaleY(0); transition: transform 700ms var(--ease-out); transition-delay: calc(var(--i) * 25ms + 200ms); }
-  .bars i.today { background: var(--orange); }
-  .pane.on .bars i, .in .bars i { transform: none; }
-  .span2 { grid-column: span 2; }
-  .share { display: grid; grid-template-columns: 1fr 70px 48px; align-items: center; gap: 8px; height: 22px; font-weight: 500; }
-  .share i { height: 5px; border-radius: 3px; background: var(--c, var(--orange)); opacity: .75; width: var(--v); transform-origin: left; transform: scaleX(0); transition: transform 800ms var(--ease-out) .4s; }
-  .pane.on .share i { transform: none; }
-  .share b { text-align: right; color: var(--muted); font-weight: 500; }
-
-  /* Stage progress under the active tab */
-  .app.cycling .etab.on .bar { animation: progress var(--scene-ms, 6000ms) linear forwards; }
-  @keyframes progress { from { transform: scaleX(0); } to { transform: scaleX(1); } }
-
-  /* Logos */
-  .works { text-align: center; padding: 44px 0 0; }
-  .works p { color: var(--muted); font-size: 15px; }
-  .logos { margin-top: 18px; font-size: 17px; font-weight: 500; color: var(--muted); overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent); mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent); }
-  .logos-track { display: flex; width: max-content; animation: marquee 60s linear infinite; }
-  .logos-set { display: flex; gap: 34px; padding-right: 34px; }
-  .logos span { display: flex; align-items: center; gap: 8px; white-space: nowrap; }
-  .logos .more { color: var(--text); }
-  @media (hover: hover) and (pointer: fine) { .logos:hover .logos-track { animation-play-state: paused; } }
-  @keyframes marquee { to { transform: translateX(-50%); } }
-  @media (prefers-reduced-motion: reduce) {
-    .logos { -webkit-mask-image: none; mask-image: none; }
-    .logos-track { animation: none; width: auto; justify-content: center; }
-    .logos-set { flex-wrap: wrap; justify-content: center; gap: 12px 30px; padding: 0; }
-    .logos-set + .logos-set { display: none; }
-  }
-  .logos svg, .logos img { width: 20px; height: 20px; }
-  /* Black marks drawn light on the dark page. */
-  img.mono { filter: invert(1) brightness(0.95); }
-  .v2 .cell { min-height: 300px; }
-  .v2 .row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; background: var(--surface-2); font-size: 14px; }
-  .v2 .row + .row { margin-top: 8px; }
-  .v2 .row .r { margin-left: auto; color: var(--muted); font-size: 13px; }
-  .v2 .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
-  .v2 .chip { font-size: 12px; font-weight: 500; padding: 2px 8px; border-radius: 99px; }
-  .v2 .meter { height: 8px; border-radius: 99px; background: var(--surface-2); overflow: hidden; margin-top: 10px; }
-  .v2 .meter i { display: block; height: 100%; width: 84%; background: var(--orange); border-radius: inherit; }
-  .v2 .big { font-size: 34px; font-weight: 600; letter-spacing: -0.02em; }
-  .v2 .phones { display: flex; align-items: flex-end; justify-content: center; gap: 12px; }
-  .v2 .phones i { display: block; border-radius: 12px; border: 2px solid var(--line-strong); background: linear-gradient(160deg, var(--surface-2), var(--card)); }
-  .v2 .split { position: relative; height: 150px; border-radius: 14px; overflow: hidden; background: linear-gradient(90deg, var(--surface-2) 50%, var(--accent-soft) 50%); }
-  .v2 .split::after { content: ""; position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; background: #fff; }
-  .v2 .split span { position: absolute; top: 10px; font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 99px; background: rgba(0,0,0,.5); }
-  .v2 .cell .mcp-vis { display: grid; grid-template-columns: 1fr 1.2fr; gap: 28px; align-items: center; }
-  @media (max-width: 860px) { .v2 .cell .mcp-vis { grid-template-columns: 1fr; } }
-  .v2 .logo-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-  .v2 .logo-grid span { aspect-ratio: 1; border-radius: 14px; background: var(--surface-2); display: grid; place-items: center; border: 1px solid var(--line); }
-  .v2 .logo-grid img { width: 26px; height: 26px; }
-
-  /* Pinned statement */
-  .statement { height: 230vh; position: relative; }
-  .statement-pin { position: sticky; top: 0; height: 100vh; display: grid; place-items: center; overflow: hidden; }
-  .glow { position: absolute; left: 50%; top: 56%; width: min(820px, 92vw); height: 220px; transform: translate(-50%, -50%); filter: blur(60px); opacity: .55; border-radius: 50%;
-    background: radial-gradient(closest-side at 30% 50%, var(--glow-a), transparent), radial-gradient(closest-side at 55% 50%, var(--glow-b), transparent), radial-gradient(closest-side at 78% 50%, var(--glow-c), transparent); }
-  .statement p { position: relative; max-width: 960px; padding: 0 16px; text-align: center; font-size: clamp(28px, 4.2vw, 44px); line-height: 1.22; letter-spacing: -0.03em; font-weight: 500; }
-  .w { display: inline-block; white-space: pre; }
-  .js .statement .w { opacity: .14; filter: blur(8px); }
-  .brand-pill { display: inline-flex; align-items: center; gap: .2em; padding: 0 .2em; border: 1px solid var(--line-strong); border-radius: .22em; background: var(--card); vertical-align: baseline; }
-  .brand-pill img { width: .82em; height: .82em; display: inline-block; }
-
-  /* Sections */
-  section { padding: 110px 0 0; }
-  .sec-head { text-align: center; display: grid; justify-items: center; gap: 14px; margin-bottom: 40px; }
-  .sec-head p { color: var(--muted); font-size: 17px; max-width: 560px; }
-  .boxed { position: relative; display: inline-block; padding: 10px 26px 14px; border-radius: 18px; border: 1px solid; }
-  .boxed .corner { position: absolute; right: 12px; bottom: -11px; height: 21px; padding: 0 8px; border-radius: 11px; border: 1px solid; font-size: 11.5px; font-weight: 500; background: var(--bg); display: flex; align-items: center; }
-
-  /* How it works grid with hairlines and corner dots */
-  .grid-lines { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); position: relative; }
-  .grid-lines .wrap { border-left: 1px solid var(--line); border-right: 1px solid var(--line); }
-  .how-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-bottom: 1px solid var(--line); font-size: 15px; }
-  .how-title { padding: 56px 40px 52px; border-bottom: 1px solid var(--line); }
-  .how-title p { color: var(--muted); margin-top: 12px; font-size: 17px; }
-  .steps { display: grid; grid-template-columns: repeat(3, 1fr); }
-  .step { padding: 26px; border-right: 1px solid var(--line); position: relative; }
-  .step:last-child { border-right: 0; }
-  .dot-corner { position: absolute; width: 5px; height: 5px; background: var(--text); border-radius: 50%; }
-  .step-vis { height: 230px; border-radius: 14px; background: var(--surface); padding: 14px; display: flex; flex-direction: column; justify-content: center; gap: 8px; }
-  .step small { display: block; margin-top: 24px; color: var(--faint); font-size: 12px; }
-  .step h3 { margin-top: 6px; }
-  .step p { color: var(--muted); margin-top: 8px; font-size: 15px; }
-  .cmd { background: var(--term); color: var(--term-text); border-radius: 10px; padding: 12px; font-family: "Google Sans Code", monospace; font-size: 12px; line-height: 1.6; overflow: hidden; }
-  .cmd .dim { color: var(--term-dim); } .cmd .ok { color: #3dd68c; } .cmd .p { color: #7ea2ff; }
-  .copy-row { display: flex; gap: 8px; align-items: center; }
-  .copy-row .cmd { flex: 1; min-width: 0; white-space: nowrap; text-overflow: ellipsis; }
-  @media (max-width: 860px) { .steps { grid-template-columns: 1fr; } .step { border-right: 0; border-bottom: 1px solid var(--line); } .how-title { padding: 36px 20px; } }
-
-  /* Old way vs Vibex way */
-  .versus { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--line); border-radius: 20px; position: relative; background: var(--card); }
-  .old-list i svg.ui { width: 10px; height: 10px; stroke-width: 3; }
-  .versus > div:not(.vs-arrow) { padding: 34px 30px 40px; text-align: center; }
-  .versus > div + div:not(.vs-arrow) { border-left: 1px solid var(--line); }
-  .versus h3 { font-size: 21px; }
-  .versus .sub { color: var(--muted); margin-top: 2px; }
-  .old-list { margin: 26px auto 0; max-width: 300px; text-align: left; background: var(--surface); border-radius: 12px; padding: 16px 18px; transform: rotate(-2deg); box-shadow: var(--shadow); display: grid; gap: 12px; }
-  .old-list div { display: grid; grid-template-columns: 18px 1fr; gap: 8px; font-size: 15px; line-height: 1.3; }
-  .old-list i { width: 16px; height: 16px; border-radius: 50%; background: var(--red-soft); color: var(--red); display: grid; place-items: center; font-style: normal; font-size: 10px; font-weight: 700; margin-top: 2px; }
-  .old-list small { display: block; color: var(--faint); font-size: 12.5px; }
-  .vs-arrow svg.ui { display: block; width: 18px; height: 18px; }
-  .vs-arrow { position: absolute; left: 50%; top: 50%; width: 38px; height: 38px; aspect-ratio: 1; box-sizing: border-box; transform: translate(-50%, -50%); border-radius: 50%; border: 1px solid var(--line-strong); background: var(--card); display: grid; place-items: center; color: var(--muted); }
-  .greet { display: inline-flex; align-items: center; gap: 10px; margin-top: 26px; }
-  .greet img { width: 34px; height: 34px; border-radius: 9px; }
-  .greet span { background: var(--surface); padding: 8px 12px; border-radius: 12px; font-weight: 500; }
-  .chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 18px; }
-  .chips span { height: 32px; padding: 0 12px; border-radius: 16px; display: inline-flex; align-items: center; gap: 7px; font-size: 14px; font-weight: 500; }
-  .c-blue { color: var(--accent); background: var(--accent-soft); } .c-green { color: var(--green); background: var(--green-soft); }
-  .c-orange { color: var(--orange); background: var(--orange-soft); } .c-violet { color: var(--violet); background: var(--violet-soft); }
-  .c-pink { color: var(--pink); background: var(--pink-soft); } .c-red { color: var(--red); background: var(--red-soft); }
-  @media (max-width: 760px) { .versus { grid-template-columns: 1fr; } .versus > div + div { border-left: 0; border-top: 1px solid var(--line); } .vs-arrow { display: none; } }
-
-  /* Stats */
-  .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 14px; }
-  .stat { border-radius: 18px; padding: 20px 22px; background: var(--surface); min-height: 168px; display: flex; flex-direction: column; justify-content: space-between; }
-  .stat b { font-size: clamp(44px, 6vw, 64px); font-weight: 500; letter-spacing: -.05em; line-height: 1; text-align: right; }
-  .stat:first-child { background: var(--accent-soft); }
-  .stat span { color: var(--muted); font-size: 15px; }
-  @media (max-width: 760px) { .stats-row { grid-template-columns: 1fr; } }
-
-  /* Bento */
-  .bento { display: grid; grid-template-columns: repeat(12, 1fr); gap: 12px; }
-  .cell { border-radius: 20px; border: 1px solid var(--line); background: var(--card); padding: 22px; display: flex; flex-direction: column; gap: 18px; min-height: 340px; overflow: hidden; }
-  .cell.grey { background: var(--surface); border-color: transparent; }
-  .cell .vis { flex: 1; display: flex; flex-direction: column; justify-content: center; }
-  .cell h3 { font-size: 22px; }
-  .cell .lbl { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
-  .c7 { grid-column: span 7; } .c5 { grid-column: span 5; } .c6 { grid-column: span 6; } .c4 { grid-column: span 4; } .c8 { grid-column: span 8; } .c12 { grid-column: span 12; }
-  @media (max-width: 860px) { .bento > * { grid-column: span 12; } }
-  .feature { padding-top: 120px; }
-  .feature .sec-head { margin-bottom: 34px; }
-
-  .list-card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
-  .li { display: flex; align-items: center; gap: 10px; padding: 10px 12px; font-size: 14px; }
-  .li + .li { border-top: 1px solid var(--line); }
-  .li .r { margin-left: auto; color: var(--muted); font-size: 13px; }
-  .li .r.ok { color: var(--green); font-weight: 500; }
-  .ico { width: 26px; height: 26px; border-radius: 7px; display: grid; place-items: center; flex: none; }
-  .ico.logo { background: var(--surface-2); border: 1px solid var(--line); }
-  .ico.logo img { width: 17px; height: 17px; }
-  .ico svg { width: 15px; height: 15px; }
-  .btn-xs { height: 26px; padding: 0 10px; border-radius: 7px; font-size: 12.5px; font-weight: 500; display: inline-flex; align-items: center; border: 1px solid var(--line-strong); background: var(--card); }
-  .btn-xs.dark { background: var(--btn); color: var(--btn-text); border-color: transparent; }
-
-  .say { display: flex; gap: 10px; align-items: flex-start; }
-  .say img { width: 22px; height: 22px; border-radius: 6px; }
-  .bubble { background: var(--surface); border-radius: 12px; padding: 9px 12px; font-size: 14px; }
-  .bubble.me { margin-left: auto; background: var(--surface-2); }
-  .steps-log { font-size: 13px; color: var(--muted); display: grid; gap: 5px; margin: 8px 0; }
-  .steps-log div { display: flex; gap: 8px; align-items: center; }
-  .steps-log div::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
-  .steps-log span { margin-left: auto; font-family: "Google Sans Code", monospace; font-size: 11px; color: var(--faint); }
-  .approve { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; font-size: 13.5px; }
-  .approve .row2 small { color: var(--muted); }
-
-  .heat { display: grid; grid-template-columns: repeat(13, 1fr); grid-auto-flow: column; grid-template-rows: repeat(7, 1fr); gap: 4px; width: min(280px, 100%); flex: none; }
-  .heat i { aspect-ratio: 1; border-radius: 3px; background: var(--surface-2); }
-  .heat i.l1 { background: color-mix(in srgb, var(--text) 22%, var(--surface-2)); }
-  .heat i.l2 { background: color-mix(in srgb, var(--text) 45%, var(--surface-2)); }
-  .heat i.l3 { background: color-mix(in srgb, var(--text) 75%, var(--surface-2)); }
-  .heat i.today { outline: 1.5px solid var(--text); outline-offset: 1px; }
-
-  /* Open source */
-  .oss { border-radius: 24px; background: var(--term); color: #f1f1f4; padding: 56px 44px; position: relative; overflow: hidden; }
-  .oss .glow { top: 0; opacity: .35; }
-  .oss h2 { position: relative; }
-  .oss > p { position: relative; color: #a9a9b4; font-size: 17px; margin-top: 14px; max-width: 520px; }
-  .oss-grid { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 36px; }
-  .oss-grid div { border: 1px solid rgba(255,255,255,.1); border-radius: 16px; padding: 18px; background: rgba(255,255,255,.03); }
-  .oss-grid b { display: block; font-size: 17px; font-weight: 500; letter-spacing: -.01em; }
-  .oss-grid p { color: #a9a9b4; font-size: 14.5px; margin-top: 6px; }
-  .oss .btn-light { background: #f1f1f4; color: #0c0c0f; border-color: transparent; }
-  .oss .btn-ghost { color: #f1f1f4; border-color: rgba(255,255,255,.2); background: transparent; }
-  @media (max-width: 760px) { .oss { padding: 40px 22px; } .oss-grid { grid-template-columns: 1fr; } }
-
-  /* FAQ */
-  .faq { max-width: 620px; margin-inline: auto; display: grid; gap: 8px; }
-  .faq details { background: var(--surface); border-radius: 12px; }
-  .faq summary { list-style: none; cursor: pointer; padding: 14px 16px; font-weight: 500; display: flex; justify-content: space-between; gap: 16px; }
-  .faq summary::-webkit-details-marker { display: none; }
-  .faq summary::after { content: "+"; color: var(--muted); font-size: 18px; line-height: 1; transition: transform 200ms var(--ease-out); }
-  .faq details[open] summary::after { transform: rotate(45deg); }
-  .faq .a { padding: 0 16px 16px; color: var(--muted); font-size: 15px; }
-  .faq details[open] .a { animation: fadeUp 220ms var(--ease-out); }
-  @keyframes fadeUp { from { opacity: 0; transform: translateY(-4px); } }
-  .faq code { font-size: 13px; background: var(--surface-2); padding: 1px 5px; border-radius: 5px; }
-
-  /* CTA */
-  .cta-box { border-radius: 24px; background: var(--surface); padding: 64px 24px 0; text-align: center; overflow: hidden; }
-  .cta-box h2 { max-width: 640px; margin-inline: auto; }
-  .cta-box .hero-cta { justify-content: center; }
-  .cta-box .copy-row { max-width: 560px; margin: 22px auto 0; }
-  .cta-peek { margin: 44px auto 0; width: min(760px, 100%); height: 190px; border-radius: 16px 16px 0 0; border: 1px solid var(--line); border-bottom: 0; background: var(--card); overflow: hidden; display: grid; grid-template-columns: 1fr 1fr; text-align: left; }
-  .cta-peek .cmd { border-radius: 0; height: 100%; }
-  .cta-peek .agents { padding: 12px; display: grid; gap: 8px; background: var(--surface); }
-
-  /* Footer */
-  footer { margin-top: 110px; background: #0c0c0f; color: #f1f1f4; padding: 56px 0 28px; }
-  .foot { display: grid; grid-template-columns: 1.4fr repeat(3, 1fr); gap: 28px; }
-  .foot p { color: #8b8b96; font-size: 14px; margin-top: 12px; max-width: 260px; }
-  .foot h4 { margin: 0 0 12px; font-size: 14px; font-weight: 500; }
-  .foot ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 9px; font-size: 14px; color: #a9a9b4; }
-  .foot a:hover { color: #fff; }
-  .foot-bottom { margin-top: 44px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,.08); display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; color: #6f6f7a; font-size: 13px; }
-  @media (max-width: 760px) { .foot { grid-template-columns: 1fr 1fr; } }
-
-  /* Scroll reveal */
-  .js .reveal { opacity: 0; transform: translateY(14px); transition: opacity 700ms var(--ease-out), transform 700ms var(--ease-out); transition-delay: var(--d, 0ms); }
-  .js .reveal.in { opacity: 1; transform: none; }
-
-  @media (prefers-reduced-motion: reduce) {
-    html { scroll-behavior: auto; }
-    .js .reveal { transform: none; transition: opacity 300ms ease; }
-    .ln, .pane, .streak { transform: none !important; transition-duration: 200ms; transition-delay: 0ms !important; }
-    .tap, .caret { animation: none; }
-    .bars i, .meter b, .share i { transition: none; transform: none; }
-    .chart path { transition: none; stroke-dashoffset: 0; }
-    .js .statement .w { filter: none; }
-    .app .scm { transition: none; }
-    .pane.on .cmp-stage { animation: none; }
-    .dev, .toast { transition: opacity 200ms ease !important; transform: none !important; }
-  }
-</style>
+<link rel="stylesheet" href="/assets/site.css">
+<link rel="stylesheet" href="/assets/scenes.css">
+<script>document.documentElement.classList.add('js')</script>
+<script type="module" src="/assets/components.js"></script>
 </head>
 <body>
-<!-- Icons: Untitled UI free icons -->
-<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="i-arrow-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16m0 0-6-6m6 6-6 6"/></symbol><symbol id="i-arrow-down-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18m0 0h8m-8 0v-8"/></symbol><symbol id="i-play" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4.99c0-.972 0-1.457.202-1.725a1 1 0 0 1 .738-.395c.335-.02.74.25 1.548.788l10.515 7.01c.668.446 1.002.668 1.118.949a1 1 0 0 1 0 .766c-.116.28-.45.503-1.118.948l-10.515 7.01c-.809.54-1.213.809-1.548.789a1 1 0 0 1-.738-.395C5 20.467 5 19.98 5 19.01V4.99Z"/></symbol><symbol id="i-tap" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3.5V2M5.06 5.06 4 4m1.06 9L4 14.06m9-9L14.06 4M3.5 9H2m13.864 7.19-2.491 4.627c-.285.529-.427.793-.598.86a.5.5 0 0 1-.451-.044c-.155-.099-.243-.386-.42-.96L8.445 9.445c-.144-.468-.216-.703-.158-.861a.5.5 0 0 1 .297-.297c.158-.058.393.014.861.158l11.228 3.459c.574.177.86.265.96.42a.5.5 0 0 1 .044.45c-.067.172-.331.314-.86.599l-4.627 2.492a1.08 1.08 0 0 0-.153.09.493.493 0 0 0-.082.082 1.08 1.08 0 0 0-.09.153Z"/></symbol><symbol id="i-compare" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 17H4m0 0 4-4m-4 4 4 4M4 7h16m0 0-4-4m4 4-4 4"/></symbol><symbol id="i-gauge" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12a7 7 0 0 1 7-7m4.5 2.5L12 12m10 0c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2s10 4.477 10 10Zm-9 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"/></symbol><symbol id="i-stars" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 22v-5m0-10V2M2 4.5h5m-5 15h5M13 3l-1.734 4.509c-.282.733-.423 1.1-.643 1.408a3 3 0 0 1-.706.707c-.308.219-.675.36-1.408.642L4 12l4.509 1.734c.733.282 1.1.423 1.408.643.273.194.512.433.707.706.219.308.36.675.642 1.408L13 21l1.734-4.509c.282-.733.423-1.1.643-1.408.194-.273.433-.512.706-.707.308-.219.675-.36 1.408-.642L22 12l-4.509-1.734c-.733-.282-1.1-.423-1.408-.642a3 3 0 0 1-.706-.707c-.22-.308-.36-.675-.643-1.408L13 3Z"/></symbol><symbol id="i-console" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m4 17 6-6-6-6m8 14h8"/></symbol><symbol id="i-zap" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4.093 12.688c-.348.418-.523.628-.525.804a.5.5 0 0 0 .185.397c.138.111.41.111.955.111H12l-1 8 8.907-10.688c.348-.418.523-.628.525-.804a.5.5 0 0 0-.185-.397c-.138-.111-.41-.111-.955-.111H12l1-8Z"/></symbol><symbol id="i-undo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h10a6 6 0 0 1 0 12H4M4 7l4-4M4 7l4 4"/></symbol><symbol id="i-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 7H4.6c-.56 0-.84 0-1.054.109a1 1 0 0 0-.437.437C3 7.76 3 8.04 3 8.6v10.8c0 .56 0 .84.109 1.054a1 1 0 0 0 .437.437C3.76 21 4.04 21 4.6 21H9m0 0h6m-6 0V4.6c0-.56 0-.84.109-1.054a1 1 0 0 1 .437-.437C9.76 3 10.04 3 10.6 3h2.8c.56 0 .84 0 1.054.109a1 1 0 0 1 .437.437C15 3.76 15 4.04 15 4.6V21m0-10h4.4c.56 0 .84 0 1.054.109a1 1 0 0 1 .437.437C21 11.76 21 12.04 21 12.6v6.8c0 .56 0 .84-.109 1.054a1 1 0 0 1-.437.437C20.24 21 19.96 21 19.4 21H15"/></symbol><symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21 21-4.35-4.35M19 11a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z"/></symbol><symbol id="i-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21v-7.4c0-.56 0-.84.109-1.054a1 1 0 0 1 .437-.437C9.76 12 10.04 12 10.6 12h2.8c.56 0 .84 0 1.054.109a1 1 0 0 1 .437.437C15 12.76 15 13.04 15 13.6V21M11.018 2.764 4.235 8.039c-.453.353-.68.53-.843.75a2 2 0 0 0-.318.65C3 9.704 3 9.991 3 10.565V17.8c0 1.12 0 1.68.218 2.108a2 2 0 0 0 .874.874C4.52 21 5.08 21 6.2 21h11.6c1.12 0 1.68 0 2.108-.218a2 2 0 0 0 .874-.874C21 19.48 21 18.92 21 17.8v-7.235c0-.574 0-.861-.074-1.126a2.002 2.002 0 0 0-.318-.65c-.163-.22-.39-.397-.843-.75l-6.783-5.275c-.351-.273-.527-.41-.72-.462a1 1 0 0 0-.523 0c-.194.052-.37.189-.721.462Z"/></symbol><symbol id="i-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.354 21A3.99 3.99 0 0 0 12 22c1.015 0 1.94-.378 2.646-1M2.294 5.82A4.007 4.007 0 0 1 4.326 2.3m17.376 3.52A4.007 4.007 0 0 0 19.67 2.3M18 8A6 6 0 1 0 6 8c0 3.09-.78 5.206-1.65 6.605-.735 1.18-1.102 1.771-1.088 1.936.014.182.053.252.2.36.133.099.73.099 1.927.099h13.222c1.197 0 1.795 0 1.927-.098.147-.11.186-.179.2-.361.014-.165-.353-.755-1.087-1.936C18.78 13.206 18 11.09 18 8Z"/></symbol><symbol id="i-dollar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.667A2.333 2.333 0 0 0 10.833 17H13a2.5 2.5 0 0 0 0-5h-2a2.5 2.5 0 0 1 0-5h2.167A2.333 2.333 0 0 1 15.5 9.333M12 5.5V7m0 10v1.5M22 12c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2s10 4.477 10 10Z"/></symbol><symbol id="i-branch" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v10.2c0 1.68 0 2.52.327 3.162a3 3 0 0 0 1.311 1.311C5.28 18 6.12 18 7.8 18H15m0 0a3 3 0 1 0 6 0 3 3 0 0 0-6 0ZM3 8h12m0 0a3 3 0 1 0 6 0 3 3 0 0 0-6 0Z"/></symbol><symbol id="i-columns" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M7.8 3h8.4c1.68 0 2.52 0 3.162.327a3 3 0 0 1 1.311 1.311C21 5.28 21 6.12 21 7.8v8.4c0 1.68 0 2.52-.327 3.162a3 3 0 0 1-1.311 1.311C18.72 21 17.88 21 16.2 21H7.8c-1.68 0-2.52 0-3.162-.327a3 3 0 0 1-1.311-1.311C3 18.72 3 17.88 3 16.2V7.8c0-1.68 0-2.52.327-3.162a3 3 0 0 1 1.311-1.311C5.28 3 6.12 3 7.8 3Z"/></symbol><symbol id="i-grid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h18m-9-9v18M7.8 3h8.4c1.68 0 2.52 0 3.162.327a3 3 0 0 1 1.311 1.311C21 5.28 21 6.12 21 7.8v8.4c0 1.68 0 2.52-.327 3.162a3 3 0 0 1-1.311 1.311C18.72 21 17.88 21 16.2 21H7.8c-1.68 0-2.52 0-3.162-.327a3 3 0 0 1-1.311-1.311C3 18.72 3 17.88 3 16.2V7.8c0-1.68 0-2.52.327-3.162a3 3 0 0 1 1.311-1.311C5.28 3 6.12 3 7.8 3Z"/></symbol><symbol id="i-puzzle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 4.5a2.5 2.5 0 0 1 5 0V6h1c1.398 0 2.097 0 2.648.228a3 3 0 0 1 1.624 1.624C18 8.403 18 9.102 18 10.5h1.5a2.5 2.5 0 0 1 0 5H18v1.7c0 1.68 0 2.52-.327 3.162a3 3 0 0 1-1.311 1.311C15.72 22 14.88 22 13.2 22h-.7v-1.75a2.25 2.25 0 0 0-4.5 0V22H6.8c-1.68 0-2.52 0-3.162-.327a3 3 0 0 1-1.311-1.311C2 19.72 2 18.88 2 17.2v-1.7h1.5a2.5 2.5 0 0 0 0-5H2c0-1.398 0-2.097.228-2.648a3 3 0 0 1 1.624-1.624C4.403 6 5.102 6 6.5 6h1V4.5Z"/></symbol><symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10V8a5 5 0 0 1 9.584-2M12 14.5v2M8.8 21h6.4c1.68 0 2.52 0 3.162-.327a3 3 0 0 0 1.311-1.311C20 18.72 20 17.88 20 16.2v-1.4c0-1.68 0-2.52-.327-3.162a3 3 0 0 0-1.311-1.311C17.72 10 16.88 10 15.2 10H8.8c-1.68 0-2.52 0-3.162.327a3 3 0 0 0-1.311 1.311C4 12.28 4 13.12 4 14.8v1.4c0 1.68 0 2.52.327 3.162a3 3 0 0 0 1.311 1.311C6.28 21 7.12 21 8.8 21Z"/></symbol><symbol id="i-globe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10m0-20a15.3 15.3 0 0 0-4 10 15.3 15.3 0 0 0 4 10m0-20C6.477 2 2 6.477 2 12s4.477 10 10 10m0-20c5.523 0 10 4.477 10 10s-4.477 10-10 10M2.5 9h19m-19 6h19"/></symbol><symbol id="i-chevron-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></symbol><symbol id="i-chevron-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></symbol><symbol id="i-chevron-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></symbol><symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></symbol><symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></symbol><symbol id="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 3h7.1c2.24 0 3.36 0 4.216.436a4 4 0 0 1 1.748 1.748C21 6.04 21 7.16 21 9.4v7.1M6.2 21h8.1c1.12 0 1.68 0 2.108-.218a2 2 0 0 0 .874-.874c.218-.428.218-.988.218-2.108V9.7c0-1.12 0-1.68-.218-2.108a2 2 0 0 0-.874-.874C15.98 6.5 15.42 6.5 14.3 6.5H6.2c-1.12 0-1.68 0-2.108.218a2 2 0 0 0-.874.874C3 8.02 3 8.58 3 9.7v8.1c0 1.12 0 1.68.218 2.108a2 2 0 0 0 .874.874C4.52 21 5.08 21 6.2 21Z"/></symbol><symbol id="i-phone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17.5h.01M8.2 22h7.6c1.12 0 1.68 0 2.108-.218a2 2 0 0 0 .874-.874C19 20.48 19 19.92 19 18.8V5.2c0-1.12 0-1.68-.218-2.108a2 2 0 0 0-.874-.874C17.48 2 16.92 2 15.8 2H8.2c-1.12 0-1.68 0-2.108.218a2 2 0 0 0-.874.874C5 3.52 5 4.08 5 5.2v13.6c0 1.12 0 1.68.218 2.108a2 2 0 0 0 .874.874C6.52 22 7.08 22 8.2 22Zm4.3-4.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0Z"/></symbol><symbol id="i-dataflow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4.5h7.3c1.12 0 1.68 0 2.108.218a2 2 0 0 1 .874.874c.218.428.218.988.218 2.108V9c0 .932 0 1.398-.152 1.765a2 2 0 0 1-1.083 1.083C19.898 12 19.432 12 18.5 12M13 19.5H5.7c-1.12 0-1.68 0-2.108-.218a2 2 0 0 1-.874-.874C2.5 17.98 2.5 17.42 2.5 16.3V15c0-.932 0-1.398.152-1.765a2 2 0 0 1 1.083-1.083C4.102 12 4.568 12 5.5 12m4.8 2.5h3.4c.28 0 .42 0 .527-.055a.5.5 0 0 0 .218-.218c.055-.107.055-.247.055-.527v-3.4c0-.28 0-.42-.055-.527a.5.5 0 0 0-.218-.218C14.12 9.5 13.98 9.5 13.7 9.5h-3.4c-.28 0-.42 0-.527.055a.5.5 0 0 0-.218.218c-.055.107-.055.247-.055.527v3.4c0 .28 0 .42.055.527a.5.5 0 0 0 .218.218c.107.055.247.055.527.055Zm7.5 7.5h3.4c.28 0 .42 0 .527-.055a.5.5 0 0 0 .218-.218C22 21.62 22 21.48 22 21.2v-3.4c0-.28 0-.42-.055-.527a.5.5 0 0 0-.218-.218C21.62 17 21.48 17 21.2 17h-3.4c-.28 0-.42 0-.527.055a.5.5 0 0 0-.218.218C17 17.38 17 17.52 17 17.8v3.4c0 .28 0 .42.055.527a.5.5 0 0 0 .218.218c.107.055.247.055.527.055ZM2.8 7h3.4c.28 0 .42 0 .527-.054a.5.5 0 0 0 .218-.219C7 6.62 7 6.48 7 6.2V2.8c0-.28 0-.42-.054-.527a.5.5 0 0 0-.219-.219C6.62 2 6.48 2 6.2 2H2.8c-.28 0-.42 0-.527.054a.5.5 0 0 0-.219.219C2 2.38 2 2.52 2 2.8v3.4c0 .28 0 .42.054.527a.5.5 0 0 0 .219.218C2.38 7 2.52 7 2.8 7Z"/></symbol><symbol id="i-settings" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M18.727 14.727a1.5 1.5 0 0 0 .3 1.655l.055.054a1.816 1.816 0 0 1 0 2.573 1.818 1.818 0 0 1-2.573 0l-.055-.055a1.5 1.5 0 0 0-1.654-.3 1.5 1.5 0 0 0-.91 1.373v.155a1.818 1.818 0 1 1-3.636 0V20.1a1.5 1.5 0 0 0-.981-1.373 1.5 1.5 0 0 0-1.655.3l-.054.055a1.818 1.818 0 0 1-3.106-1.287 1.818 1.818 0 0 1 .533-1.286l.054-.055a1.5 1.5 0 0 0 .3-1.654 1.5 1.5 0 0 0-1.372-.91h-.155a1.818 1.818 0 1 1 0-3.636H3.9a1.5 1.5 0 0 0 1.373-.981 1.5 1.5 0 0 0-.3-1.655l-.055-.054A1.818 1.818 0 1 1 7.491 4.99l.054.054a1.5 1.5 0 0 0 1.655.3h.073a1.5 1.5 0 0 0 .909-1.372v-.155a1.818 1.818 0 0 1 3.636 0V3.9a1.499 1.499 0 0 0 .91 1.373 1.5 1.5 0 0 0 1.654-.3l.054-.055a1.817 1.817 0 0 1 2.573 0 1.819 1.819 0 0 1 0 2.573l-.055.054a1.5 1.5 0 0 0-.3 1.655v.073a1.5 1.5 0 0 0 1.373.909h.155a1.818 1.818 0 0 1 0 3.636H20.1a1.499 1.499 0 0 0-1.373.91Z"/></symbol><symbol id="i-tablet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17.5h.01M7.2 22h9.6c1.12 0 1.68 0 2.108-.218a2 2 0 0 0 .874-.874C20 20.48 20 19.92 20 18.8V5.2c0-1.12 0-1.68-.218-2.108a2 2 0 0 0-.874-.874C18.48 2 17.92 2 16.8 2H7.2c-1.12 0-1.68 0-2.108.218a2 2 0 0 0-.874.874C4 3.52 4 4.08 4 5.2v13.6c0 1.12 0 1.68.218 2.108a2 2 0 0 0 .874.874C5.52 22 6.08 22 7.2 22Zm5.3-4.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0Z"/></symbol><symbol id="i-camera" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8.377c0-.35 0-.525.015-.673a3 3 0 0 1 2.69-2.69C4.851 5 5.035 5 5.404 5c.143 0 .214 0 .274-.004a2 2 0 0 0 1.735-1.25c.023-.056.044-.12.086-.246.042-.127.063-.19.086-.246a2 2 0 0 1 1.735-1.25C9.38 2 9.448 2 9.58 2h4.838c.133 0 .2 0 .26.004a2 2 0 0 1 1.735 1.25c.023.056.044.12.086.246.042.127.063.19.086.246a2 2 0 0 0 1.735 1.25c.06.004.131.004.273.004.37 0 .554 0 .702.015a3 3 0 0 1 2.69 2.69c.014.147.014.322.014.672V16.2c0 1.68 0 2.52-.327 3.162a3 3 0 0 1-1.311 1.311C19.72 21 18.88 21 17.2 21H6.8c-1.68 0-2.52 0-3.162-.327a3 3 0 0 1-1.311-1.311C2 18.72 2 17.88 2 16.2V8.377Z"/><path d="M12 16.5a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/></symbol></svg>
-<!-- Icons: Untitled UI free icons -->
-<!-- Icons: Untitled UI free icons -->
-<!-- Icons: Untitled UI free icons -->
-<!-- Icons: Untitled UI free icons -->
-<script>document.documentElement.classList.add('js')</script>
-
-<header class="nav">
-  <div class="wrap">
-    <a class="brand" href="#"><img src="icon.png" alt="">vibex</a>
-    <nav class="nav-links" aria-label="Sections">
-      <a href="#features">Features</a>
-      <a href="#new">New in 2.0</a>
-      <a href="#how">How it works</a>
-      <a href="#open-source">Open source</a>
-      <a href="#faq">FAQ</a>
-    </nav>
-    <div class="nav-cta">
-      <a class="btn btn-light btn-sm" href="https://github.com/uwussimo/vibex">
-        <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 .2a8 8 0 0 0-2.53 15.59c.4.07.55-.17.55-.38v-1.33c-2.23.48-2.7-1.07-2.7-1.07-.36-.93-.89-1.17-.89-1.17-.73-.5.05-.49.05-.49.8.06 1.23.83 1.23.83.72 1.22 1.88.87 2.33.66.07-.52.28-.87.5-1.07-1.78-.2-3.65-.89-3.65-3.95 0-.87.31-1.59.83-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.22 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.52.56.83 1.28.83 2.15 0 3.07-1.87 3.75-3.66 3.95.29.25.54.73.54 1.48v2.2c0 .21.15.46.55.38A8 8 0 0 0 8 .2Z"/></svg>
-        Star<span class="star-count" data-stars hidden></span>
-      </a>
-      <a class="btn btn-dark btn-sm" href="#install">Download</a>
-    </div>
-  </div>
-</header>
-
+<vx-nav></vx-nav>
 <main>
-<section class="hero" style="padding-top:64px">
-  <div class="wrap">
-    <div class="hero-grid">
-      <h1>Your coding agent finally has <span class="pill">eyes</span>.</h1>
-      <p class="hero-lede">Claude Code writes, runs and checks its own work in a live simulator and browser. You just review. Free and open source.</p>
-    </div>
-    <div class="hero-cta">
-      <a class="btn btn-dark" href="#install"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.4 12.6c0-2.6 2.1-3.8 2.2-3.9-1.2-1.8-3.1-2-3.7-2-1.6-.2-3.1.9-3.9.9-.8 0-2-.9-3.4-.9-1.7 0-3.3 1-4.2 2.6-1.8 3.1-.5 7.7 1.3 10.2.8 1.2 1.8 2.6 3.1 2.6 1.3-.1 1.7-.8 3.3-.8 1.5 0 1.9.8 3.3.8 1.4 0 2.2-1.3 3-2.5 1-1.4 1.3-2.7 1.4-2.8-.1 0-2.4-.9-2.4-4.2zM13.9 5c.7-.9 1.2-2 1-3.2-1 0-2.3.7-3 1.6-.7.8-1.2 2-1.1 3.1 1.2.1 2.3-.6 3.1-1.5z"/></svg>Download for Mac</a>
-      <button class="btn btn-light hero-cmd" data-copy-cmd="curl -fsSL https://vibex.cc/install.sh | sh" title="Copy the install command"><span class="p">❯</span><code>curl -fsSL vibex.cc/install.sh | sh</code><span class="copy-ico"><svg class="ui"><use href="#i-copy"/></svg><svg class="ui"><use href="#i-check"/></svg></span></button>
-    </div>
 
-    <div class="stage" aria-label="Animated preview of the Vibex window">
-      <div class="stage-frame">
-        <div class="stage-scale" data-stage>
-          <div class="app" data-scene="build">
-            <div class="chrome">
-              <div class="lights"><i></i><i></i><i></i></div>
-              <div class="chrome-title">habits</div>
-              <div class="run-pill"><b></b><code>vibex-mcp:5150</code></div>
+<!-- Hero -->
+<vx-scene length="220">
+  <div class="pin hero-pin">
+    <div class="hero-copy" data-out="0-.3">
+      <h1 class="load-in">Your coding agent finally has <span class="eyes">eyes</span>.</h1>
+      <p class="lede load-in" style="--d:.08s">Claude writes the code, then runs it, taps through it and fixes what it finds. You stop being the one who checks.</p>
+      <div class="cta-row load-in" style="--d:.16s">
+        <a class="btn btn-primary" href="#install">Get Vibex free</a>
+        <vx-install></vx-install>
+      </div>
+      <p class="assure load-in" style="--d:.24s">For Mac. About a minute to install. No account.</p>
+    </div>
+    <div class="hero-rise keep" data-at="0-.55">
+      <vx-art w="1120" h="650" small-w="340" small-h="590" role="img" aria-label="The Vibex window: a Claude chat beside a live iPhone that Claude is tapping through.">
+        <div class="art"><div class="hero-tilt keep" data-at="0-.55"><vx-window title="habits">
+          <div class="rail"><i class="on"></i><i></i><i></i><i></i><i></i><i></i></div>
+          <div class="pane hero-chat">
+            <div class="bubble" data-at=".36-.44">Run the app and check onboarding works</div>
+            <div class="tool" data-at=".44-.52"><span>▶</span>Build and launch Habits<span class="ok">✓</span></div>
+            <div class="tool" data-at=".52-.6"><span>◎</span>Simulator: find “Get started”<span class="ok">✓</span></div>
+            <div class="tool" data-at=".6-.68"><span>◉</span>Simulator: tap “Get started”<span class="ok">✓</span></div>
+            <div class="say" data-at=".72-.84">Onboarding works. The Continue button sat under the home indicator on small phones, so I moved it up and checked again.</div>
+          </div>
+          <div class="hero-side">
+            <vx-phone>
+              <div class="ph-title">Today</div>
+              <div class="habit"><i class="on"></i>Morning walk</div>
+              <div class="habit"><i></i>Read 20 pages</div>
+              <div class="habit"><i></i>Call Mum</div>
+              <div class="ph-cta">Get started</div>
+              <span class="tap" data-at=".6-.68" data-out=".68-.72" style="left:96px;bottom:18px"></span>
+            </vx-phone>
+          </div>
+        </vx-window></div></div>
+      </vx-art>
+    </div>
+  </div>
+</vx-scene>
+
+<!-- The old way: contrast and loss aversion. Windows collapse into one. -->
+<vx-scene length="280" style="--tint:var(--red)">
+  <div class="pin"><div class="scene-grid">
+    <div class="copy">
+      <h2>Right now, you’re your agent’s eyes.</h2>
+      <ol class="beats">
+        <li data-beat="0-.34">It writes blind. So you run it, look at it, screenshot it and explain what broke.</li>
+        <li data-beat=".34-.68">Every check costs you a Command-Tab and your train of thought. Then you do it again.</li>
+        <li data-beat=".68-1"><strong>Vibex puts all of it in one window Claude can see and drive.</strong> You get your attention back.</li>
+      </ol>
+      <span class="scene-progress"><i></i></span>
+    </div>
+    <vx-art w="820" h="560" role="img" aria-label="Scattered windows for a terminal, the simulator, a browser, Git and usage collapse into one Vibex window.">
+      <div class="art">
+        <div class="mess stay" data-at=".36-.68" data-out=".6-.7" style="left:10px;top:30px;--dx:280px;--dy:160px;--r:-5deg"><vx-window title="Terminal"><div class="pane mono">$ claude<br>Done. Please run the app<br>and tell me how it looks.</div></vx-window></div>
+        <div class="mess stay" data-at=".36-.68" data-out=".6-.7" style="left:520px;top:10px;--dx:-230px;--dy:180px;--r:6deg"><vx-window title="Simulator"><div class="pane">Where did this window go?</div></vx-window></div>
+        <div class="mess stay" data-at=".38-.68" data-out=".6-.7" style="left:280px;top:190px;--dx:0px;--dy:0px;--r:2deg"><vx-window title="localhost:5173"><div class="pane mono" style="color:var(--red)">TypeError: undefined…<br><span style="color:var(--muted)">copy, switch, paste</span></div></vx-window></div>
+        <div class="mess stay" data-at=".38-.68" data-out=".6-.7" style="left:30px;top:350px;--dx:250px;--dy:-160px;--r:4deg"><vx-window title="Git"><div class="pane mono">what did it change?<br>git diff | less</div></vx-window></div>
+        <div class="mess stay" data-at=".4-.68" data-out=".6-.7" style="left:540px;top:360px;--dx:-260px;--dy:-170px;--r:-6deg"><vx-window title="Usage"><div class="pane">Limit reached.<br>Resets in 3 hours.</div></vx-window></div>
+        <div class="one" data-at=".62-.78"><vx-window title="Vibex">
+          <div class="rail"><i class="on"></i><i></i><i></i><i></i></div>
+          <div class="mini-col"><div class="bubble" style="font-size:12px">Fix the checkout</div><div class="tool">Simulator: tap “Pay”<span class="ok">✓</span></div><div class="tool">Browser: read console<span class="ok">✓</span></div><div class="say">Fixed. Two files changed.</div></div>
+          <div class="mini-col" style="background:#101014;align-items:center"><vx-phone style="zoom:.76"><div class="ph-title">Checkout</div><div class="habit">Total $24.00</div><div class="ph-cta">Pay</div></vx-phone></div>
+        </vx-window></div>
+      </div>
+    </vx-art>
+  </div></div>
+</vx-scene>
+
+<!-- The loop: a ring draws closed around Write, Run, See, Fix. -->
+<vx-scene id="features" length="320" flip style="--tint:var(--green)">
+  <div class="pin"><div class="scene-grid">
+    <div class="copy">
+      <p class="eyebrow">The loop</p>
+      <h2>It checks its own work.</h2>
+      <ol class="beats">
+        <li data-beat="0-.3">Claude builds and launches your app, on its own.</li>
+        <li data-beat=".3-.62">It taps through real screens and reads what’s actually there, like a tester would.</li>
+        <li data-beat=".62-1">It spots what’s wrong and fixes it. <strong>You come back to review, not to debug.</strong></li>
+      </ol>
+      <span class="scene-progress"><i></i></span>
+    </div>
+    <vx-art w="820" h="560" role="img" aria-label="A ring of Write, Run, See and Fix closes while a button that ran off the screen gets fixed on a live iPhone.">
+      <div class="art">
+        <div class="ring-wrap">
+          <svg viewBox="0 0 440 440" aria-hidden="true"><circle cx="220" cy="220" r="170" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="4"/><circle class="draw" data-at="0-.86" style="opacity:1" cx="220" cy="220" r="170" fill="none" stroke="#3dd68c" stroke-width="4" stroke-linecap="round" pathLength="1" transform="rotate(-90 220 220)"/></svg>
+          <div class="ring-mid"><div><b>Claude</b>closes the loop</div></div>
+          <span class="node" data-at="0-.06" style="left:220px;top:50px">✎ Write</span>
+          <span class="node" data-at=".2-.28" style="left:390px;top:220px">▶ Run</span>
+          <span class="node" data-at=".42-.5" style="left:220px;top:390px">◉ See</span>
+          <span class="node" data-at=".64-.72" style="left:50px;top:220px">✓ Fix</span>
+        </div>
+        <vx-phone class="loop-phone">
+          <div class="ph-title">Checkout</div>
+          <div class="habit">Trail shoes<span style="margin-left:auto">$84</span></div>
+          <div class="habit">Socks<span style="margin-left:auto">$12</span></div>
+          <div class="habit" style="font-weight:700">Total<span style="margin-left:auto">$96</span></div>
+          <div class="overflow stay" data-at=".2-.28" data-out=".66-.72">Pay $96</div>
+          <div class="flag" data-at=".44-.5" data-out=".64-.68">Off screen</div>
+          <div class="fixed" data-at=".68-.76">Pay $96</div>
+        </vx-phone>
+      </div>
+    </vx-art>
+  </div></div>
+</vx-scene>
+
+<!-- Vibex Design: JSON types itself and screens assemble block by block. -->
+<vx-scene id="design" length="360" style="--tint:var(--pink)">
+  <div class="pin"><div class="scene-grid">
+    <div class="copy">
+      <p class="eyebrow">New · Vibex Design</p>
+      <h2>See it before you build it.</h2>
+      <ol class="beats">
+        <li data-beat="0-.36">Describe an app or a site. Claude draws it on a canvas, screen by screen, in real device frames.</li>
+        <li data-beat=".36-.72">Here, a wrong idea costs you a sentence. <strong>Not a week of code.</strong></li>
+        <li data-beat=".72-1">Love it? <strong>Build This</strong> hands the design to Claude. It’s plain JSON in your repo, so nothing gets lost in translation.</li>
+      </ol>
+      <span class="scene-progress"><i></i></span>
+    </div>
+    <vx-art w="820" h="560" role="img" aria-label="JSON appears on the left while phone screens assemble from it, block by block, on a canvas.">
+      <div class="art">
+<pre class="json" data-at="0-.1" aria-hidden="true"><b>"name"</b>: <em>"Plantly"</em>,
+<b>"tokens"</b>: {
+  <b>"primary"</b>: <em>"#2F7D57"</em>,
+  <b>"surface"</b>: <em>"#FFFFFF"</em>
+},
+<b>"screens"</b>: [
+  { <b>"name"</b>: <em>"Today"</em>,
+    <b>"device"</b>: <em>"iphone"</em>,
+    <b>"root"</b>: {
+      <b>"type"</b>: <em>"column"</em>,
+      <b>"gap"</b>: 12,
+      <b>"children"</b>: [ … ]
+    }
+  },
+  { <b>"name"</b>: <em>"Monstera"</em> },
+  { <b>"name"</b>: <em>"Add a plant"</em> }
+]</pre>
+        <div class="d-phone" style="left:290px"><vx-phone data-at=".08-.16" class="grow">
+          <div class="d-big" data-at=".14-.2">Good morning</div>
+          <div class="d-hero" data-at=".2-.26">4 plants need water<small>About 5 minutes</small></div>
+          <div class="d-card" data-at=".26-.32"><i></i>Monstera</div>
+          <div class="d-card" data-at=".3-.36"><i></i>Fiddle Leaf Fig</div>
+          <div class="d-card" data-at=".34-.4"><i></i>Pothos</div>
+          <div class="d-tabs" data-at=".38-.44"><i></i><i></i><i></i></div>
+        </vx-phone></div>
+        <div class="d-phone from-r" style="left:565px" data-at=".46-.56"><vx-phone>
+          <div class="d-photo" data-at=".52-.58"></div>
+          <div class="d-big" data-at=".56-.6">Monstera</div>
+          <div class="d-bars" data-at=".6-.66"><i style="height:60%"></i><i style="height:78%"></i><i style="height:52%"></i><i style="height:92%"></i><i style="height:70%"></i></div>
+          <div class="d-btn" data-at=".64-.7">Water now</div>
+        </vx-phone></div>
+        <a class="btn btn-primary btn-sm build-this rise" data-at=".76-.84" href="#install" tabindex="-1">Build This</a>
+      </div>
+    </vx-art>
+  </div></div>
+</vx-scene>
+
+<!-- Chat: the composer types, the menu opens, the mode morphs. -->
+<vx-scene length="340" flip style="--tint:var(--accent)">
+  <div class="pin"><div class="scene-grid">
+    <div class="copy">
+      <p class="eyebrow">Claude, native</p>
+      <h2>All of Claude Code. None of the terminal.</h2>
+      <ol class="beats">
+        <li data-beat="0-.36">Type <code>/</code> for every command and skill, with what each one does. <code>@</code> adds a file. Paste a screenshot.</li>
+        <li data-beat=".36-.7"><strong>Plan</strong> when it matters. <strong>Auto</strong> when it doesn’t. You decide how much Claude does before it asks.</li>
+        <li data-beat=".7-1">It’s the real Claude Code, so your CLAUDE.md, skills, hooks and MCP servers just work. <strong>There’s nothing to migrate.</strong></li>
+      </ol>
+      <span class="scene-progress"><i></i></span>
+    </div>
+    <vx-art w="820" h="560" role="img" aria-label="A native chat composer opens a command menu, then switches from Ask to Plan to Auto mode.">
+      <div class="art"><div class="chat-win"><vx-window title="Claude">
+        <div class="chat-feed">
+          <div class="bubble" data-at=".44-.5">Add Sign in with Apple</div>
+          <div class="say" data-at=".5-.56"><b style="color:var(--violet)">Plan</b>: add the entitlement, a sign-in screen and a session store. Nothing changed yet.</div>
+          <div class="tool" data-at=".72-.78">Edit AuthStore.swift<span class="ok">✓</span></div>
+          <div class="tool" data-at=".76-.82">Simulator: tap “Sign in”<span class="ok">✓</span></div>
+          <div class="say" data-at=".82-.9">Done, and it works on the simulator.</div>
+        </div>
+        <div class="menu rise" data-at=".06-.14" data-out=".32-.38">
+          <div class="hi"><b>/compact</b>Free up context by summarizing</div>
+          <div><b>/context</b>Show what’s using the conversation</div>
+          <div><b>/code-review</b>Review changes since a commit</div>
+          <div><b>/model</b>Opus 5.5, Sonnet 5.5, Fable 5.1</div>
+        </div>
+        <div class="composer">
+          <div class="c-field"><span data-at=".02-.08" data-out=".32-.36" data-type class="mono stay">/co</span></div>
+          <div class="c-tools">
+            <span style="position:relative;width:96px;height:26px">
+              <span class="chip mode" data-out=".38-.42">🔒 Ask</span>
+              <span class="chip mode plan" data-at=".38-.42" data-out=".66-.7">☰ Plan</span>
+              <span class="chip mode auto" data-at=".66-.7">⚡ Auto</span>
+            </span>
+            <span class="chip">Opus 5.5</span>
+            <span class="chip">⑂ Agent</span>
+            <span class="c-send"></span>
+          </div>
+        </div>
+      </vx-window></div></div>
+    </vx-art>
+  </div></div>
+</vx-scene>
+
+<!-- Agents: branch lines draw out from main; the winner merges home. -->
+<vx-scene id="agents" length="340" style="--tint:var(--violet)">
+  <div class="pin"><div class="scene-grid">
+    <div class="copy">
+      <p class="eyebrow">Parallel agents</p>
+      <h2>Try three ideas. Keep the best one.</h2>
+      <ol class="beats">
+        <li data-beat="0-.36"><code>⌘Return</code> sends a message as its own agent, on its own branch, in its own folder.</li>
+        <li data-beat=".36-.68">They work side by side and can’t touch your project. <strong>A bad attempt costs you nothing.</strong></li>
+        <li data-beat=".68-1">Review each one, merge the winner, throw the rest away.</li>
+      </ol>
+      <span class="scene-progress"><i></i></span>
+    </div>
+    <vx-art w="820" h="560" role="img" aria-label="Three branches leave main, each with a running agent. The best one merges back and the others fade away.">
+      <div class="art">
+        <svg class="tree" viewBox="0 0 820 560" aria-hidden="true">
+          <path class="draw" data-at="0-.08" style="opacity:1" d="M0 280 H150" stroke="#9b9ba7" pathLength="1"/>
+          <path class="draw" data-at=".06-.3" data-out=".72-.82" d="M150 280 C 260 280 260 90 410 90" stroke="#a78bfa" pathLength="1"/>
+          <path class="draw" data-at=".1-.34" d="M150 280 H410" stroke="#3dd68c" pathLength="1"/>
+          <path class="draw" data-at=".14-.38" data-out=".72-.82" d="M150 280 C 260 280 260 470 410 470" stroke="#f17cc5" pathLength="1"/>
+        </svg>
+        <span class="main-label">main</span>
+        <div class="agent from-r" data-at=".22-.34" data-out=".72-.82" style="top:42px"><h3><span class="dot" style="background:var(--violet)"></span>sheet-based-checkout</h3><p><span class="plus" data-at=".34-.6" data-count="212" data-prefix="+"></span> <span class="minus" data-at=".34-.6" data-count="38" data-prefix="−"></span> · 2 failing screens</p></div>
+        <div class="agent from-r" data-at=".26-.38" style="top:232px;border-color:rgba(61,214,140,.6)"><h3><span class="dot"></span>one-page-checkout</h3><p><span class="plus" data-at=".38-.62" data-count="146" data-prefix="+"></span> <span class="minus" data-at=".38-.62" data-count="91" data-prefix="−"></span> · Checked on the simulator</p></div>
+        <div class="agent from-r" data-at=".3-.42" data-out=".72-.82" style="top:422px"><h3><span class="dot" style="background:var(--pink)"></span>apple-pay-first</h3><p><span class="plus" data-at=".42-.64" data-count="87" data-prefix="+"></span> <span class="minus" data-at=".42-.64" data-count="12" data-prefix="−"></span> · Waiting for you</p></div>
+        <span class="chip rise" data-at=".8-.9" style="position:absolute;left:510px;top:345px;background:rgba(61,214,140,.16);color:var(--green)">✓ Merged into main</span>
+      </div>
+    </vx-art>
+  </div></div>
+</vx-scene>
+
+<!-- Simulator: a tap by label, then one device fans out into three. -->
+<vx-scene id="simulator" length="300" flip style="--tint:var(--green)">
+  <div class="pin"><div class="scene-grid">
+    <div class="copy">
+      <p class="eyebrow">Simulator</p>
+      <h2>The iPhone, inside your window.</h2>
+      <ol class="beats">
+        <li data-beat="0-.34">No more Simulator window lost behind everything else. The device lives next to your code.</li>
+        <li data-beat=".34-.66">Claude taps by label, not by guessing pixels, so it hits what it means to.</li>
+        <li data-beat=".66-1">A small phone, a big phone and an iPad, all live. <strong>Run on All</strong> installs everywhere at once.</li>
+      </ol>
+      <span class="scene-progress"><i></i></span>
+    </div>
+    <vx-art w="820" h="560" role="img" aria-label="A live iPhone gets tapped by its label, then a small phone and an iPad fan out beside it.">
+      <div class="art">
+        <div class="sim-l" data-at=".66-.86"><vx-phone style="--ph-bg:#f5f5f7"><div class="ph-title" style="font-size:20px">Today</div><div class="habit">Morning walk</div><div class="habit">Read 20 pages</div><div class="ph-cta">Add habit</div></vx-phone></div>
+        <div class="sim-r" data-at=".66-.86"><div><div class="ph-title">Today</div><div class="habit">Morning walk</div><div class="habit">Read 20 pages</div><div class="habit">Call Mum</div><div class="ph-cta">Add habit</div></div></div>
+        <vx-phone class="sim-c">
+          <div class="ph-title">Today</div>
+          <div class="habit"><i class="on"></i>Morning walk</div>
+          <div class="habit"><i></i>Read 20 pages</div>
+          <div class="habit"><i></i>Call Mum</div>
+          <div class="ph-cta">Add habit</div>
+          <span class="label-tag rise" data-at=".36-.44" data-out=".6-.66" style="left:30px;bottom:74px">tap “Add habit”</span>
+          <span class="tap" data-at=".48-.56" data-out=".58-.62" style="left:90px;bottom:18px"></span>
+        </vx-phone>
+      </div>
+    </vx-art>
+  </div></div>
+</vx-scene>
+
+<!-- Browser: the route types out, a ref locks on, the console slides up. -->
+<vx-scene length="300" style="--tint:var(--accent)">
+  <div class="pin"><div class="scene-grid">
+    <div class="copy">
+      <p class="eyebrow">Browser</p>
+      <h2>It reads the console so you don’t have to.</h2>
+      <ol class="beats">
+        <li data-beat="0-.34">Your dev server opens in a tab next to Claude, and the address bar always shows the route you’re on.</li>
+        <li data-beat=".34-.66">Claude clicks through pages, watches requests and reads every error for itself.</li>
+        <li data-beat=".66-1"><strong>Never paste a stack trace into a chat again.</strong></li>
+      </ol>
+      <span class="scene-progress"><i></i></span>
+    </div>
+    <vx-art w="820" h="560" role="img" aria-label="A browser route types into the address bar, an element is targeted, and the console reports zero errors.">
+      <div class="art"><div class="b-win"><vx-window title="Vibex">
+        <div class="b-col">
+          <div class="addr"><span class="host">localhost:5173</span><span class="route keep" data-at=".04-.26" data-type>/orders/42?tab=items</span></div>
+          <div class="page">
+            <h4 data-at=".22-.3">Order #42</h4>
+            <div class="row-card" data-at=".26-.34"><span>Trail shoes</span><b>$84.00</b></div>
+            <div class="row-card" data-at=".3-.38"><span>Socks</span><b>$12.00</b></div>
+            <div class="row-card" data-at=".34-.42" style="background:#111;color:#fff;border:0;justify-content:center">Refund order</div>
+            <div class="ref grow" data-at=".42-.5" style="left:12px;right:12px;top:167px;height:51px"><span>e12</span></div>
+          </div>
+          <div class="console rise" data-at=".56-.66">
+            <div data-at=".6-.66">browser_click e12 → ok</div>
+            <div data-at=".66-.72">POST /api/refund 200 · 41 ms</div>
+            <div class="g" data-at=".74-.8">browser_console → 0 errors</div>
+          </div>
+        </div>
+      </vx-window></div></div>
+    </vx-art>
+  </div></div>
+</vx-scene>
+
+<!-- Approvals: a banner drops in, a button presses, work resumes. -->
+<vx-scene length="280" flip style="--tint:var(--orange)">
+  <div class="pin"><div class="scene-grid">
+    <div class="copy">
+      <p class="eyebrow">Approvals</p>
+      <h2>Walk away. We’ll get you when it matters.</h2>
+      <ol class="beats">
+        <li data-beat="0-.34">Long job? Go make a coffee. You don’t have to watch Claude work.</li>
+        <li data-beat=".34-.66">When it needs a yes, you get a dot on its tab, a count in the window and a notification.</li>
+        <li data-beat=".66-1">One click takes you there, and one click puts it back to work. <strong>No session sits waiting for hours.</strong></li>
+      </ol>
+      <span class="scene-progress"><i></i></span>
+    </div>
+    <vx-art w="820" h="560" role="img" aria-label="A notification says Claude needs approval. Allow is clicked and the work continues.">
+      <div class="art">
+        <div class="banner" data-at=".3-.42" data-out=".62-.7"><img src="/icon.png" alt=""><div><b>Claude needs you in add-notes</b>Allow Bash: swift test</div></div>
+        <div class="b-win"><vx-window title="habits">
+          <div class="b-col">
+            <div class="tabs"><span>Claude</span><span class="on">add-notes<i class="waiting" data-at=".34-.4" data-out=".6-.64"></i></span><span>Terminal</span></div>
+            <div class="pane" style="flex:1">
+              <div class="bubble">Add notes to each habit</div>
+              <div class="tool" data-at="0-.06">Edit Habit.swift<span class="ok">✓</span></div>
+              <div class="tool" data-at=".08-.14">Edit HabitRow.swift<span class="ok">✓</span></div>
+              <div class="approve" data-at=".36-.44" data-out=".6-.66">
+                <small>Claude wants to run</small><code>swift test</code>
+                <div class="approve-row"><span class="a-btn yes" data-at=".54-.58" style="opacity:1">Allow</span><span class="a-btn">Always Allow</span><span class="a-btn">Don’t Allow</span></div>
+              </div>
+              <div class="tool rise" data-at=".68-.74">Run swift test<span class="ok">✓</span></div>
+              <div class="say" data-at=".78-.86">All 48 tests pass. Notes are in, and they sync.</div>
             </div>
-            <div class="body">
-              <div class="act">
-                <span data-act="terminal"><svg class="ui"><use href="#i-console"/></svg><b class="badge warn">1</b></span>
-                <span data-act="build devices"><svg class="ui"><use href="#i-phone"/></svg></span>
-                <span><svg class="ui"><use href="#i-globe"/></svg></span>
-                <i class="sep"></i>
-                <span data-act="review"><svg class="ui"><use href="#i-branch"/></svg><b class="badge">2</b></span>
-                <span data-act="agents"><svg class="ui"><use href="#i-dataflow"/></svg><b class="badge">2</b></span>
-                <span><svg class="ui"><use href="#i-stars"/></svg></span>
-                <span><svg class="ui"><use href="#i-puzzle"/></svg></span>
-                <span class="grow" style="height:auto"></span>
-                <span data-act="usage"><svg class="ui"><use href="#i-gauge"/></svg></span>
-                <span style="margin-bottom:8px"><svg class="ui"><use href="#i-settings"/></svg></span>
-              </div>
-              <div class="scm">
-                <div class="scm-in side-p" data-side="review">
-                  <div class="scm-h">Source Control</div>
-                  <div class="scm-msg">Message (⌘↩ to commit)</div>
-                  <div class="scm-commit"><svg class="ui"><use href="#i-check"/></svg>Commit All</div>
-                  <div class="scm-group"><span><svg class="ui"><use href="#i-chevron-down"/></svg>Changes</span><span>2</span></div>
-                  <div class="scm-row sel"><span class="file-ico"></span>HabitsView.swift<em style="color:var(--orange)">M</em></div>
-                  <div class="scm-row"><span class="file-ico"></span>StreakBadge.swift<em style="color:var(--green)">U</em></div>
-                </div>
-                <div class="scm-in side-p" data-side="agents">
-                  <div class="scm-h">Agents <span class="plus">+</span></div>
-                  <div class="agent">
-                    <div class="agent-h"><b class="adot" style="background:var(--green)"></b>streak-spring<small>+42 −3</small></div>
-                    <div class="agent-b">vibex/streak-spring</div>
-                    <div class="agent-a"><span>Review</span><span class="pri">Merge</span></div>
-                  </div>
-                  <div class="agent">
-                    <div class="agent-h"><b class="adot" style="background:var(--orange)"></b>streak-confetti<small>+96 −4</small></div>
-                    <div class="agent-b"><span class="wait"><svg class="ui"><use href="#i-bell"/></svg>Waiting for you</span></div>
-                    <div class="agent-a"><span>Review</span><span>Merge</span></div>
-                  </div>
-                </div>
-              </div>
-              <div class="term">
-                <div class="term-tabs"><span class="on">claude</span><span>claude 2<i class="tdot"></i></span><span>zsh</span></div>
-                <div class="term-body">
-                  <div class="tscene" data-for="build">
-                    <div class="ln" style="--i:0"><span class="p">~/habits ❯</span> claude</div>
-                    <div class="ln" style="--i:1"><span class="you">&gt; add a streak counter to the habits screen</span></div>
-                    <div class="ln" style="--i:2"> </div>
-                    <div class="ln" style="--i:3"><span class="dot">●</span> <span class="tool">Edit</span> <span class="dim">HabitsView.swift</span> <span class="add">+18</span> <span class="del">−2</span></div>
-                    <div class="ln" style="--i:4"><span class="dot">●</span> <span class="tool">vibex_run</span> <span class="dim">iOS · Habits</span></div>
-                    <div class="ln" style="--i:5"><span class="dim">  Built in 6.2s · launched on iPhone 17 Pro</span></div>
-                    <div class="ln" style="--i:6"><span class="dot">●</span> <span class="tool">simulator_tap_element</span> <span class="dim">"Read 10 pages"</span></div>
-                    <div class="ln" style="--i:7"><span class="dot">●</span> <span class="tool">simulator_screenshot</span></div>
-                    <div class="ln" style="--i:8"> </div>
-                    <div class="ln" style="--i:9">The streak shows 4 days after the tap.</div>
-                    <div class="ln" style="--i:10"><span class="you">&gt;</span> <span class="caret"></span></div>
-                  </div>
-                  <div class="tscene" data-for="review">
-                    <div class="ln" style="--i:0"><span class="you">&gt; what did you change?</span></div>
-                    <div class="ln" style="--i:1"> </div>
-                    <div class="ln" style="--i:2"><span class="dot">●</span> <span class="tool">Bash</span> <span class="dim">git diff --stat</span></div>
-                    <div class="ln" style="--i:3"><span class="dim">  HabitsView.swift  | 20 </span><span class="add">++++++++++++++++</span><span class="del">--</span></div>
-                    <div class="ln" style="--i:4"><span class="dim">  StreakBadge.swift | 31 </span><span class="add">++++++++++++++++++++</span></div>
-                    <div class="ln" style="--i:5"> </div>
-                    <div class="ln" style="--i:6">A new StreakBadge view, and HabitsView counts</div>
-                    <div class="ln" style="--i:7">consecutive days from completions.</div>
-                    <div class="ln" style="--i:8"><span class="you">&gt;</span> <span class="caret"></span></div>
-                  </div>
-                  <div class="tscene" data-for="devices">
-                    <div class="ln" style="--i:0"><span class="you">&gt; check it on every screen size</span></div>
-                    <div class="ln" style="--i:1"> </div>
-                    <div class="ln" style="--i:2"><span class="dot">●</span> <span class="tool">vibex_run</span> <span class="dim">Run on All · 3 devices</span></div>
-                    <div class="ln" style="--i:3"><span class="dot">●</span> <span class="tool">simulator_screenshot_all</span></div>
-                    <div class="ln" style="--i:4"><span class="dim">  iPhone 16e · iPhone 17 Pro Max · iPad Air</span></div>
-                    <div class="ln" style="--i:5"> </div>
-                    <div class="ln" style="--i:6">The badge fits on all three. On iPad the list</div>
-                    <div class="ln" style="--i:7">gets a second column.</div>
-                    <div class="ln" style="--i:8"><span class="you">&gt;</span> <span class="caret"></span></div>
-                  </div>
-                  <div class="tscene" data-for="agents">
-                    <div class="ln" style="--i:0"><span class="p">streak-spring ❯</span> claude</div>
-                    <div class="ln" style="--i:1"><span class="you">&gt; make the streak badge feel alive</span></div>
-                    <div class="ln" style="--i:2"> </div>
-                    <div class="ln" style="--i:3"><span class="dot">●</span> <span class="tool">Edit</span> <span class="dim">StreakBadge.swift</span> <span class="add">+24</span></div>
-                    <div class="ln" style="--i:4"><span class="dot">●</span> <span class="tool">vibex_run</span> <span class="dim">iOS · Habits</span></div>
-                    <div class="ln" style="--i:5"><span class="dot">●</span> <span class="tool">simulator_snapshot</span> <span class="dim">"After spring"</span></div>
-                    <div class="ln" style="--i:6"> </div>
-                    <div class="ln" style="--i:7">Before and after are in the Compare tab.</div>
-                    <div class="ln" style="--i:8"><span class="you">&gt;</span> <span class="caret"></span></div>
-                  </div>
-                  <div class="tscene" data-for="usage">
-                    <div class="ln" style="--i:0"><span class="you">&gt; how much of my session is left?</span></div>
-                    <div class="ln" style="--i:1"> </div>
-                    <div class="ln" style="--i:2"><span class="dot">●</span> <span class="tool">vibex_focus</span> <span class="dim">AI Usage</span></div>
-                    <div class="ln" style="--i:3"><span class="dim">  Session $42.10 of your $50 limit · resets in 1h 3m</span></div>
-                    <div class="ln" style="--i:4"> </div>
-                    <div class="ln" style="--i:5">You're at 84%. Vibex pings you again at 100%.</div>
-                    <div class="ln" style="--i:6">claude 2 is waiting for your approval.</div>
-                    <div class="ln" style="--i:7"><span class="you">&gt;</span> <span class="caret"></span></div>
-                  </div>
-                </div>
-              </div>
-              <div class="toast" aria-hidden="true"><svg class="ui"><use href="#i-bell"/></svg><div><b>Claude needs your approval</b><small>habits · claude 2 · Bash: npm test</small></div></div>
-              <div class="editor">
-                <div class="etabs" role="tablist" aria-label="Preview scenes">
-                  <button class="etab" data-scene="build" role="tab"><svg class="ui"><use href="#i-phone"/></svg>iPhone 17 Pro<i class="bar"></i></button>
-                  <button class="etab" data-scene="devices" role="tab"><svg class="ui"><use href="#i-grid"/></svg>Devices<i class="bar"></i></button>
-                  <button class="etab italic" data-scene="review" role="tab"><svg class="ui"><use href="#i-branch"/></svg>HabitsView.swift<i class="bar"></i></button>
-                  <button class="etab" data-scene="agents" role="tab"><svg class="ui"><use href="#i-compare"/></svg>Compare<i class="bar"></i></button>
-                  <button class="etab" data-scene="usage" role="tab"><svg class="ui"><use href="#i-gauge"/></svg>AI Usage<i class="bar"></i></button>
-                </div>
-                <div class="panes">
-                  <div class="pane pane-sim" data-for="build">
-                    <div class="sim-h"><b></b>iPhone 17 Pro <small>iOS 26.6 · slim</small></div>
-                    <div class="phone"><div class="screen">
-                      <div class="island"></div>
-                      <h4>Today</h4>
-                      <div class="sub">Thursday, October 23</div>
-                      <div class="streak">🔥 4-day streak</div>
-                      <div class="habit done"><i></i>Morning walk<small>7:10</small></div>
-                      <div class="habit done"><i></i>Drink water<small>3 / 8</small></div>
-                      <div class="habit done"><i></i>Read 10 pages<small>now</small></div>
-                      <div class="habit"><i></i>Stretch<small>9 pm</small></div>
-                      <div class="habit"><i></i>No phone after 11<small></small></div>
-                      <div class="tap"></div>
-                    </div></div>
-                  </div>
-                  <div class="pane pane-diff" data-for="review">
-                    <div class="diff-h"><strong>HabitsView.swift</strong><span class="chip m">Modified</span><span class="stats"><span style="color:var(--green)">+18</span> <span style="color:var(--red)">−2</span></span><span class="stage-btn">Stage</span></div>
-                    <div class="code">
-                      <div class="hunk">struct HabitsView: View {</div>
-                      <div class="row"><span class="n">12</span><span class="t">    <span class="kw">@State private var</span> habits: [<span class="ty">Habit</span>] = []</span></div>
-                      <div class="row del"><span class="n">13</span><span class="t">    <span class="kw">var</span> title = <span class="st">"Today"</span></span></div>
-                      <div class="row add"><span class="n">13</span><span class="t">    <span class="kw">var</span> streak: <span class="ty">Int</span> { habits.<mark>currentStreak</mark>() }</span></div>
-                      <div class="row"><span class="n">14</span><span class="t"> </span></div>
-                      <div class="row"><span class="n">15</span><span class="t">    <span class="kw">var</span> body: <span class="kw">some</span> <span class="ty">View</span> {</span></div>
-                      <div class="row"><span class="n">16</span><span class="t">        <span class="ty">List</span> {</span></div>
-                      <div class="row add"><span class="n">17</span><span class="t">            <span class="kw">if</span> streak &gt; <span class="nu">0</span> {</span></div>
-                      <div class="row add"><span class="n">18</span><span class="t">                <span class="ty">StreakBadge</span>(days: streak)</span></div>
-                      <div class="row add"><span class="n">19</span><span class="t">                    .transition(.scale(scale: <span class="nu">0.9</span>))</span></div>
-                      <div class="row add"><span class="n">20</span><span class="t">            }</span></div>
-                      <div class="row"><span class="n">21</span><span class="t">            <span class="ty">ForEach</span>(habits) { <span class="ty">HabitRow</span>(habit: $0) }</span></div>
-                      <div class="row"><span class="n">22</span><span class="t">        }</span></div>
-                      <div class="row del"><span class="n">23</span><span class="t">        .navigationTitle(title)</span></div>
-                      <div class="row add"><span class="n">23</span><span class="t">        .navigationTitle(<span class="st">"Today"</span>)</span></div>
-                      <div class="row add"><span class="n">24</span><span class="t">        .animation(.spring(duration: <span class="nu">0.4</span>), value: streak)</span></div>
-                      <div class="row"><span class="n">25</span><span class="t">    }</span></div>
-                      <div class="row"><span class="n">26</span><span class="t"><span class="cm">// MARK: - Streaks</span></span></div>
-                    </div>
-                  </div>
-                  <div class="pane pane-devices" data-for="devices">
-                    <div class="dev-bar"><b>Devices</b><span class="ghost">+ Add Device</span><span class="pri"><svg class="ui"><use href="#i-play"/></svg>Run on All</span></div>
-                    <div class="dev-row">
-                    <div class="dev"><div class="dev-h"><b></b>iPhone 16e</div><div class="m-phone small"><div class="m-scr"><div class="m-isl"></div><b>Today</b><span class="m-streak">🔥 4-day streak</span><i class="d"></i><i class="d"></i><i class="d"></i><i></i><i></i></div></div></div>
-                    <div class="dev"><div class="dev-h"><b></b>iPhone 17 Pro Max</div><div class="m-phone"><div class="m-scr"><div class="m-isl"></div><b>Today</b><span class="m-streak">🔥 4-day streak</span><i class="d"></i><i class="d"></i><i class="d"></i><i></i><i></i></div></div></div>
-                    <div class="dev"><div class="dev-h"><b></b>iPad Air 13-inch</div><div class="m-pad"><div class="m-scr pad"><div class="m-isl"></div><b>Today</b><span class="m-streak">🔥 4-day streak</span><i class="d"></i><i class="d"></i><i class="d"></i><i></i><i></i></div></div></div>
-                    </div>
-                  </div>
-                  <div class="pane pane-compare" data-for="agents">
-                    <div class="cmp-h"><span class="pick"><em>Before</em>16:02</span><svg class="ui"><use href="#i-arrow-right"/></svg><span class="pick"><em>After</em>16:05</span><span class="seg"><b>Slider</b><span>Side by Side</span></span></div>
-                    <div class="cmp-stage">
-                      <div class="cmp-shot after"><div class="m-isl"></div><b>Today</b><span class="m-streak big">🔥 5-day streak <small>+1</small></span><i class="d"></i><i class="d"></i><i class="d"></i><i class="d"></i><i></i></div>
-                      <div class="cmp-shot before"><div class="m-isl"></div><b>Today</b><span class="m-streak">🔥 4-day streak</span><i class="d"></i><i class="d"></i><i class="d"></i><i></i><i></i></div>
-                      <div class="cmp-line"><span><svg class="ui"><use href="#i-columns"/></svg></span></div>
-                      <span class="cmp-tag l">Before</span><span class="cmp-tag r">After</span>
-                    </div>
-                  </div>
-                  <div class="pane pane-agents" data-for="usage">
-                    <div class="acard"><h6><img class="brand-ico" src="logos/claude.svg" alt="">Claude <span class="plan">Max 20×</span></h6><div class="row2"><small class="muted">Session · 84% of $50</small><b>$42.10</b></div><div class="meter"><b style="--v:84%"></b></div></div>
-                    <div class="acard"><h6><img class="brand-ico mono" src="logos/openai.svg" alt="">Codex <span class="plan" style="color:var(--accent);background:var(--accent-soft)">Plus</span></h6><div class="row2"><small class="muted">7d · 4d 2h</small><b>31%</b></div><div class="meter"><b style="--v:31%;background:var(--accent)"></b></div></div>
-                    <div class="acard"><h6><svg class="ui"><use href="#i-dollar"/></svg>Spending <span style="margin-left:auto;color:var(--muted);font-weight:400">30 days</span></h6><div class="big">$2,017 <small class="muted" style="font-size:12px;font-weight:400">API value</small></div><small class="muted">3.5B tokens · 98% from cache</small></div>
-                    <div class="acard"><h6>Now</h6><div class="row2"><b>habits</b><span style="color:var(--orange)">8:54</span></div><small class="muted">Opus 5.5 · 41K written · $2.36</small></div>
-                    <div class="acard span2"><h6>Trend <span style="margin-left:auto;color:var(--muted);font-weight:400">30 days · $2,017</span></h6>
-                      <div class="bars" data-bars="30"></div>
-                    </div>
-                    <div class="acard"><h6>Models</h6>
-                      <div class="share"><span>Fable 5.1</span><i style="--v:100%"></i><b>$1,138</b></div>
-                      <div class="share"><span>Opus 5.5</span><i style="--v:52%"></i><b>$588</b></div>
-                      <div class="share"><span>Sonnet 5.5</span><i style="--v:15%"></i><b>$167</b></div>
-                    </div>
-                    <div class="acard"><h6>Projects</h6>
-                      <div class="share"><span>habits</span><i style="--v:100%;--c:var(--text)"></i><b>$355</b></div>
-                      <div class="share"><span>dashboard</span><i style="--v:96%;--c:var(--text)"></i><b>$352</b></div>
-                      <div class="share"><span>vibex</span><i style="--v:84%;--c:var(--text)"></i><b>$303</b></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
+        </vx-window></div>
+      </div>
+    </vx-art>
+  </div></div>
+</vx-scene>
+
+<!-- Review: diff lines wipe in, then a before/after divider drags across. -->
+<vx-scene length="320" style="--tint:var(--orange)">
+  <div class="pin"><div class="scene-grid">
+    <div class="copy">
+      <p class="eyebrow">Review</p>
+      <h2>Every change, before it counts.</h2>
+      <ol class="beats">
+        <li data-beat="0-.4">Side-by-side diffs with syntax highlighting, right beside the running app. No more guessing what the agent touched.</li>
+        <li data-beat=".4-.74">Every run saves a screenshot. Drag between before and after, and paste both into your PR.</li>
+        <li data-beat=".74-1">Commit and push from the same window. <strong>You stay the one who decides.</strong></li>
+      </ol>
+      <span class="scene-progress"><i></i></span>
+    </div>
+    <vx-art w="820" h="560" role="img" aria-label="Diff lines wipe in on the left while a divider drags across a before and after screenshot.">
+      <div class="art">
+        <div class="diff"><div class="diff-head">CheckoutView.swift <span style="color:var(--green)">+3</span> <span style="color:var(--red)">−2</span></div>
+          <div class="l bar-x keep" data-at=".02-.08">struct CheckoutView: View {</div>
+          <div class="l bar-x keep" data-at=".06-.12">  var body: some View {</div>
+          <div class="l del bar-x keep" data-at=".1-.16">-   Button("Pay") { pay() }</div>
+          <div class="l del bar-x keep" data-at=".14-.2">-     .frame(width: 420)</div>
+          <div class="l add bar-x keep" data-at=".18-.24">+   Button("Pay \(total)") {</div>
+          <div class="l add bar-x keep" data-at=".22-.28">+     pay()</div>
+          <div class="l add bar-x keep" data-at=".26-.32">+   }.frame(maxWidth: .infinity)</div>
+          <div class="l bar-x keep" data-at=".3-.36">  }</div>
+          <div class="l bar-x keep" data-at=".34-.4">}</div>
+        </div>
+        <div class="compare" data-at=".38-.44">
+          <vx-phone><div class="ph-title">Before</div><div class="habit">Total $96</div><div class="overflow">Pay</div></vx-phone>
+          <vx-phone class="after keep" data-at=".46-.74"><div class="ph-title">After</div><div class="habit">Total $96</div><div class="ph-cta">Pay $96</div></vx-phone>
+          <span class="divider keep" data-at=".46-.74"></span>
         </div>
       </div>
+    </vx-art>
+  </div></div>
+</vx-scene>
+
+<!-- Skills and MCP: tiles fly home from everywhere and lock in. -->
+<vx-scene length="280" flip style="--tint:var(--violet)">
+  <div class="pin"><div class="scene-grid">
+    <div class="copy">
+      <p class="eyebrow">Skills and MCP</p>
+      <h2>New abilities, one click away.</h2>
+      <ol class="beats">
+        <li data-beat="0-.36">Browse skills and MCP servers from inside Vibex, without leaving your work.</li>
+        <li data-beat=".36-.7">It asks for any API key, then installs for this project or for all of them.</li>
+        <li data-beat=".7-1">You can always see what’s connected, what needs a sign-in and what’s failing.</li>
+      </ol>
+      <span class="scene-progress"><i></i></span>
     </div>
-  </div>
-</section>
-
-<div class="works wrap">
-  <p>Works with the stack you already have, and anything that runs in a terminal or speaks MCP.</p>
-  <div class="logos" aria-label="Works with Claude Code, Codex, Xcode, the iOS Simulator, Swift, Git, GitHub, Node, Vite, Next.js, React, Python, Docker, Postgres, Supabase, Figma, Playwright, Chrome DevTools, Linear, Sentry and anything with a command line">
-    <div class="logos-track" aria-hidden="true"><div class="logos-set"><span><img src="logos/claude.svg" alt="">Claude Code</span><span><img class="mono" src="logos/openai.svg" alt="">Codex</span><span><img src="logos/xcode.svg" alt="">Xcode</span><span><img class="mono" src="logos/apple.svg" alt="">iOS Simulator</span><span><img src="logos/swift.svg" alt="">Swift</span><span><img src="logos/git.svg" alt="">Git</span><span><img class="mono" src="logos/github.svg" alt="">GitHub</span><span><img src="logos/nodejs.svg" alt="">Node</span><span><img src="logos/vitejs.svg" alt="">Vite</span><span><img class="mono" src="logos/nextjs.svg" alt="">Next.js</span><span><img src="logos/react.svg" alt="">React</span><span><img src="logos/python.svg" alt="">Python</span><span><img src="logos/docker.svg" alt="">Docker</span><span><img src="logos/postgresql.svg" alt="">Postgres</span><span><img src="logos/supabase.svg" alt="">Supabase</span><span><img src="logos/figma.svg" alt="">Figma</span><span><img src="logos/playwright.svg" alt="">Playwright</span><span><img src="logos/chrome.svg" alt="">Chrome DevTools</span><span><img class="mono" src="logos/linear.svg" alt="">Linear</span><span><img class="mono" src="logos/sentry.svg" alt="">Sentry</span><span class="more">+ anything with a CLI</span></div><div class="logos-set"><span><img src="logos/claude.svg" alt="">Claude Code</span><span><img class="mono" src="logos/openai.svg" alt="">Codex</span><span><img src="logos/xcode.svg" alt="">Xcode</span><span><img class="mono" src="logos/apple.svg" alt="">iOS Simulator</span><span><img src="logos/swift.svg" alt="">Swift</span><span><img src="logos/git.svg" alt="">Git</span><span><img class="mono" src="logos/github.svg" alt="">GitHub</span><span><img src="logos/nodejs.svg" alt="">Node</span><span><img src="logos/vitejs.svg" alt="">Vite</span><span><img class="mono" src="logos/nextjs.svg" alt="">Next.js</span><span><img src="logos/react.svg" alt="">React</span><span><img src="logos/python.svg" alt="">Python</span><span><img src="logos/docker.svg" alt="">Docker</span><span><img src="logos/postgresql.svg" alt="">Postgres</span><span><img src="logos/supabase.svg" alt="">Supabase</span><span><img src="logos/figma.svg" alt="">Figma</span><span><img src="logos/playwright.svg" alt="">Playwright</span><span><img src="logos/chrome.svg" alt="">Chrome DevTools</span><span><img class="mono" src="logos/linear.svg" alt="">Linear</span><span><img class="mono" src="logos/sentry.svg" alt="">Sentry</span><span class="more">+ anything with a CLI</span></div></div>
-  </div>
-</div>
-
-<div class="statement" data-statement>
-  <div class="statement-pin">
-    <div class="glow" aria-hidden="true"></div>
-    <p>Meet <span class="brand-pill"><img src="icon.png" alt="">Vibex</span>, a window built for your coding agent. Agents used to work blind and wait for you to run, look and explain. Here Claude runs it, sees it and fixes it. You just review.</p>
-  </div>
-</div>
-
-<section id="film" class="film">
-  <div class="wrap">
-    <div class="sec-head reveal">
-      <h2>Watch Claude see what it builds</h2>
-      <p>Claude writes the code, runs the app, taps through it and checks its own work, all in one window.</p>
-    </div>
-    <div class="stage-frame reveal">
-      <video src="launch.mp4" poster="launch-poster.jpg" controls playsinline preload="metadata" aria-label="Vibex launch film, one minute"></video>
-    </div>
-  </div>
-</section>
-
-<section id="how" style="padding-top:40px">
-  <div class="grid-lines">
-    <div class="wrap" style="padding:0">
-      <div class="how-head"><span>How it works</span><a class="btn btn-light btn-sm" href="#install">Install Vibex</a></div>
-      <div class="how-title reveal"><h2>From install to your first agent loop in a minute</h2><p>Three steps, and Claude can see, run and test your app.</p></div>
-      <div class="steps">
-        <div class="step reveal">
-          <div class="step-vis">
-            <div class="cmd"><span class="p">❯</span> curl -fsSL vibex.cc/install.sh | sh<br><span class="dim">Downloading Vibex…</span><br><span class="ok">✓</span> Installed to /Applications<br><span class="ok">✓</span> Linked the vibex command</div>
-          </div>
-          <small>01</small>
-          <h3>Install with one line</h3>
-          <p>It verifies the release, installs Vibex and links the <code>vibex</code> command. Updates arrive on their own.</p>
-        </div>
-        <div class="step reveal" style="--d:80ms">
-          <div class="step-vis">
-            <div class="list-card">
-              <div class="li"><span class="ico c-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2.5"/><path d="M8 11V7a4 4 0 0 1 7.5-2"/><circle cx="12" cy="16" r="1.2" fill="currentColor"/></svg></span>Full Disk Access<span class="r ok">Ready</span></div>
-              <div class="li"><span class="ico logo"><img src="logos/xcode.svg" alt=""></span>Xcode &amp; iOS runtime<span class="r ok">Ready</span></div>
-              <div class="li"><span class="ico logo"><img src="logos/claude.svg" alt=""></span>Claude Code<span class="r"><span class="btn-xs">Install</span></span></div>
-            </div>
-          </div>
-          <small>02</small>
-          <h3>Grant once</h3>
-          <p>Setup lists every permission and tool with its live status, and one button to fix each.</p>
-        </div>
-        <div class="step reveal" style="--d:160ms">
-          <div class="step-vis">
-            <div class="cmd"><span class="p">~/habits ❯</span> vibex .<br><span class="p">~/habits ❯</span> claude<br>&gt; run the app and check onboarding<br><span class="ok">●</span> vibex_run · <span class="ok">●</span> simulator_describe</div>
-          </div>
-          <small>03</small>
-          <h3>Open a folder and ask</h3>
-          <p>Each project gets its own window. Claude Code finds Vibex's tools on its own and drives that window.</p>
+    <vx-art w="820" h="500" role="img" aria-label="Tiles for tools like Figma, Linear and Sentry fly into a marketplace grid and get installed.">
+      <div class="art">
+        <div class="market-search"><span>⌕</span><span class="keep" data-at="0-.14" data-type>Search skills and MCP servers</span></div>
+        <div class="tiles">
+          <div class="m-tile" data-at=".08-.3" style="--dx:-260px;--dy:-120px"><img src="/logos/figma.svg" alt="">Figma<small>Designs in context</small></div>
+          <div class="m-tile" data-at=".12-.34" style="--dx:-90px;--dy:-210px;--r:-8deg"><img src="/logos/linear.svg" alt="">Linear<small>Issues, fast</small><span class="installed" data-at=".56-.6">✓</span></div>
+          <div class="m-tile" data-at=".14-.36" style="--dx:100px;--dy:-220px"><img src="/logos/sentry.svg" alt="">Sentry<small>Errors and releases</small></div>
+          <div class="m-tile" data-at=".1-.32" style="--dx:280px;--dy:-120px;--r:-9deg"><img src="/logos/supabase.svg" alt="">Supabase<small>Tables, migrations</small><span class="installed" data-at=".62-.66">✓</span></div>
+          <div class="m-tile" data-at=".16-.38" style="--dx:-280px;--dy:140px;--r:-7deg"><img src="/logos/playwright.svg" alt="">Playwright<small>Drive a browser</small></div>
+          <div class="m-tile" data-at=".2-.42" style="--dx:-100px;--dy:240px"><img src="/logos/github.svg" alt="">GitHub<small>PRs and Actions</small><span class="installed" data-at=".5-.54">✓</span></div>
+          <div class="m-tile" data-at=".22-.44" style="--dx:110px;--dy:230px;--r:-6deg"><img src="/logos/notion.svg" alt="">Notion<small>Docs and databases</small></div>
+          <div class="m-tile" data-at=".18-.4" style="--dx:270px;--dy:140px"><img src="/logos/postgresql.svg" alt="">Postgres<small>Query your data</small></div>
         </div>
       </div>
-    </div>
-  </div>
-</section>
+    </vx-art>
+  </div></div>
+</vx-scene>
 
-<section>
-  <div class="wrap">
-    <div class="sec-head reveal"><h2>The old way vs. <span class="pill" style="background:var(--accent-soft);border-color:transparent;box-shadow:none">the Vibex way</span></h2></div>
-    <div class="versus reveal">
-      <div>
-        <h3>The old way: you are the agent's eyes.</h3>
-        <p class="sub">It writes blind. You run, look, screenshot and explain.</p>
-        <div class="old-list">
-          <div><i><svg class="ui"><use href="#i-x"/></svg></i><span>Simulator covering your terminal<small>while Claude waits for you to look</small></span></div>
-          <div><i><svg class="ui"><use href="#i-x"/></svg></i><span>Guessing what the agent changed<small>until git diff scrolls past</small></span></div>
-          <div><i><svg class="ui"><use href="#i-x"/></svg></i><span>Copying console errors by hand<small>from Safari into the chat</small></span></div>
-          <div><i><svg class="ui"><use href="#i-x"/></svg></i><span>Hitting usage limits by surprise<small>halfway through a big refactor</small></span></div>
-        </div>
-      </div>
-      <div>
-        <h3>The Vibex way: it sees for itself.</h3>
-        <p class="sub">It runs, sees and fixes its own work. You review.</p>
-        <div class="greet"><img src="icon.png" alt=""><span>What should we build today?</span></div>
-        <div class="chips">
-          <span class="c-green"><svg class="ui"><use href="#i-play"/></svg>Runs your app</span><span class="c-blue"><svg class="ui"><use href="#i-tap"/></svg>Taps the simulator</span>
-          <span class="c-violet"><svg class="ui"><use href="#i-compare"/></svg>Shows every diff</span><span class="c-orange"><svg class="ui"><use href="#i-gauge"/></svg>Tracks usage</span>
-          <span class="c-pink"><svg class="ui"><use href="#i-stars"/></svg>Installs skills</span><span class="c-red"><svg class="ui"><use href="#i-console"/></svg>Reads the console</span>
-        </div>
-      </div>
-      <div class="vs-arrow" aria-hidden="true"><svg class="ui"><use href="#i-arrow-right"/></svg></div>
+<!-- Usage: the gauge sweeps, numbers count, bars grow, the nudge lands. -->
+<vx-scene length="280" style="--tint:var(--yellow)">
+  <div class="pin"><div class="scene-grid">
+    <div class="copy">
+      <p class="eyebrow">AI Usage</p>
+      <h2>Never hit a limit by surprise.</h2>
+      <ol class="beats">
+        <li data-beat="0-.4">Session and plan limits at a glance, for Claude Code and Codex.</li>
+        <li data-beat=".4-.72">A nudge before you run out, not after, so a big refactor doesn’t die halfway.</li>
+        <li data-beat=".72-1">It’s all read from logs on your Mac. <strong>Nothing leaves your machine.</strong></li>
+      </ol>
+      <span class="scene-progress"><i></i></span>
     </div>
-    <div class="stats-row">
-      <div class="stat reveal"><span class="stat-ico"><svg class="ui"><use href="#i-arrow-down-left"/></svg></span><b>$0</b><span>Forever. No plans, no trial.</span></div>
-      <div class="stat reveal" style="--d:80ms"><span class="stat-ico"><svg class="ui"><use href="#i-arrow-down-left"/></svg></span><b>50+</b><span>MCP tools that let Claude see and act</span></div>
-      <div class="stat reveal" style="--d:160ms"><span class="stat-ico"><svg class="ui"><use href="#i-arrow-down-left"/></svg></span><b>MIT</b><span>Fork it, ship it, change it</span></div>
-    </div>
-  </div>
-</section>
+    <vx-art w="820" h="500" role="img" aria-label="A usage gauge fills to 82 percent, daily bars grow and a notification warns before the limit.">
+      <div class="art">
+        <div class="gauge">
+          <svg viewBox="0 0 330 330" aria-hidden="true"><circle cx="165" cy="165" r="140" stroke="rgba(255,255,255,.07)"/><circle class="fill" data-at="0-.46" style="opacity:1" cx="165" cy="165" r="140" stroke="#f5d76e" pathLength="1"/></svg>
+          <div class="gauge-text"><div><b class="keep" data-at="0-.46" data-count="82" data-suffix="%">82%</b>of this session</div></div>
+        </div>
+        <div class="bars"><span>Last 14 days</span>
+          <i class="bar-y keep" data-at=".06-.2" style="--h:32%"></i><i class="bar-y keep" data-at=".08-.22" style="--h:48%"></i><i class="bar-y keep" data-at=".1-.24" style="--h:26%"></i><i class="bar-y keep" data-at=".12-.26" style="--h:58%"></i><i class="bar-y keep" data-at=".14-.28" style="--h:40%"></i><i class="bar-y keep" data-at=".16-.3" style="--h:66%"></i><i class="bar-y keep" data-at=".18-.32" style="--h:36%"></i><i class="bar-y keep" data-at=".2-.34" style="--h:52%"></i><i class="bar-y keep" data-at=".22-.36" style="--h:74%"></i><i class="bar-y keep" data-at=".24-.38" style="--h:44%"></i><i class="bar-y keep" data-at=".26-.4" style="--h:60%"></i><i class="bar-y keep" data-at=".28-.42" style="--h:82%"></i><i class="bar-y keep" data-at=".3-.44" style="--h:54%"></i><i class="bar-y keep" data-at=".32-.46" style="--h:78%"></i>
+        </div>
+        <div class="nudge rise" data-at=".5-.6"><b>You’ve used 82% of this session</b>Wrap up, or plan the big change for after the reset.</div>
+      </div>
+    </vx-art>
+  </div></div>
+</vx-scene>
 
-<section id="features" class="feature">
-  <div class="wrap">
-    <div class="sec-head reveal">
-      <span class="tag" style="background:var(--green)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="7" y="3" width="10" height="18" rx="2.5"/></svg>Simulator</span>
-      <h2 class="boxed" style="border-color:color-mix(in srgb,var(--green) 40%,transparent);background:var(--green-soft)">The iPhone, inside your window<span class="corner" style="border-color:color-mix(in srgb,var(--green) 40%,transparent);color:var(--green)">Live</span></h2>
-    </div>
-    <div class="bento">
-      <div class="cell c7 reveal">
-        <div class="vis">
-          <div class="say"><img src="icon.png" alt=""><div class="bubble">Booting iPhone 17 Pro slim. 11 of 38 daemons off.</div></div>
-          <div class="steps-log" style="margin-left:32px"><div>simulator_boot<span>2.1s</span></div><div>simulator_install_app<span>0.8s</span></div><div>simulator_launch_app<span>0.4s</span></div><div>simulator_describe<span>0.2s</span></div></div>
-          <div class="approve" style="margin-left:32px"><div class="row2"><b>button "Continue"</b><small>ref r3 · 180,503</small></div></div>
-        </div>
-        <div class="lbl"><span class="mini-tag"><i class="c-green"><svg class="ui"><use href="#i-tap"/></svg></i>Accessibility tree</span><h3>Claude taps by label, not by guessing pixels</h3></div>
-      </div>
-      <div class="cell c5 grey reveal" style="--d:80ms">
-        <div class="vis"><div class="list-card">
-          <div class="li"><span class="ico c-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="7" y="3" width="10" height="18" rx="2.5"/></svg></span>iPhone 17 Pro<span class="r ok">Booted</span></div>
-          <div class="li"><span class="ico c-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="3" width="14" height="18" rx="2.5"/></svg></span>iPad Air<span class="r">Shut down</span></div>
-          <div class="li"><span class="ico c-violet"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 7c-6 0-10 4-10 10 4 0 9-2 10-10Z"/></svg></span>Slim boots<span class="r">simslim</span></div>
-        </div></div>
-        <div class="lbl"><span class="mini-tag"><i class="c-violet"><svg class="ui"><use href="#i-zap"/></svg></i>Embedded</span><h3>No Simulator.app window to lose</h3></div>
-      </div>
-    </div>
-  </div>
-</section>
+<!-- Everything else -->
+<section class="section"><div class="wrap">
+  <vx-reveal class="center"><h2>The small things add up too.</h2></vx-reveal>
+  <vx-reveal class="bento">
+    <div class="tile"><h3>One button to run</h3><p>iOS, macOS, Node, Swift, Rust or Go. Vibex works out how your project runs, and Claude can start it too.</p></div>
+    <div class="tile"><h3>Files, always current</h3><p>A file tree that updates as Claude adds and deletes things, with read-only code, Markdown and images.</p></div>
+    <div class="tile"><h3>Quick open</h3><p><code>⇧⌘P</code> finds any file or command, so you never go hunting through folders.</p></div>
+    <div class="tile"><h3>Use your favorite agent</h3><p>The terminal runs Codex, Gemini CLI or Aider. The tools are standard MCP, so any client can use them.</p></div>
+    <div class="tile"><h3>One window per project</h3><p>Each project keeps its own tabs, layout and Claude, right where you left them.</p></div>
+    <div class="tile"><h3>Native, and quick</h3><p>Swift and AppKit, not a browser in a box. It updates itself in the background.</p></div>
+  </vx-reveal>
+</div></section>
 
-<section class="feature">
-  <div class="wrap">
-    <div class="sec-head reveal">
-      <span class="tag" style="background:var(--orange)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="8" r="2"/><path d="M6 7v10M18 10c0 4-6 3-11.5 7"/></svg>Source Control</span>
-      <h2 class="boxed" style="border-color:color-mix(in srgb,var(--orange) 40%,transparent);background:var(--orange-soft)">Every change, before you commit<span class="corner" style="border-color:color-mix(in srgb,var(--orange) 40%,transparent);color:var(--orange)">+18 −2</span></h2>
-    </div>
-    <div class="bento">
-      <div class="cell c8 reveal">
-        <div class="vis"><div class="list-card code" style="font-size:12px">
-          <div class="row"><span class="n">15</span><span class="t"><span class="kw">var</span> body: <span class="kw">some</span> <span class="ty">View</span> {</span></div>
-          <div class="row del"><span class="n">16</span><span class="t">    <span class="ty">Text</span>(<span class="st">"Today"</span>)</span></div>
-          <div class="row add"><span class="n">16</span><span class="t">    <span class="ty">StreakBadge</span>(days: <mark>streak</mark>)</span></div>
-          <div class="row add"><span class="n">17</span><span class="t">        .transition(.scale(scale: <span class="nu">0.9</span>))</span></div>
-          <div class="row"><span class="n">18</span><span class="t">}</span></div>
-        </div></div>
-        <div class="lbl"><span class="mini-tag"><i class="c-orange"><svg class="ui"><use href="#i-compare"/></svg></i>Diffs</span><h3>Syntax-highlighted diffs, side by side</h3></div>
-      </div>
-      <div class="cell c4 grey reveal" style="--d:80ms">
-        <div class="vis" style="gap:8px">
-          <div class="approve" style="background:var(--green-soft);border-color:transparent"><div class="row2"><span><svg class="ui"><use href="#i-check"/></svg>Committed <b class="code">a1b2c3d</b></span><span class="btn-xs dark">Push</span></div></div>
-          <div class="approve"><div class="row2"><span>Discarded “Notes.md”</span><span class="btn-xs">Undo</span></div></div>
-        </div>
-        <div class="lbl"><span class="mini-tag"><i class="c-green"><svg class="ui"><use href="#i-undo"/></svg></i>Forgiving</span><h3>Commit, push, and undo a discard</h3></div>
-      </div>
-    </div>
-  </div>
-</section>
+<!-- Film -->
+<section class="section" style="padding-top:0"><div class="wrap">
+  <vx-reveal class="center"><h2>Watch Claude see what it builds.</h2></vx-reveal>
+  <vx-reveal><vx-film src="/launch.mp4" poster="/launch-poster.jpg" class="film-frame">
+    <img src="/launch-poster.jpg" alt="The Vibex launch film" loading="lazy">
+    <button type="button" aria-label="Play the film"><span>▶ Play the film</span></button>
+  </vx-film></vx-reveal>
+</div></section>
 
-<section class="feature">
-  <div class="wrap">
-    <div class="sec-head reveal">
-      <span class="tag" style="background:var(--accent)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 19V11M10 19V6M15 19v-5M20 19V9"/></svg>AI Usage</span>
-      <h2 class="boxed" style="border-color:color-mix(in srgb,var(--accent) 40%,transparent);background:var(--accent-soft)">Know what your agents cost<span class="corner" style="border-color:color-mix(in srgb,var(--accent) 40%,transparent);color:var(--accent)">Local only</span></h2>
+<!-- Open source: zero price, and honest about the limits -->
+<section class="section" id="open-source"><div class="wrap">
+  <vx-reveal class="free">
+    <div>
+      <div class="figure">$0</div>
+      <h2 style="margin-top:14px">Free. Not free for now.</h2>
+      <p class="lede" style="margin-top:14px">Vibex is MIT licensed and built in the open. Read every line, fork it, ship your own. You only pay for the AI tools you already use.</p>
+      <ul class="ticks"><li>No account, no subscription, no trial</li><li>No tracking. Usage numbers stay on your Mac</li><li>Use it at work, change it, keep it</li></ul>
     </div>
-    <div class="bento">
-      <div class="cell c6 reveal">
-        <div class="vis" style="gap:10px">
-          <div class="acard" style="padding:14px 16px"><h6><img class="brand-ico" src="logos/claude.svg" alt="">Claude <span class="plan">Max 20×</span></h6><div class="row2"><small class="muted">Session · resets in 1h 3m</small><span class="big">$36.43</span></div><div class="meter"><b style="--v:61%"></b></div></div>
-          <div class="acard" style="padding:14px 16px"><h6>Spending <span style="margin-left:auto;color:var(--muted);font-weight:400">30 days</span></h6><div class="row2"><span class="big">$2,017 <small class="muted" style="font-size:13px;font-weight:400">API value</small></span><span class="chip m">10×</span></div></div>
-        </div>
-        <div class="lbl"><span class="mini-tag"><i class="c-orange"><svg class="ui"><use href="#i-gauge"/></svg></i>Limits</span><h3>Session and plan limits at a glance</h3></div>
-      </div>
-      <div class="cell c6 grey reveal" style="--d:80ms">
-        <div class="vis"><div class="acard" style="padding:14px 16px"><h6>Trend <span style="margin-left:auto;color:var(--muted);font-weight:400">Oct 8 · $25.97</span></h6><div class="bars" data-bars="30" style="height:110px"></div></div></div>
-        <div class="lbl"><span class="mini-tag"><i class="c-blue"><svg class="ui"><use href="#i-chart"/></svg></i>Trend</span><h3>Every day, model and project</h3></div>
-      </div>
-      <div class="cell c12 reveal" style="min-height:0;flex-direction:row;align-items:center;flex-wrap:wrap;gap:28px">
-        <div class="heat" data-heat></div>
-        <div style="flex:1;min-width:220px"><div class="big">$3,133 <small class="muted" style="font-size:14px;font-weight:400">13 weeks</small></div>
-          <p class="muted" style="margin-top:8px">Read straight from Claude Code's and Codex's own logs on your Mac. Nothing leaves your machine. Open it from the menu bar too.</p></div>
-      </div>
+    <div class="honest">
+      <h3>What it won’t do, so you don’t find out later</h3>
+      <ul>
+        <li>It’s Mac only, and needs macOS 26.</li>
+        <li>The simulator pane needs Xcode 26 with an iOS runtime.</li>
+        <li>Claude Code is set up for you, but it isn’t included. You bring your own plan.</li>
+        <li>Vibex isn’t notarized yet. The install command handles that; with the DMG, macOS asks you to allow it once.</li>
+      </ul>
     </div>
-  </div>
-</section>
+  </vx-reveal>
+</div></section>
 
-<section class="feature">
-  <div class="wrap">
-    <div class="sec-head reveal">
-      <span class="tag" style="background:var(--violet)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l1.8 5.6L19.5 10l-5.7 1.6L12 17l-1.8-5.4L4.5 10l5.7-1.4z"/></svg>Skills</span>
-      <h2 class="boxed" style="border-color:color-mix(in srgb,var(--violet) 40%,transparent);background:var(--violet-soft)">A skills marketplace, built in<span class="corner" style="border-color:color-mix(in srgb,var(--violet) 40%,transparent);color:var(--violet)">skills.sh</span></h2>
-    </div>
-    <div class="bento">
-      <div class="cell c7 reveal">
-        <div class="vis"><div class="list-card">
-          <div class="li"><span class="ico c-violet"><svg class="ui"><use href="#i-stars"/></svg></span><span><b style="font-weight:500">write-swift</b><br><small class="muted">emilkowalski/skills · 112K installs</small></span><span class="r"><span class="btn-xs dark">Install</span></span></div>
-          <div class="li"><span class="ico c-blue"><svg class="ui"><use href="#i-stars"/></svg></span><span><b style="font-weight:500">swiftui-pro</b><br><small class="muted">twostraws/swiftui-agent-skill · 34K</small></span><span class="r"><span class="btn-xs">Global<svg class="ui"><use href="#i-chevron-down"/></svg></span></span></div>
-          <div class="li"><span class="ico c-green"><svg class="ui"><use href="#i-stars"/></svg></span><span><b style="font-weight:500">find-skills</b><br><small class="muted">vercel-labs/skills · 4M installs</small></span><span class="r ok">Installed</span></div>
-        </div></div>
-        <div class="lbl"><span class="mini-tag"><i class="c-violet"><svg class="ui"><use href="#i-search"/></svg></i>Browse</span><h3>Search thousands of skills and install in one click</h3></div>
-      </div>
-      <div class="cell c5 grey reveal" style="--d:80ms">
-        <div class="vis"><div class="list-card">
-          <div class="li" style="color:var(--muted);font-size:12px;font-weight:600">GLOBAL</div>
-          <div class="li">ux-laws<span class="r">~/.claude/skills</span></div>
-          <div class="li" style="color:var(--muted);font-size:12px;font-weight:600">THIS PROJECT</div>
-          <div class="li">apple-design<span class="r">.claude/skills</span></div>
-        </div></div>
-        <div class="lbl"><span class="mini-tag"><i class="c-blue"><svg class="ui"><use href="#i-home"/></svg></i>Scopes</span><h3>Global and per-project, side by side</h3></div>
-      </div>
-    </div>
-  </div>
-</section>
+<!-- FAQ -->
+<section class="section" id="faq" style="padding-top:0"><div class="wrap">
+  <vx-reveal class="center"><h2>Questions</h2></vx-reveal>
+  <vx-reveal class="faq">
+    <details><summary>Is it really free?</summary><p>Yes. It’s open source under the MIT license, with no paid tier, no trial and no account. You only pay for the AI tools you already use, like Claude Code.</p></details>
+    <details><summary>Do I have to change how I work?</summary><p>No. It’s the real Claude Code, so your CLAUDE.md, skills, hooks and MCP servers carry over. Your repo stays as it is, and a full terminal is one tab away.</p></details>
+    <details><summary>What do I need?</summary><p>A Mac on macOS 26, Apple silicon or Intel, plus Claude Code. Xcode 26 with an iOS simulator runtime is only needed for the simulator. Setup checks each one and installs what it can.</p></details>
+    <details><summary>Does it work with Codex or other agents?</summary><p>Yes. The terminal runs any agent CLI, like Codex, Gemini CLI or Aider. Vibex’s tools are a standard MCP server on your Mac, so any MCP client can use them, and AI Usage reads Codex’s limits too. The native chat and Claude Code setup are for Claude.</p></details>
+    <details><summary>What can it run?</summary><p>iOS and macOS apps from Xcode or XcodeGen, web apps with a dev server (npm, pnpm, yarn or bun, so Vite, Next.js and the rest), and Swift, Rust and Go command-line projects. Anything else runs in the terminal like it always has.</p></details>
+    <details><summary>Is my code or usage sent anywhere?</summary><p>Vibex sends your code nowhere itself. Claude Code talks to Anthropic as it always does. Usage numbers come from local logs. Vibex contacts GitHub for updates, skills.sh and the MCP registry when you browse them, and a server’s own site to fetch its icon.</p></details>
+    <details><summary>Why does macOS warn me when I first open it?</summary><p>Vibex isn’t notarized yet. The install command handles it. With the DMG, open System Settings → Privacy &amp; Security and choose Open Anyway.</p></details>
+    <details><summary>How does it update?</summary><p>Vibex checks GitHub releases in the background and offers the new version in its own window, or you can run the install command again.</p></details>
+  </vx-reveal>
+</div></section>
 
-<section class="feature">
-  <div class="wrap">
-    <div class="sec-head reveal">
-      <span class="tag" style="background:var(--pink)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3.5 3.5 3.5 14.5 0 18M12 3c-3.5 3.5-3.5 14.5 0 18"/></svg>Browser &amp; Run</span>
-      <h2 class="boxed" style="border-color:color-mix(in srgb,var(--pink) 40%,transparent);background:var(--pink-soft)">Your preview, next to your code<span class="corner" style="border-color:color-mix(in srgb,var(--pink) 40%,transparent);color:var(--pink)">vibex_run</span></h2>
-    </div>
-    <div class="bento">
-      <div class="cell c6 grey reveal">
-        <div class="vis"><div class="cmd">[vite] ready on <span class="p">localhost:5173</span><br><span class="ok">✓</span> GET /api/habits 200 · 18 ms<br><span class="dim">browser_console → 0 errors</span></div></div>
-        <div class="lbl"><span class="mini-tag"><i class="c-pink"><svg class="ui"><use href="#i-console"/></svg></i>Console &amp; network</span><h3>Claude reads the console so you don't paste it</h3></div>
-      </div>
-      <div class="cell c6 reveal" style="--d:80ms">
-        <div class="vis"><div class="list-card">
-          <div class="li"><span class="ico logo"><img class="mono" src="logos/apple.svg" alt=""></span>iOS<span class="r">build, install, launch</span></div>
-          <div class="li"><span class="ico logo"><img src="logos/vitejs.svg" alt=""></span>Web<span class="r">dev server + preview tab</span></div>
-          <div class="li"><span class="ico logo"><img src="logos/swift.svg" alt=""></span>Swift, Cargo, Go<span class="r">just run</span></div>
-        </div></div>
-        <div class="lbl"><span class="mini-tag"><i class="c-green"><svg class="ui"><use href="#i-play"/></svg></i>vibex_run</span><h3>Claude runs any project for you</h3></div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="feature v2" id="new">
-  <div class="wrap">
-    <div class="sec-head reveal">
-      <span class="tag" style="background:var(--accent)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z"/></svg>New in 2.0</span>
-      <h2 class="boxed" style="border-color:color-mix(in srgb,var(--accent) 40%,transparent);background:var(--accent-soft)">From one agent to a team<span class="corner" style="border-color:color-mix(in srgb,var(--accent) 40%,transparent);color:var(--accent)">2.0</span></h2>
-    </div>
-    <div class="bento">
-      <div class="cell c6 reveal">
-        <div class="vis">
-          <div class="row"><span class="dot" style="background:var(--orange)"></span>habits · terminal 2<span class="r">Bash: npm test</span></div>
-          <div class="row"><span class="dot" style="background:var(--orange)"></span>api · terminal 1<span class="r">Claude has a question</span></div>
-          <div class="row"><span class="dot" style="background:var(--green)"></span>site · terminal 1<span class="r">working</span></div>
-        </div>
-        <div class="lbl"><span class="mini-tag"><i class="c-orange"><svg class="ui"><use href="#i-bell"/></svg></i>Approval inbox</span><h3>See which Claude is waiting for you</h3><p class="muted">Every session that needs a yes shows on its tab, in the menu bar and as a notification. One click jumps to it.</p></div>
-      </div>
-      <div class="cell c6 reveal" style="--d:80ms">
-        <div class="vis">
-          <div class="row" style="display:block"><div style="display:flex;align-items:baseline;gap:8px"><span class="big">$42</span><span class="muted">of $50 this session</span><span class="chip" style="margin-left:auto;background:var(--orange-soft);color:var(--orange)">84%</span></div><div class="meter"><i></i></div></div>
-        </div>
-        <div class="lbl"><span class="mini-tag"><i class="c-green"><svg class="ui"><use href="#i-dollar"/></svg></i>Budget alerts</span><h3>A limit per session, a nudge at 80%</h3><p class="muted">Pick a limit or let Vibex learn it from your past sessions. You get a notification before you blow through it.</p></div>
-      </div>
-      <div class="cell c4 reveal">
-        <div class="vis">
-          <div class="row"><span class="code">vibex/onboarding</span><span class="r" style="color:var(--green)">+182 −20</span></div>
-          <div class="row"><span class="code">vibex/onboarding-2</span><span class="r" style="color:var(--green)">+96 −4</span></div>
-        </div>
-        <div class="lbl"><span class="mini-tag"><i class="c-violet"><svg class="ui"><use href="#i-branch"/></svg></i>Parallel agents</span><h3>Two attempts, two branches</h3><p class="muted">Each agent gets its own git worktree. Review the diff, merge the winner, throw the rest away.</p></div>
-      </div>
-      <div class="cell c4 reveal" style="--d:80ms">
-        <div class="vis"><div class="split"><span style="left:10px">Before</span><span style="right:10px">After</span></div></div>
-        <div class="lbl"><span class="mini-tag"><i class="c-pink"><svg class="ui"><use href="#i-columns"/></svg></i>Before &amp; after</span><h3>Drag to see what changed</h3><p class="muted">Every run saves a screenshot. Compare any two, then copy them side by side into your PR.</p></div>
-      </div>
-      <div class="cell c4 reveal" style="--d:160ms">
-        <div class="vis"><div class="phones"><i style="width:44px;height:90px"></i><i style="width:52px;height:110px"></i><i style="width:96px;height:128px"></i></div></div>
-        <div class="lbl"><span class="mini-tag"><i class="c-blue"><svg class="ui"><use href="#i-grid"/></svg></i>Devices</span><h3>Every screen size at once</h3><p class="muted">A small phone, a big phone and an iPad, live and touchable. Run on All installs the app everywhere.</p></div>
-      </div>
-      <div class="cell c12 reveal">
-        <div class="vis mcp-vis">
-          <div class="lbl"><span class="mini-tag"><i class="c-green"><svg class="ui"><use href="#i-puzzle"/></svg></i>MCP servers</span><h3>Give Claude new tools in one click</h3><p class="muted">See the MCP servers Claude Code uses, then browse featured ones or search the official MCP registry. Vibex asks for any API key and installs it for every project or just this one.</p></div>
-          <div class="logo-grid">
-            <span><img src="logos/playwright.svg" alt="Playwright"></span><span><img class="mono" src="logos/github.svg" alt="GitHub"></span><span><img src="logos/figma.svg" alt="Figma"></span><span><img src="logos/supabase.svg" alt="Supabase"></span>
-            <span><img class="mono" src="logos/linear.svg" alt="Linear"></span><span><img class="mono" src="logos/sentry.svg" alt="Sentry"></span><span><img src="logos/notion.svg" alt="Notion"></span><span><img src="logos/chrome.svg" alt="Chrome DevTools"></span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section id="open-source">
-  <div class="wrap">
-    <div class="oss reveal">
-      <div class="glow" aria-hidden="true"></div>
-      <h2>Free. Open source. Yours.</h2>
-      <p>Vibex is MIT licensed and built in the open. No account, no subscription, no tracking. Read every line, fork it, make it yours.</p>
-      <div class="hero-cta" style="position:relative">
-        <a class="btn btn-light" href="https://github.com/uwussimo/vibex">Star on GitHub</a>
-        <a class="btn btn-ghost" href="https://github.com/uwussimo/vibex/blob/main/LICENSE" style="border:1px solid rgba(255,255,255,.2)">Read the license</a>
-      </div>
-      <div class="oss-grid">
-        <div><b>MIT licensed</b><p>Use it at work, change it, ship your own build. No strings.</p></div>
-        <div><b>Nothing phones home</b><p>Usage stats are read from logs on your Mac. Updates come straight from GitHub releases.</p></div>
-        <div><b>Built with Claude Code</b><p>Native Swift 6 and AppKit. Issues and pull requests welcome.</p></div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section id="faq">
-  <div class="wrap">
-    <div class="sec-head reveal"><h2>Questions</h2></div>
-    <div class="faq reveal">
-      <details open><summary>Is Vibex really free?</summary><div class="a">Yes. It's open source under the MIT license, with no paid tier, no trial and no account. You only pay for the AI tools you already use, like Claude Code.</div></details>
-      <details><summary>What do I need?</summary><div class="a">A Mac on macOS 26 (Apple silicon or Intel), Xcode 26 with an iOS simulator runtime for the simulator pane, and Claude Code. Setup checks each one and installs what it can.</div></details>
-      <details><summary>Does it work with Codex or other agents?</summary><div class="a">Yes. The terminal runs any agent CLI, like Codex, Gemini CLI or Aider. Vibex's tools are a standard MCP server on your Mac, so any MCP client can use them, and AI Usage reads Codex's limits too. Claude Code is set up for you.</div></details>
-      <details><summary>What kinds of projects can it run?</summary><div class="a">iOS and macOS apps from Xcode or XcodeGen, web apps with a dev server (npm, pnpm, yarn or bun, so Vite, Next.js, React and the rest), and Swift, Rust and Go command-line projects. Anything else runs in the terminal like it always has.</div></details>
-      <details><summary>Is my code or usage sent anywhere?</summary><div class="a">No. Usage numbers come from Claude Code's and Codex's local logs. Vibex only talks to GitHub to check for updates and to skills.sh when you browse skills.</div></details>
-      <details><summary>Why does macOS warn me when I first open it?</summary><div class="a">Vibex isn't notarized yet. The install script handles it; with the DMG, open <b>System Settings → Privacy &amp; Security</b> and click <b>Open Anyway</b>.</div></details>
-      <details><summary>How do updates work?</summary><div class="a">Vibex checks GitHub releases in the background and installs the new version when you quit, or right away with <b>Restart to Update</b>.</div></details>
-    </div>
-  </div>
-</section>
-
-<section id="install">
-  <div class="wrap">
-    <div class="cta-box reveal">
-      <h2>Give your agent eyes.</h2>
-      <p class="muted" style="margin-top:12px;font-size:17px">Paste this into Terminal. About a minute, free, no account.</p>
-      <div class="copy-row">
-        <div class="cmd"><span class="p">❯</span> <span data-cmd>curl -fsSL https://vibex.cc/install.sh | sh</span></div>
-        <button class="btn btn-dark btn-sm" data-copy>Copy</button>
-      </div>
-      <div class="hero-cta">
-        <a class="btn btn-light" href="https://github.com/uwussimo/vibex/releases/latest">Download the DMG</a>
-        <a class="btn btn-light" href="https://github.com/uwussimo/vibex#build-and-run">Build from source</a>
-      </div>
-      <div class="cta-peek" aria-hidden="true">
-        <div class="cmd"><span class="p">~/app ❯</span> vibex .<br><span class="p">~/app ❯</span> claude<br>&gt; make it feel great<br><span class="ok">●</span> <span>vibex_run</span><br><span class="dim">  Launched on iPhone 17 Pro</span></div>
-        <div class="agents">
-          <div class="acard"><h6><img class="brand-ico" src="logos/claude.svg" alt="">Claude <span class="plan">Max 20×</span></h6><div class="meter"><b style="--v:42%"></b></div></div>
-          <div class="acard"><div class="bars" data-bars="18" style="height:48px"></div></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
+<!-- The end: small steps, one action -->
+<section class="section final center" id="install"><div class="wrap">
+  <vx-reveal>
+    <img class="final-icon" src="/icon.png" alt="" width="96" height="96" loading="lazy">
+    <h1 style="font-size:clamp(40px,6vw,76px)">Give your agent eyes.</h1>
+    <p class="lede">Paste one line. A minute from now, Claude can see what it builds.</p>
+    <div class="cta-row"><vx-install></vx-install></div>
+    <p class="assure">Free forever. No account. Or <a href="https://github.com/uwussimo/vibex/releases/latest" style="text-decoration:underline">download the DMG</a>.</p>
+  </vx-reveal>
+  <vx-reveal><ol class="steps">
+    <li><b>1. Paste the command</b>It checks the release, installs Vibex and links the <code>vibex</code> command.</li>
+    <li><b>2. Open a project</b>Setup shows what’s missing, with one button to fix each thing.</li>
+    <li><b>3. Ask Claude for something</b>Then watch it run, look and fix, instead of asking you to.</li>
+  </ol></vx-reveal>
+</div></section>
 </main>
-
-<footer>
-  <div class="wrap">
-    <div class="foot">
-      <div>
-        <a class="brand" href="#"><img src="icon.png" alt="">vibex</a>
-        <p>The agentic workstation for Mac, where your coding agent sees what it builds. Free and MIT licensed. Made by <a href="https://github.com/uwussimo" style="color:#d6d6dd">Yusuf Abdurakhimov</a>.</p>
-      </div>
-      <div><h4>Product</h4><ul><li><a href="#features">Features</a></li><li><a href="#how">How it works</a></li><li><a href="#install">Install</a></li><li><a href="https://github.com/uwussimo/vibex/releases">Releases</a></li></ul></div>
-      <div><h4>Open source</h4><ul><li><a href="https://github.com/uwussimo/vibex">GitHub</a></li><li><a href="https://github.com/uwussimo/vibex/blob/main/LICENSE">MIT License</a></li><li><a href="https://github.com/uwussimo/vibex/issues">Issues</a></li><li><a href="https://github.com/uwussimo/vibex/pulls">Pull requests</a></li></ul></div>
-      <div><h4>Works with</h4><ul><li><a href="https://claude.com/claude-code">Claude Code</a></li><li><a href="https://skills.sh">skills.sh</a></li><li><a href="https://github.com/mobai-app/simslim">simslim</a></li><li><a href="https://github.com/yonaskolb/XcodeGen">XcodeGen</a></li></ul></div>
-    </div>
-    <div class="foot-bottom"><span>© 2026 Vibex contributors · MIT License</span><span>Not affiliated with Apple or Anthropic.</span></div>
-  </div>
-</footer>
-
-<script>
-(() => {
-  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  // Bars and heatmap: deterministic shapes so the page looks the same on every load.
-  const wave = (i) => 0.18 + 0.82 * Math.abs(Math.sin(i * 1.7) * Math.cos(i * 0.37));
-  document.querySelectorAll('[data-bars]').forEach((el) => {
-    const n = +el.dataset.bars;
-    for (let i = 0; i < n; i++) {
-      const bar = document.createElement('i');
-      bar.style.setProperty('--v', `${Math.round(wave(i) * 100)}%`);
-      bar.style.setProperty('--i', i);
-      if (i === n - 1) bar.className = 'today';
-      el.append(bar);
-    }
-  });
-  document.querySelectorAll('[data-heat]').forEach((el) => {
-    for (let i = 0; i < 91; i++) {
-      const cell = document.createElement('i');
-      const v = wave(i * 3.1);
-      cell.className = i > 88 ? '' : v > 0.8 ? 'l3' : v > 0.55 ? 'l2' : v > 0.35 ? 'l1' : '';
-      if (i === 88) cell.classList.add('today');
-      el.append(cell);
-    }
-  });
-
-  // Hero: scale the fixed-size mockup to its column, then cycle through the scenes.
-  const stage = document.querySelector('[data-stage]');
-  const app = stage.querySelector('.app');
-  const fit = () => {
-    const s = Math.min(1, stage.clientWidth / app.offsetWidth);
-    app.style.transform = `scale(${s})`;
-    stage.style.height = `${app.offsetHeight * s}px`;
-  };
-  new ResizeObserver(fit).observe(stage);
-  fit();
-
-  const order = ['build', 'devices', 'review', 'agents', 'usage'];
-  const sceneMs = 6500;
-  app.style.setProperty('--scene-ms', `${sceneMs}ms`);
-  let index = 0, timer = null, visible = true, hovering = false;
-  const show = (name) => {
-    app.dataset.scene = name;
-    index = order.indexOf(name);
-    app.querySelectorAll('.etab').forEach((t) => {
-      const on = t.dataset.scene === name;
-      t.classList.toggle('on', on);
-      t.setAttribute('aria-selected', on);
-      // Restart the progress bar on the newly selected tab.
-      const bar = t.querySelector('.bar');
-      bar.style.animation = 'none'; void bar.offsetWidth; bar.style.animation = '';
-    });
-    app.querySelectorAll('[data-for]').forEach((p) => p.classList.toggle('on', p.dataset.for === name));
-    app.querySelectorAll('[data-act]').forEach((a) => a.classList.toggle('on', a.dataset.act.split(' ').includes(name)));
-  };
-  const schedule = () => {
-    clearTimeout(timer);
-    const run = !reduce && visible && !hovering && !document.hidden;
-    app.classList.toggle('cycling', run);
-    if (run) timer = setTimeout(() => { show(order[(index + 1) % order.length]); schedule(); }, sceneMs);
-  };
-  app.querySelectorAll('.etab').forEach((t) => t.addEventListener('click', () => { show(t.dataset.scene); schedule(); }));
-  app.addEventListener('pointerenter', () => { hovering = true; schedule(); });
-  app.addEventListener('pointerleave', () => { hovering = false; schedule(); });
-  document.addEventListener('visibilitychange', schedule);
-  new IntersectionObserver(([e]) => { visible = e.isIntersecting; schedule(); }, { threshold: 0.25 }).observe(stage);
-  show('build');
-  schedule();
-
-  // Reveal cards as they scroll in.
-  const reveals = document.querySelectorAll('.reveal');
-  const io = new IntersectionObserver((entries) => {
-    for (const e of entries) if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
-  }, { rootMargin: '0px 0px -8% 0px' });
-  reveals.forEach((el) => io.observe(el));
-
-  // The pinned statement sharpens word by word as you scroll through it.
-  const statement = document.querySelector('[data-statement]');
-  const text = statement.querySelector('p');
-  const words = [];
-  const split = (node) => {
-    for (const child of [...node.childNodes]) {
-      if (child.nodeType === Node.TEXT_NODE) {
-        const frag = document.createDocumentFragment();
-        for (const part of child.textContent.split(/(\s+)/)) {
-          if (!part) continue;
-          if (/^\s+$/.test(part)) { frag.append(part); continue; }
-          const w = document.createElement('span');
-          w.className = 'w'; w.textContent = part;
-          frag.append(w); words.push(w);
-        }
-        child.replaceWith(frag);
-      } else if (child.classList?.contains('brand-pill')) {
-        child.classList.add('w'); words.push(child);
-      }
-    }
-  };
-  split(text);
-  let ticking = false;
-  const update = () => {
-    ticking = false;
-    const rect = statement.getBoundingClientRect();
-    const range = statement.offsetHeight - innerHeight;
-    const p = Math.min(1, Math.max(0, -rect.top / (range * 0.85)));
-    const n = words.length;
-    words.forEach((w, i) => {
-      const a = Math.min(1, Math.max(0, p * (n + 2) - i));
-      w.style.opacity = 0.14 + 0.86 * a;
-      w.style.filter = reduce ? '' : `blur(${(1 - a) * 8}px)`;
-    });
-  };
-  addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
-  update();
-
-  // The hero's install command copies itself.
-  document.querySelectorAll('[data-copy-cmd]').forEach((button) => button.addEventListener('click', async () => {
-    try {
-      await navigator.clipboard.writeText(button.dataset.copyCmd);
-      button.classList.add('copied');
-      setTimeout(() => button.classList.remove('copied'), 1600);
-    } catch {
-      getSelection().selectAllChildren(button.querySelector('code'));
-    }
-  }));
-
-  // Copy the install command.
-  document.querySelectorAll('[data-copy]').forEach((button) => button.addEventListener('click', async () => {
-    try {
-      await navigator.clipboard.writeText(document.querySelector('[data-cmd]').textContent);
-      button.textContent = 'Copied';
-      setTimeout(() => { button.textContent = 'Copy'; }, 1600);
-    } catch { button.textContent = 'Select it'; }
-  }));
-
-  // Star count from GitHub; the button reads fine without it.
-  fetch('https://api.github.com/repos/uwussimo/vibex').then((r) => r.ok ? r.json() : null).then((repo) => {
-    const el = document.querySelector('[data-stars]');
-    if (repo && el) { el.textContent = repo.stargazers_count.toLocaleString(); el.hidden = false; }
-  }).catch(() => {});
-})();
-</script>
+<vx-footer></vx-footer>
 </body>
 </html>
