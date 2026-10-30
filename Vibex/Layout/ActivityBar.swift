@@ -95,6 +95,13 @@ struct ActivityBar: View {
                 isSelected: sidebar.isShowing(.mcp),
                 action: actions.toggleMCP
             )
+            ActivityButton(
+                icon: .hardDrive,
+                label: "Servers",
+                help: "Servers: your saved SSH connections (⌃⇧S)",
+                isSelected: sidebar.isShowing(.servers),
+                action: actions.toggleServers
+            )
             Spacer()
             ActivityButton(
                 icon: .barChart,
@@ -147,6 +154,7 @@ struct ActivityBarActions {
     var toggleSkills: () -> Void
     var toggleExplorer: () -> Void
     var toggleMCP: () -> Void
+    var toggleServers: () -> Void
     var showAgents: () -> Void
     var showSetup: () -> Void
 }

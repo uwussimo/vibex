@@ -79,3 +79,4 @@ users Users01
 rocket Rocket01
 target Target04
 flag Flag05
+hardDrive HardDrive

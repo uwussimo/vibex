@@ -6,7 +6,7 @@ import SwiftUI
 /// clicking it again hides the sidebar.
 @Observable
 final class SidebarModel {
-    enum Panel: String { case explorer, sourceControl, skills, mcp }
+    enum Panel: String { case explorer, sourceControl, skills, mcp, servers }
 
     var panel: Panel = .sourceControl
     var isVisible = false
@@ -26,6 +26,7 @@ struct SidebarView: View {
     let browseSkills: () -> Void
     let browseMCP: () -> Void
     let openClaude: () -> Void
+    let connectServer: (ServerProfile) -> Void
 
     var body: some View {
         Group {
@@ -38,6 +39,8 @@ struct SidebarView: View {
                 SkillsSidebar(model: skills, browse: browseSkills, view: viewSkill)
             case .mcp:
                 MCPServersSidebar(model: mcpServers, browse: browseMCP, openClaude: openClaude)
+            case .servers:
+                ServersSidebar(model: .shared, connect: connectServer)
             }
         }
         // Solid, like the landing page, instead of the translucent sidebar material.

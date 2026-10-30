@@ -67,7 +67,8 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
             window: { [weak window] in window },
             browseSkills: { [weak workspace] in workspace?.editor.openSkillsMarketplace() },
             browseMCP: { [weak self] in self?.browseMCPServers(nil) },
-            openClaude: { [weak self] in self?.openClaudeCode() }
+            openClaude: { [weak self] in self?.openClaudeCode() },
+            connectServer: { [weak self] server in self?.connect(to: server) }
         )))
         sidebarItem.minimumThickness = 240
         sidebarItem.maximumThickness = 440
@@ -135,6 +136,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
                 toggleSkills: { [weak self] in self?.toggleSkills(nil) },
                 toggleExplorer: { [weak self] in self?.toggleExplorer(nil) },
                 toggleMCP: { [weak self] in self?.toggleMCPServers(nil) },
+                toggleServers: { [weak self] in self?.toggleServers(nil) },
                 showAgents: { [weak self] in self?.showAgents(nil) },
                 showSetup: { NSApp.sendAction(#selector(AppDelegate.showSetup(_:)), to: nil, from: nil) }
             )
@@ -332,6 +334,20 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
         workspace.editor.openDocument(.file(url), keep: keep)
     }
     @objc func toggleMCPServers(_ sender: Any?) { toggleSidebar(.mcp) }
+    @objc func toggleServers(_ sender: Any?) { toggleSidebar(.servers) }
+
+    /// Touch ID first when a secret is saved, then a terminal tab in this window running `ssh`.
+    func connect(to server: ServerProfile) {
+        let model = ServersModel.shared
+        Task { [weak self] in
+            await model.connect(server) { profile in
+                guard let self else { return nil }
+                let (id, session) = self.workspace.terminalPane.openSSHTab(profile: profile, credentials: model.credentials, isGrantAuthorized: model.isGrantAuthorized)
+                self.workspace.showTerminalTab(id)
+                return session
+            }
+        }
+    }
 
     /// A terminal tab running Claude Code in the project, e.g. to sign in to MCP servers with /mcp.
     func showClaude() {

@@ -19,11 +19,11 @@ final class TerminalPaneViewController: NSViewController {
         var onExit: ((Int32?) -> Void)?
         var fixedTitle: String?
 
-        init(id: UUID = UUID(), terminal: LocalProcessTerminalView, title: String, directory: String?) {
+        init(id: UUID = UUID(), terminal: LocalProcessTerminalView, content: NSView? = nil, title: String, directory: String?) {
             self.id = id
             self.terminal = terminal
             chat = nil
-            content = terminal
+            self.content = content ?? terminal
             self.title = title
             self.directory = directory
         }
@@ -147,6 +147,8 @@ final class TerminalPaneViewController: NSViewController {
         guard let window = view.window, event.window === window, let terminal = selectedTab?.terminal else { return }
         let point = container.convert(event.locationInWindow, from: nil)
         guard container.bounds.contains(point), window.firstResponder !== terminal else { return }
+        // A password prompt's field keeps the keyboard: a stray keystroke must not reach the shell.
+        if let hit = container.hitTest(point), !hit.isDescendant(of: terminal) { return }
         window.makeFirstResponder(terminal)
     }
 
@@ -306,8 +308,34 @@ final class TerminalPaneViewController: NSViewController {
         AttentionCenter.shared.handle(AttentionCenter.Event(chatRequest: request), tabID: tab, windowID: session.windowID)
     }
 
+    /// A tab running `ssh` for a saved server. The caller starts the session, since it holds the
+    /// credential. It stays open when the connection ends, so its last output can be read.
+    func openSSHTab(
+        profile: SSHConnectionProfile,
+        credentials: CredentialAccess,
+        isGrantAuthorized: @escaping @MainActor (CredentialGrant) -> Bool
+    ) -> (id: UUID, session: SSHSessionController) {
+        hasRestored = true
+        if session.state.terminalClosed == true { session.update { $0.terminalClosed = false } }
+        let terminal = makeTerminalView(ManagedTerminalView(frame: container.bounds))
+        let ssh = SSHSessionController(profile: profile, terminalView: terminal, isGrantAuthorized: isGrantAuthorized)
+        let content = SSHTerminalContainer(session: ssh, credentials: credentials)
+        content.autoresizingMask = [.width, .height]
+        let tab = Tab(terminal: terminal, content: content, title: profile.name, directory: nil)
+        tab.fixedTitle = profile.name
+        // Reads as "connection closed" in the terminal, like a Run tab reads as finished.
+        tab.onExit = { _ in }
+        tabs.append(tab)
+        syncTabBar()
+        select(tab.id)
+        return (tab.id, ssh)
+    }
+
     private func makeTerminalView() -> LocalProcessTerminalView {
-        let terminal = LocalProcessTerminalView(frame: container.bounds)
+        makeTerminalView(LocalProcessTerminalView(frame: container.bounds))
+    }
+
+    private func makeTerminalView<Terminal: LocalProcessTerminalView>(_ terminal: Terminal) -> Terminal {
         terminal.autoresizingMask = [.width, .height]
         TerminalTheme.apply(to: terminal)
         terminal.processDelegate = self
