@@ -9,6 +9,8 @@ struct TabStripItem: Identifiable, Equatable {
     var needsAttention = false
     /// A native Claude chat rather than a terminal.
     var isClaude = false
+    /// A terminal connected to a saved server rather than this Mac.
+    var isServer = false
 }
 
 struct TabStripActions {
@@ -108,7 +110,7 @@ private struct TabStripCell: View {
             } else if item.isClaude {
                 BrandLogoView(.claude, size: 13)
             } else {
-                IconView(.terminal, size: 13).foregroundStyle(textColor)
+                IconView(item.isServer ? .hardDrive : .terminal, size: 13).foregroundStyle(textColor)
             }
             Text(item.title)
                 .font(.vibex(size: 12, weight: isSelected ? .medium : .regular))

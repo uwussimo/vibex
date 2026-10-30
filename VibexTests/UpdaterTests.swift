@@ -33,6 +33,16 @@ import Testing
         #expect(TerminalPaneViewController.displayTitle("~") == "~")
         #expect(TerminalPaneViewController.displayTitle("npm run dev") == "npm run dev")
     }
+
+    @Test(arguments: ["", "  ", "root@box: ~/infra", "root@box:~", "me@box", "~/infra", "/root/infra"])
+    func `a shell's routine title leaves a server's tab on its name`(title: String) {
+        #expect(TerminalPaneViewController.serverTabTitle(title, server: "OQIM Prod") == "OQIM Prod")
+    }
+
+    @Test func `what runs on the server can retitle its tab`() {
+        #expect(TerminalPaneViewController.serverTabTitle("✳ Cleaning infra docs", server: "OQIM Prod") == "✳ Cleaning infra docs")
+        #expect(TerminalPaneViewController.serverTabTitle("email me@box: soon", server: "OQIM Prod") == "email me@box: soon")
+    }
 }
 
 @Suite struct IconTests {

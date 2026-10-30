@@ -18,6 +18,8 @@ final class TerminalPaneViewController: NSViewController {
         /// Set for tabs that run one command (Run): they stay open on exit and report the code.
         var onExit: ((Int32?) -> Void)?
         var fixedTitle: String?
+        /// A server's tab: what's running there can retitle it, while `fixedTitle` stays its name.
+        var followsRemoteTitle = false
 
         init(id: UUID = UUID(), terminal: LocalProcessTerminalView, content: NSView? = nil, title: String, directory: String?) {
             self.id = id
@@ -323,6 +325,7 @@ final class TerminalPaneViewController: NSViewController {
         content.autoresizingMask = [.width, .height]
         let tab = Tab(terminal: terminal, content: content, title: profile.name, directory: nil)
         tab.fixedTitle = profile.name
+        tab.followsRemoteTitle = true
         // Reads as "connection closed" in the terminal, like a Run tab reads as finished.
         tab.onExit = { _ in }
         tabs.append(tab)
@@ -386,7 +389,7 @@ final class TerminalPaneViewController: NSViewController {
 
     private func syncTabBar() {
         let attention = AttentionCenter.shared
-        tabBarModel.tabs = tabs.map { TabStripItem(id: $0.id, title: $0.title, isLoading: false, needsAttention: attention.isWaiting(tab: $0.id) || $0.chat?.needsAttention == true, isClaude: $0.chat != nil) }
+        tabBarModel.tabs = tabs.map { TabStripItem(id: $0.id, title: $0.title, isLoading: false, needsAttention: attention.isWaiting(tab: $0.id) || $0.chat?.needsAttention == true, isClaude: $0.chat != nil, isServer: $0.followsRemoteTitle) }
         attention.forget(tabs: Set(tabs.map(\.id)), inWindow: session.windowID)
         tabBarModel.selectedID = selectedID
         emptyHost?.isHidden = !tabs.isEmpty
@@ -401,6 +404,14 @@ final class TerminalPaneViewController: NSViewController {
         let folder = last == "~" || last == "/" ? last : (last as NSString).lastPathComponent
         words.removeLast()
         return words.isEmpty ? folder : words.joined(separator: " ") + " · " + folder
+    }
+
+    /// What a server's tab shows for a title sent from the server. Claude's title is the point; the
+    /// routine ones a shell sets at each prompt ("root@box: ~/infra") say less than the server's name.
+    nonisolated static func serverTabTitle(_ title: String, server: String) -> String {
+        let title = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        let isShellPrompt = title.wholeMatch(of: /[^\s@]+@[^\s:]+(:.*)?/) != nil || title.hasPrefix("~") || title.hasPrefix("/")
+        return title.isEmpty || isShellPrompt ? server : title
     }
 
     private static func title(forDirectory directory: String?) -> String {
@@ -559,7 +570,14 @@ extension TerminalPaneViewController: LocalProcessTerminalViewDelegate {
     func sizeChanged(source: LocalProcessTerminalView, newCols: Int, newRows: Int) {}
 
     func setTerminalTitle(source: LocalProcessTerminalView, title: String) {
-        guard let tab = tabs.first(where: { $0.terminal === source }), tab.fixedTitle == nil else { return }
+        guard let tab = tabs.first(where: { $0.terminal === source }) else { return }
+        if tab.followsRemoteTitle, let server = tab.fixedTitle {
+            guard !tab.hasExited else { return }
+            tab.title = Self.serverTabTitle(title, server: server)
+            syncTabBar()
+            return
+        }
+        guard tab.fixedTitle == nil else { return }
         tab.title = title.isEmpty ? Self.title(forDirectory: tab.directory) : Self.displayTitle(title)
         syncTabBar()
     }
