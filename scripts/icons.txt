@@ -8,6 +8,7 @@ merge GitMerge
 commit GitCommit
 pullRequest GitPullRequest
 sparkles Stars02
+skills GraduationHat01
 agents Speedometer03
 settings Settings01
 plus Plus

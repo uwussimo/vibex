@@ -377,10 +377,10 @@ final class EditorAreaViewController: NSViewController {
             ))
         }
         if agentsHost != nil {
-            items.append(EditorTabsModel.Item(tab: .agents, title: "AI Usage", icon: .agents))
+            items.append(EditorTabsModel.Item(tab: .agents, title: "AI Usage", icon: .barChart))
         }
         if skillsHost != nil {
-            items.append(EditorTabsModel.Item(tab: .skills, title: "Skills", icon: .sparkles))
+            items.append(EditorTabsModel.Item(tab: .skills, title: "Skills", icon: .skills))
         }
         if compareHost != nil {
             items.append(EditorTabsModel.Item(tab: .compare, title: "Compare", icon: .compare))
@@ -389,7 +389,7 @@ final class EditorAreaViewController: NSViewController {
             items.append(EditorTabsModel.Item(tab: .devices, title: "Devices", icon: .grid))
         }
         if mcpHost != nil {
-            items.append(EditorTabsModel.Item(tab: .mcp, title: "MCP Servers", icon: .puzzle))
+            items.append(EditorTabsModel.Item(tab: .mcp, title: "MCP Servers", icon: .server))
         }
         for id in fileOrder {
             guard let document = fileDocuments[id] else { continue }
@@ -471,6 +471,9 @@ struct EditorTabStrip: View {
                                 close: { close(item.tab) }
                             )
                             .id(item.tab)
+                            .contextMenu {
+                                TabCloseCommands(id: item.tab, all: model.items.map(\.tab), close: close)
+                            }
                             .transition(.opacity.combined(with: .scale(scale: 0.96, anchor: .leading)))
                         }
                     }
@@ -480,6 +483,9 @@ struct EditorTabStrip: View {
                     guard let tab else { return }
                     withAnimation(.spring(response: 0.3, dampingFraction: 1)) { proxy.scrollTo(tab) }
                 }
+            }
+            if model.items.count > tabListThreshold {
+                TabListMenu(tabs: model.items.map { ($0.tab, $0.title, $0.tab == model.selected) }, select: select)
             }
             Button(action: newTab) {
                 IconView(.plus, size: 15)

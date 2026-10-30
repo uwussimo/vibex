@@ -317,6 +317,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
         guard let window, let contentView = window.contentView else { return }
         responderBeforePalette = window.firstResponder
         let items = CommandCatalog.items(for: self)
+        explorer.refreshFileIndex()
         let model = PaletteModel(items: items) { [weak self] query in
             guard let self else { return [] }
             return CommandCatalog.dynamicItems(for: query, window: self)

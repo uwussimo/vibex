@@ -24,7 +24,10 @@ final class PaletteModel {
     var rows: [Row] {
         let dynamic = dynamicItems(query).map { Row(item: $0, positions: []) }
         let ranked = FuzzyMatch.rank(base, query: query) { $0.title }.map { Row(item: $0.item, positions: $0.result.positions) }
-        return Array((dynamic + ranked).prefix(60))
+        // The best commands stay on top; files come right after them, ahead of weaker command matches.
+        let files = dynamic.filter { $0.id.hasPrefix("file-") }
+        let others = dynamic.filter { !$0.id.hasPrefix("file-") }
+        return Array((others + ranked.prefix(3) + files + ranked.dropFirst(3)).prefix(60))
     }
 
     func move(_ delta: Int) {

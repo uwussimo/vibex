@@ -47,6 +47,14 @@ enum CommandCatalog {
                 window.workspace.browserPane.openTab(url: url)
             })
         }
+        // Quick open: the best few files in the project, by name or path.
+        let root = window.explorer.root
+        for match in FuzzyMatch.rank(window.explorer.fileIndex, query: text, text: { $0 }).prefix(6) {
+            let path = match.item
+            items.append(PaletteItem(id: "file-\(path)", title: (path as NSString).lastPathComponent, subtitle: (path as NSString).deletingLastPathComponent, icon: "doc.text") {
+                window.openFile(root.appendingPathComponent(path), keep: true)
+            })
+        }
         return items
     }
 

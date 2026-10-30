@@ -21,6 +21,8 @@ final class ExplorerModel {
     private(set) var ignored: Set<String> = []
     /// The file open in the editor, highlighted in the tree.
     var selection: URL?
+    /// Every tracked or unignored file, relative to the root, for quick open in the palette.
+    private(set) var fileIndex: [String] = []
     private var watcher: FileWatcher?
 
     /// Never worth showing.
@@ -126,6 +128,19 @@ final class ExplorerModel {
             if a.isDirectory != b.isDirectory { return a.isDirectory }
             return a.name.localizedStandardCompare(b.name) == .orderedAscending
         }
+    }
+
+    func refreshFileIndex() {
+        let root = root
+        Task {
+            fileIndex = await Self.projectFiles(root)
+        }
+    }
+
+    @concurrent private static func projectFiles(_ root: URL) async -> [String] {
+        guard let data = try? Shell.run("/usr/bin/git", ["-C", root.path, "ls-files", "--cached", "--others", "--exclude-standard"]),
+              let text = String(data: data, encoding: .utf8) else { return [] }
+        return Array(text.split(separator: "\n").prefix(20_000).map(String.init))
     }
 
     private func refreshIgnored() {

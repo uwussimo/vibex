@@ -101,7 +101,7 @@ struct AgentsSidebar: View {
 
     private func emptyState(title: String, detail: String, button: String?) -> some View {
         VStack(spacing: 10) {
-            IconView(.dataflow, size: 28).foregroundStyle(Theme.faint)
+            IconView(.users, size: 28).foregroundStyle(Theme.faint)
             Text(title).font(.vibex(size: 13.5, weight: .semibold)).foregroundStyle(Theme.text)
             Text(detail)
                 .font(.vibex(size: 12))

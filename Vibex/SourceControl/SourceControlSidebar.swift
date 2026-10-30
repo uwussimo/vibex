@@ -87,7 +87,7 @@ struct SourceControlSidebar: View {
     /// Shown while Source Control shows a parallel agent's worktree instead of the project.
     private func reviewingBar(_ agent: String) -> some View {
         HStack(spacing: 8) {
-            IconView(.dataflow, size: 14).foregroundStyle(Theme.accent)
+            IconView(.users, size: 14).foregroundStyle(Theme.accent)
             VStack(alignment: .leading, spacing: 0) {
                 Text("Reviewing \(agent)").font(.vibex(size: 12, weight: .semibold)).foregroundStyle(Theme.text)
                 Text("Its own branch and folder").font(.vibex(size: 11)).foregroundStyle(Theme.muted)

@@ -35,9 +35,15 @@ struct TabStrip: View {
                             select: { actions.select(item.id) },
                             close: { actions.close(item.id) }
                         )
+                        .contextMenu {
+                            TabCloseCommands(id: item.id, all: items.map(\.id), close: actions.close)
+                        }
                     }
                 }
                 .padding(.leading, 8)
+            }
+            if items.count > tabListThreshold {
+                TabListMenu(tabs: items.map { ($0.id, $0.title, $0.id == selectedID) }, select: actions.select)
             }
             Button(action: actions.new) {
                 IconView(.plus, size: 15)
@@ -89,6 +95,8 @@ private struct TabStripCell: View {
                     .transition(.scale.combined(with: .opacity))
             } else if item.isLoading {
                 ProgressView().controlSize(.mini)
+            } else {
+                IconView(.terminal, size: 13).foregroundStyle(textColor)
             }
             Text(item.title)
                 .font(.vibex(size: 12, weight: isSelected ? .medium : .regular))
@@ -118,5 +126,50 @@ private struct TabStripCell: View {
         .onHover { isHovering = $0 }
         .animation(.spring(response: 0.2, dampingFraction: 1), value: isHovering)
         .animation(.spring(response: 0.2, dampingFraction: 1), value: isSelected)
+    }
+}
+
+/// Past this many tabs some are likely scrolled out of sight.
+let tabListThreshold = 3
+
+/// Every tab in a list, for when they no longer fit in the strip.
+struct TabListMenu<ID: Hashable>: View {
+    let tabs: [(id: ID, title: String, isSelected: Bool)]
+    let select: (ID) -> Void
+
+    var body: some View {
+        Menu {
+            ForEach(tabs, id: \.id) { tab in
+                Toggle(tab.title, isOn: Binding(get: { tab.isSelected }, set: { _ in select(tab.id) }))
+            }
+        } label: {
+            IconView(.chevronDown, size: 13).foregroundStyle(Theme.muted)
+        }
+        .menuStyle(.button)
+        .buttonStyle(.plain)
+        .menuIndicator(.hidden)
+        .fixedSize()
+        .frame(width: 22, height: 26)
+        .help("All Tabs")
+    }
+}
+
+/// Close, Close Others and Close to the Right, as in every browser and editor.
+struct TabCloseCommands<ID: Hashable>: View {
+    let id: ID
+    let all: [ID]
+    let close: (ID) -> Void
+
+    var body: some View {
+        Button("Close Tab") { close(id) }
+        Button("Close Other Tabs") { for other in all where other != id { close(other) } }
+            .disabled(all.count < 2)
+        Button("Close Tabs to the Right") { for other in right { close(other) } }
+            .disabled(right.isEmpty)
+    }
+
+    private var right: [ID] {
+        guard let index = all.firstIndex(of: id) else { return [] }
+        return Array(all[(index + 1)...])
     }
 }

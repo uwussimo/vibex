@@ -14,12 +14,13 @@ struct ActivityBar: View {
     let windowID: String
     let actions: ActivityBarActions
 
-    static let width: CGFloat = 52
+    static let width: CGFloat = 56
 
     var body: some View {
         VStack(spacing: 2) {
             ActivityButton(
                 icon: .terminal,
+                label: "Terminal",
                 help: waiting > 0
                     ? "Claude is waiting in \(waiting) tab\(waiting == 1 ? "" : "s") (⌘1)"
                     : (panes.terminal ? "Terminal (⌘1)" : "Open Terminal (⌘1)"),
@@ -29,6 +30,7 @@ struct ActivityBar: View {
             )
             ActivityButton(
                 icon: .phone,
+                label: "Simulator",
                 help: simulator.bootedDevice.map { "Simulator: \($0.name) (⌘2)" } ?? "Simulator (⌘2)",
                 isSelected: isEditorShowing(.simulator),
                 dot: simulator.bootedDevice != nil ? Theme.green : nil,
@@ -36,6 +38,7 @@ struct ActivityBar: View {
             )
             ActivityButton(
                 icon: .globe,
+                label: "Browser",
                 help: "Browser (⌘3)",
                 isSelected: isBrowserShowing,
                 action: actions.showBrowser
@@ -43,44 +46,50 @@ struct ActivityBar: View {
             groupDivider
             ActivityButton(
                 icon: .files,
+                label: "Files",
                 help: "Explorer (⇧⌘E)",
                 isSelected: sidebar.isShowing(.explorer),
                 action: actions.toggleExplorer
             )
             ActivityButton(
                 icon: .branch,
+                label: "Git",
                 help: "Source Control (⌃⇧G)",
                 isSelected: sidebar.isShowing(.sourceControl),
                 badge: sourceControl.status.changeCount,
                 action: actions.toggleSourceControl
             )
             ActivityButton(
-                icon: .dataflow,
+                icon: .users,
+                label: "Agents",
                 help: "Agents: parallel Claude attempts in their own branches (⌃⇧N)",
                 isSelected: sidebar.isShowing(.agents),
                 badge: agents.agents.count,
                 action: actions.toggleAgents
             )
             ActivityButton(
-                icon: .sparkles,
+                icon: .skills,
+                label: "Skills",
                 help: "Skills (⌃⇧K)",
                 isSelected: sidebar.isShowing(.skills),
                 action: actions.toggleSkills
             )
             ActivityButton(
-                icon: .puzzle,
+                icon: .server,
+                label: "MCP",
                 help: "MCP Servers: tools for Claude Code (⌃⇧M)",
                 isSelected: sidebar.isShowing(.mcp),
                 action: actions.toggleMCP
             )
             Spacer()
             ActivityButton(
-                icon: .agents,
+                icon: .barChart,
+                label: "Usage",
                 help: "AI Usage: Claude and Codex (⌃⇧A)",
                 isSelected: isEditorShowing(.agents),
                 action: actions.showAgents
             )
-            ActivityButton(icon: .settings, help: "Setup & Permissions", isSelected: false, action: actions.showSetup)
+            ActivityButton(icon: .settings, label: "Setup", help: "Setup & Permissions", isSelected: false, action: actions.showSetup)
                 .padding(.bottom, 10)
         }
         .padding(.top, 8)
@@ -127,6 +136,8 @@ struct ActivityBarActions {
 
 struct ActivityButton: View {
     let icon: Icon
+    /// A word under the icon, so each section says what it is without a tooltip.
+    let label: String
     let help: String
     let isSelected: Bool
     var badge = 0
@@ -138,9 +149,15 @@ struct ActivityButton: View {
 
     var body: some View {
         Button(action: action) {
-            IconView(icon, size: 19)
+            VStack(spacing: 3) {
+                IconView(icon, size: 18)
+                Text(label)
+                    .font(.vibex(size: 9.5, weight: isSelected ? .medium : .regular))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+            }
                 .foregroundStyle(isSelected ? Theme.text : (isHovering ? Theme.text.opacity(0.85) : Theme.muted))
-                .frame(width: 40, height: 40)
+                .frame(width: 48, height: 44)
                 .background(
                     RoundedRectangle(cornerRadius: 10, style: .continuous)
                         .fill(Color.white.opacity(isSelected ? 0.08 : (isHovering ? 0.045 : 0)))
@@ -149,7 +166,7 @@ struct ActivityButton: View {
                 .contentShape(Rectangle())
         }
         .buttonStyle(PressFeedbackButtonStyle())
-        .frame(width: ActivityBar.width, height: 44)
+        .frame(width: ActivityBar.width, height: 46)
         .overlay(alignment: .leading) {
             // Grows from the middle when selected, like the indicator in VS Code and Xcode's navigator.
             Capsule()

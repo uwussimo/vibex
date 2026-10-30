@@ -110,7 +110,7 @@ final class MenuBarController: NSObject, NSMenuDelegate {
             menu.addItem(item)
         }
         menu.addItem(action("Open Folder…", #selector(openFolder(_:)), icon: .folderPlus))
-        let agents = action("AI Usage", #selector(showAgents(_:)), icon: .agents)
+        let agents = action("AI Usage", #selector(showAgents(_:)), icon: .barChart)
         agents.toolTip = "Claude and Codex usage, in the frontmost project window"
         agents.isEnabled = targetWindow != nil
         menu.addItem(agents)
@@ -133,7 +133,7 @@ final class MenuBarController: NSObject, NSMenuDelegate {
 
         menu.addItem(.separator())
         if let version = updater.availableVersion {
-            menu.addItem(action("Restart to Update to \(version)", #selector(AppDelegate.restartToUpdate(_:)), icon: .download, target: NSApp.delegate))
+            menu.addItem(action("Update to \(version)…", #selector(AppDelegate.showUpdate(_:)), icon: .download, target: NSApp.delegate))
         } else {
             menu.addItem(action("Check for Updates…", #selector(AppDelegate.checkForUpdates(_:)), icon: .download, target: NSApp.delegate))
         }

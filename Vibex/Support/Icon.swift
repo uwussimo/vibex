@@ -13,6 +13,7 @@ enum Icon: String, CaseIterable, Sendable {
     case commit
     case pullRequest
     case sparkles
+    case skills
     case agents
     case settings
     case plus

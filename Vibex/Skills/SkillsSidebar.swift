@@ -141,7 +141,7 @@ private struct SkillRow: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: 8) {
-            IconView(.sparkles, size: 14)
+            IconView(.skills, size: 14)
                 .foregroundStyle(AgentColors.claude)
                 .frame(width: 16)
                 .padding(.top, 2)
