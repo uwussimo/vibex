@@ -1,81 +1,97 @@
 ---
 name: vibex
-description: How to work inside Vibex, the Mac workstation this session may be running in (terminal, embedded iOS Simulator, side browser and Git in one window), and how to use its MCP tools (simulator_*, browser_*, terminal_*, vibex_*). Use it whenever TERM_PROGRAM is Vibex or VIBEX_PROJECT is set, whenever those MCP tools are available, and whenever the task involves running, viewing, tapping or testing an iOS app or a web page.
+description: How to work inside Vibex, the Mac workstation this session may be running in (Claude chat or terminal, embedded iOS Simulator, side browser and Git in one window), and how to use its MCP tools (simulator_*, browser_*, terminal_*, vibex_*) to build, run, test and verify fast. Use it whenever TERM_PROGRAM is Vibex or VIBEX_PROJECT is set, whenever those MCP tools are available, and whenever the task involves running, viewing, tapping or testing an iOS app or a web page.
 ---
 
 <!-- Installed by Vibex {{VERSION}}. Vibex keeps this file current and replaces it when it updates. -->
 
 # Working in Vibex
 
-Vibex is a native Mac app: one window per project folder, laid out like VS Code. The user sees, side by
-side, the terminal you run in, an embedded iOS Simulator, a tabbed WebKit browser, and the Source Control
-sidebar with every diff you make. Its built-in MCP server lets you see and drive all of it.
+Vibex is one native Mac window per project: you on the left (a Claude chat or a terminal), and on the
+right a live iOS Simulator and a browser, with every diff you make in Source Control. Its MCP server lets
+you run the app and see it yourself. **You don't have to ask the user to check anything, and you don't
+have to guess whether it works: run it and look.**
 
-You are inside Vibex when `TERM_PROGRAM=Vibex` or `VIBEX_PROJECT` is set. Your tool calls act on the
-window of the project whose terminal you run in, never another one. With several projects open,
-`vibex_projects` lists them and results start with `[project: name]`.
+You are inside Vibex when `TERM_PROGRAM=Vibex` or `VIBEX_PROJECT` is set. Calls act on your project's
+window. If the tools are missing, Vibex isn't running or registered: ask the user to open it, or to choose
+**Vibex › Re-register MCP with Claude Code**. If your client defers tools, load the ones a task needs in one
+batch rather than one at a time.
 
-If none of the tools below are available, Vibex isn't running or isn't registered with Claude Code: ask the
-user to open Vibex, or to choose **Vibex › Re-register MCP with Claude Code**.
+## The loop
 
-## Principles
+Every UI change goes round this loop, and you don't call it done until the last step passes:
 
-- **The user is watching.** Everything you do in the simulator and browser happens on screen. Work in
-  plain sight, and say what you're about to do before long actions.
-- **Prefer structure over pixels.** Use `simulator_describe` / `simulator_find` and `browser_snapshot` to
-  find elements, then act by ref. Take screenshots only when layout, images or color matter.
-- **Verify every action.** Taps, swipes, typing and clicks don't return what happened. Call
-  `simulator_describe`, `simulator_screenshot`, `browser_snapshot` or `browser_console` afterwards.
-- **Don't take over the user's tabs.** The browser may be playing video in a tab. Open your own with
-  `browser_new_tab` instead of navigating an existing one.
-- **Long-running processes go in a visible terminal tab.** Use `terminal_run` for dev servers and watchers
-  so the user can see and stop them, rather than backgrounding them in your own shell.
-- **Tell the user when something long finishes** with `vibex_notify`.
+1. **Change** the code.
+2. **Run**: `vibex_run`, then poll `vibex_run_status` until it's running or failed.
+3. **Reach** the screen: `simulator_find` or `browser_snapshot`, then tap or click by ref.
+4. **Look**: read the tree for behavior; take a screenshot only for layout, images and color.
+5. **Check the logs**: `simulator_logs` or `browser_console` plus `browser_requests {failedOnly: true}`.
+   A screen that looks right can still be throwing errors.
+6. **Finish**: say what you verified and how. Say plainly what you could not verify.
+
+When a build fails, `vibex_run_status` has the tail of the log: fix the first error, not the last.
+
+## Choosing the fast tool
+
+Wrong tool choice is the main cost here. A screenshot costs far more tokens and tells you less than a tree.
+
+| You want to | Use | Not |
+|---|---|---|
+| Build, install and launch | `vibex_run` | `xcodebuild` by hand, then install and launch |
+| Start a web project | `vibex_run` | backgrounding `npm run dev` in your shell |
+| Find one element | `simulator_find {label}` | `simulator_describe`, then reading it all |
+| Tap something labelled | `simulator_tap_element {label}` | a screenshot, then guessing coordinates |
+| Know what's on screen | `simulator_describe`, `browser_snapshot` | a screenshot |
+| Read a web page | `browser_text` | `browser_screenshot` |
+| Wait for a page | `browser_wait {text}` or `{selector}` | a fixed `{ms}` sleep |
+| See layout or color | a screenshot with `maxWidth` around 400 | the default size, repeatedly |
+| Compare screen sizes | `simulator_screenshot_all` | switching devices and taking several |
+| Show a visual change | `simulator_snapshot` "before" and "after" | describing it in words |
+
+Make calls in parallel when they don't depend on each other, such as logs alongside a tree. A tap and the
+look that follows it do depend on each other: tap, then look. Taps, typing and clicks don't return what
+happened.
 
 ## iOS apps
 
-1. `vibex_run` builds the project for the window's simulator, boots it if needed, installs and launches the
-   app. Check progress with `vibex_run_status` (phase, exit code, the tail of the build log). Stop with
-   `vibex_stop`. A `.vibex.json` in the project root overrides what Vibex detects.
-2. `simulator_describe` returns the frontmost app's accessibility tree with refs like `[ref=r12]` and frames
-   in points. `simulator_find` searches it by label or identifier.
-3. `simulator_tap_element` taps by ref or label. Use `simulator_tap` / `simulator_swipe` / `simulator_long_press`
-   with point coordinates only when there is no accessible element (`simulator_info` gives the screen size).
-4. Type with `simulator_type` after tapping a field; `simulator_press_key` for return, tab and arrows;
-   `simulator_button` for home and lock.
-5. Before a UI change, call `simulator_snapshot` with label "before"; after it, "after". The user compares
-   them in Vibex's Compare tab by dragging a divider across.
-6. Read the app's logs with `simulator_logs` (filter by bundle id). Deep links: `simulator_open_url`.
-7. To check a layout on several screen sizes, `simulator_screenshot_all` returns every simulator in the
-   Devices tab in one image.
-8. Manage apps with `simulator_install_app`, `simulator_launch_app`, `simulator_terminate_app`,
-   `simulator_list_apps`; devices with `simulator_list`, `simulator_boot`, `simulator_shutdown`.
-
-Add accessibility labels and identifiers to views you build; they make the app testable this way.
+- `vibex_run` builds for this window's simulator, boots it if needed, installs and launches. `vibex_stop`
+  stops it. A `.vibex.json` in the project root overrides what Vibex detects:
+  `{"run": {"kind": "ios", "scheme": "MyApp"}}`.
+- Refs like `[ref=r12]` come from `simulator_describe` and `simulator_find`, with frames in points.
+- `simulator_tap_element` takes a ref or a label. Use `simulator_tap`, `simulator_swipe` and
+  `simulator_long_press` with points only when nothing is accessible; `simulator_info` has the screen size.
+- `simulator_type` types into the focused field, so tap it first. It uses a US keyboard layout; `\n` is
+  Return. `simulator_press_key` for return, tab and arrows. `simulator_button` for home and lock.
+- `simulator_logs {bundleId, seconds}` after a crash or odd behavior. `simulator_open_url` for deep links,
+  which get you to a deep screen much faster than tapping there.
+- **Add accessibility identifiers to the views you build.** It's what makes the next check one call.
+- `simulator_list`, `simulator_boot`, `simulator_shutdown`, `simulator_list_apps`, `simulator_install_app`,
+  `simulator_launch_app`, `simulator_terminate_app` for the rest.
 
 ## Web pages
 
-1. Start the dev server with `vibex_run` (a `package.json` dev/start script opens a Preview tab once it
-   answers) or with `terminal_run` and then `browser_new_tab` on its URL.
-2. `browser_snapshot` returns the page as a compact tree with refs like `[ref=e12]`; refs change with each
-   snapshot. Then `browser_click`, `browser_type` (set `submit` to press Enter), `browser_press`,
-   `browser_scroll`.
-3. Check `browser_console` for errors and `browser_requests` for failed API calls after every change.
-   `browser_text` reads the visible text; `browser_wait` waits for a selector or text.
-4. `browser_screenshot` for visual checks; `browser_evaluate` runs JavaScript when nothing else fits.
-5. Tabs: `browser_tabs`, `browser_select_tab`, `browser_close_tab`, `browser_back`, `browser_forward`,
-   `browser_reload`, `browser_navigate` (only in tabs you opened).
+- `vibex_run` starts a `package.json` dev or start script and opens a Preview tab once it answers. Or use
+  `terminal_run` for the server, then `browser_new_tab` on its URL.
+- **Never navigate a tab you didn't open**; the user may be watching something in it. Use `browser_new_tab`,
+  and `browser_close_tab` when you're done.
+- `browser_snapshot` gives refs like `[ref=e12]`, then `browser_click`, `browser_type {submit: true}`,
+  `browser_press`, `browser_scroll`. Refs change with each snapshot, so take a new one after the page changes.
+- Pass `clear: true` to `browser_console` and `browser_requests` before reproducing a bug, so that what you
+  read next comes from your reproduction.
+- `browser_evaluate` runs JavaScript when nothing else fits. Prefer refs for anything the user would do.
 
 ## The window
 
-- `terminal_run` opens a terminal tab in the project and types a command the user can watch and stop;
-  `terminal_tabs` lists them.
-- `vibex_layout` switches between `build` (terminal wide, editor sized to the simulator), `watch` (browser
-  wide) and `balanced`.
-- `vibex_focus` brings a pane forward: `terminal`, `simulator`, `browser`, or `agents` (the AI Usage tab;
-  it also returns the current Claude session's API value and when it resets).
-- `vibex_notify` shows a toast in the window, and a system notification when Vibex is in the background.
-- `vibex_open_project` opens another folder in its own window.
+- `terminal_run` opens a terminal tab with a command the user can see and stop. Dev servers and watchers go
+  here, not in your own background shell. `terminal_tabs` lists them.
+- `vibex_layout`: `build` (you wide, editor sized to the simulator), `watch` (browser wide), `balanced`.
+- `vibex_focus` brings forward `terminal`, `simulator`, `browser` or `agents` (AI Usage, which also returns
+  this Claude session's API value and when it resets).
+- `vibex_notify` when something long finishes: a toast, or a system notification when Vibex is in the
+  background. `vibex_projects` and `vibex_open_project` for other project windows.
 
-Every change you make to files shows up in the user's Source Control sidebar as a diff, so keep changes
-focused and explain them; the user reviews and commits there.
+## Working with the user
+
+The user is watching the simulator and browser, so work in plain sight and say what you're about to do
+before long actions. Your file changes appear in Source Control as diffs, so keep them focused; the user
+reviews and commits there.
