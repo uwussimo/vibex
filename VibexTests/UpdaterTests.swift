@@ -24,13 +24,6 @@ import Testing
 }
 
 @Suite struct UpdatePromptTests {
-    @Test func `release notes become a short plain list`() {
-        let notes = "**New**\n- **AI Usage** dashboard (⌃⇧A)\n- `Skills` sidebar\n\n**Fixed**\n- Blank diffs\n- One\n- Two\n- Three"
-        let summary = Updater.summary(ofNotes: notes)
-        #expect(summary.hasPrefix("• AI Usage dashboard (⌃⇧A)\n• Skills sidebar\n• Blank diffs"))
-        #expect(summary.split(separator: "\n").count == 5)
-        #expect(Updater.summary(ofNotes: "No bullets here.").isEmpty)
-    }
 }
 
 @Suite struct TerminalTitleTests {

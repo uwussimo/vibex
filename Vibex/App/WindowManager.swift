@@ -14,6 +14,7 @@ final class WindowManager {
     private var welcome: WelcomeWindowController?
     private var isTerminating = false
     var mcp: MCPService?
+    var updater: Updater?
 
     var keyWindow: MainWindowController? {
         if let key = windows.first(where: { $0.window?.isKeyWindow == true }) { return key }
@@ -42,7 +43,7 @@ final class WindowManager {
         let controller = MainWindowController(session: ProjectSession(project: project))
         controller.onClose = { [weak self] closed in self?.windowClosed(closed) }
         controller.onBecomeKey = { [weak self] focused in self?.noteFocus(focused) }
-        if let mcp { controller.installTitlebarAccessory(MCPStatusView(service: mcp), width: 140) }
+        if let mcp, let updater { controller.installTitlebarAccessory(TitlebarStatusView(service: mcp, updater: updater), width: 300) }
         windows.append(controller)
         noteFocus(controller)
         ProjectStore.shared.noteOpened(project)

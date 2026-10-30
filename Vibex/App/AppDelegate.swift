@@ -5,6 +5,7 @@ import os
 final class AppDelegate: NSObject, NSApplicationDelegate {
     let mcp = MCPService()
     let updater = Updater()
+    private lazy var updateWindow = UpdateWindowController(updater: updater)
     private var windows: WindowManager { .shared }
     private var hasLaunched = false
     /// Folders macOS hands over before launch finishes (`vibex .` on a cold start); opened once MCP is up.
@@ -29,12 +30,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         mcp.choosePort()
         TerminalSession.extraEnvironment = mcp.environmentVariables()
         windows.mcp = mcp
+        windows.updater = updater
         mcp.registry.register(WorkspaceTools.make())
         mcp.registry.register(BrowserTools.make())
         mcp.registry.register(SimulatorTools.make())
         mcp.start()
         AgentUsageStore.shared.startBackground()
         menuBar = MenuBarController(mcp: mcp, updater: updater)
+        updater.showWindow = { [weak self] in self?.updateWindow.showWindow(nil) }
+        updater.announceUpdated = { [weak self] version in
+            self?.windows.keyWindow?.toast.show(title: "Updated to Vibex \(version)", message: "Click to see what's new.", seconds: 8) {
+                self?.updateWindow.showWindow(nil)
+            }
+        }
         updater.start()
         hasLaunched = true
         if pendingURLs.isEmpty {
@@ -87,7 +95,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         Task { await updater.check(userInitiated: true) }
     }
 
-    @objc func restartToUpdate(_ sender: Any?) { updater.restartToUpdate() }
+    @objc func showUpdate(_ sender: Any?) { updateWindow.showWindow(sender) }
 
     @objc func showSetup(_ sender: Any?) {
         let controller = setup ?? SetupWindowController()
@@ -172,12 +180,12 @@ extension AppDelegate: NSMenuDelegate {
 }
 
 extension AppDelegate: NSMenuItemValidation {
-    /// Restart to Update appears only once a newer release is waiting.
+    /// Update to… appears only once a newer release is waiting.
     func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
-        guard menuItem.action == #selector(restartToUpdate(_:)) else { return true }
+        guard menuItem.action == #selector(showUpdate(_:)) else { return true }
         let version = updater.availableVersion
         menuItem.isHidden = version == nil
-        menuItem.title = version.map { "Restart to Update to \($0)" } ?? "Restart to Update"
+        menuItem.title = version.map { "Update to \($0)…" } ?? "Update…"
         return version != nil
     }
 }

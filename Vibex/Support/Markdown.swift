@@ -300,6 +300,11 @@ struct MarkdownView: View {
             attributed[run.range].foregroundColor = Theme.pink
             attributed[run.range].backgroundColor = Theme.raised
         }
+        // The app's font doesn't pick up Markdown's bold or italic by itself.
+        for run in attributed.runs where run.inlinePresentationIntent?.contains(.stronglyEmphasized) == true {
+            attributed[run.range].font = .vibex(size: 14, weight: .semibold)
+            attributed[run.range].foregroundColor = Theme.text
+        }
         for run in attributed.runs where run.link != nil {
             attributed[run.range].foregroundColor = Theme.accent
         }

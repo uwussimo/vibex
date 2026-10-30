@@ -4,6 +4,18 @@ import Foundation
 enum Defaults {
     private static let store = UserDefaults.standard
 
+    /// The version that ran last, to notice the first launch after an update.
+    static var lastRunVersion: String? {
+        get { store.string(forKey: Key.lastRunVersion) }
+        set { store.set(newValue, forKey: Key.lastRunVersion) }
+    }
+
+    /// The update the user answered Later to; the window doesn't open for it again.
+    static var dismissedUpdate: String? {
+        get { store.string(forKey: Key.dismissedUpdate) }
+        set { store.set(newValue, forKey: Key.dismissedUpdate) }
+    }
+
     private enum Key {
         static let lastURL = "browser.lastURL"
         static let selectedDevice = "simulator.selectedUDID"
@@ -16,6 +28,8 @@ enum Defaults {
         static let mcpPort = "mcp.port"
         static let browserSelectedTab = "browser.selectedTab"
         static let setupVersion = "setup.version"
+        static let lastRunVersion = "update.lastRunVersion"
+        static let dismissedUpdate = "update.dismissedVersion"
         static let foldersRequested = "setup.foldersRequested"
         static let notificationsRequested = "setup.notificationsRequested"
         static let agentsPeriodDays = "agents.periodDays"
