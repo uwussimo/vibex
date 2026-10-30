@@ -66,19 +66,22 @@ final class BrowserPaneViewController: NSViewController, NSMenuItemValidation {
     override func viewDidLoad() {
         super.viewDidLoad()
         restoreTabs()
+        startSleepingIdleTabs()
     }
 
     // MARK: - Tabs
 
     @discardableResult
-    func openTab(url: URL?, select shouldSelect: Bool = true) -> BrowserTab {
+    func openTab(url: URL?, select shouldSelect: Bool = true, asleep: Bool = false) -> BrowserTab {
         if session.state.browserClosed == true { session.update { $0.browserClosed = false } }
-        let tab = BrowserTab()
-        tab.webView.navigationDelegate = self
-        tab.webView.uiDelegate = self
+        let tab = BrowserTab(asleepAt: asleep ? url : nil)
+        tab.navigationDelegate = self
+        tab.uiDelegate = self
         tabs.append(tab)
         observe(tab)
-        if let url { tab.load(url) } else { tab.loadStartPage() }
+        if !tab.isAsleep {
+            if let url { tab.load(url) } else { tab.loadStartPage() }
+        }
         if shouldSelect { select(tab.id) } else { syncStrip() }
         persistTabs()
         return tab
@@ -86,6 +89,7 @@ final class BrowserPaneViewController: NSViewController, NSMenuItemValidation {
 
     func select(_ id: UUID) {
         guard let tab = tabs.first(where: { $0.id == id }) else { return }
+        selectedTab?.markUsed()
         selectedID = id
         for subview in container.subviews where subview !== tab.webView {
             subview.removeFromSuperview()
@@ -104,7 +108,6 @@ final class BrowserPaneViewController: NSViewController, NSMenuItemValidation {
     func close(_ id: UUID) {
         guard let index = tabs.firstIndex(where: { $0.id == id }) else { return }
         let tab = tabs.remove(at: index)
-        tab.webView.removeFromSuperview()
         tab.tearDown()
         if tabs.isEmpty {
             // Closing the last tab closes the browser; the activity bar brings it back.
@@ -134,9 +137,27 @@ final class BrowserPaneViewController: NSViewController, NSMenuItemValidation {
         if urls.isEmpty {
             if session.state.browserClosed != true { openTab(url: nil) }
         } else {
-            for url in urls { openTab(url: url, select: false) }
-            let index = min(max(session.state.browserSelectedTab, 0), tabs.count - 1)
+            // Read first: opening a tab saves the list, and the selection with it.
+            let selected = session.state.browserSelectedTab
+            for url in urls { openTab(url: url, select: false, asleep: true) }
+            let index = min(max(selected, 0), tabs.count - 1)
             select(tabs[index].id)
+        }
+    }
+
+    /// Runs for as long as the pane exists. Whatever the selected tab is doing, it's in view.
+    private func startSleepingIdleTabs() {
+        Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(60))
+                self?.sleepIdleTabs()
+            }
+        }
+    }
+
+    func sleepIdleTabs(at now: Date = .now) {
+        for tab in tabs where tab.id != selectedID && tab.canSleep(at: now) {
+            tab.sleep()
         }
     }
 
@@ -177,6 +198,7 @@ final class BrowserPaneViewController: NSViewController, NSMenuItemValidation {
             _ = tab.canGoBack
             _ = tab.canGoForward
             _ = tab.isSecure
+            _ = tab.isAsleep
         } onChange: { [weak self, weak tab] in
             Task { @MainActor in self?.tabDidChange(tab) }
         }

@@ -400,7 +400,7 @@ final class EditorAreaViewController: NSViewController {
 
     private func rebuildItems() {
         var items = browserPane.tabs.map { tab in
-            EditorTabsModel.Item(tab: .browser(tab.id), title: tab.title, icon: .globe, isLoading: tab.isLoading)
+            EditorTabsModel.Item(tab: .browser(tab.id), title: tab.title, icon: tab.isAsleep ? .moon : .globe, isLoading: tab.isLoading)
         }
         if isSimulatorOpen {
             let model = simulatorPane.model

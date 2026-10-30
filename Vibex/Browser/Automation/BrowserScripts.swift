@@ -22,6 +22,22 @@ enum BrowserScripts {
           try { original.apply(console, args); } catch (e) {}
         };
       }
+      // Media events don't bubble, so these listen on the way down. Both are for BrowserTab's sleep.
+      let mediaReported = 0;
+      const reportMedia = (event) => {
+        const media = event.target;
+        if (!(media instanceof HTMLMediaElement) || media.paused || Date.now() - mediaReported < 20000) { return; }
+        mediaReported = Date.now();
+        post('vibexMedia', {});
+      };
+      document.addEventListener('playing', reportMedia, true);
+      document.addEventListener('timeupdate', reportMedia, true);
+      let inputReported = false;
+      document.addEventListener('input', () => {
+        if (inputReported) { return; }
+        inputReported = true;
+        post('vibexInput', {});
+      }, true);
       window.addEventListener('error', (event) => {
         post('vibexConsole', { level: 'error', text: `${event.message} (${event.filename}:${event.lineno})`, ts: Date.now() });
       });

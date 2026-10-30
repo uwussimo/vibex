@@ -113,3 +113,99 @@ import WebKit
         #expect(try address("https://acme.com/caf%C3%A9") == "acme.com/café")
     }
 }
+
+@MainActor @Suite(.serialized) struct BrowserSleepTests {
+    private let later = Date.now.addingTimeInterval(BrowserTab.idleLimit + 60)
+    private func page(_ title: String, _ body: String = "<p>hi</p>") -> URL {
+        URL(string: "data:text/html,<title>\(title)</title>\(body)".addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!)!
+    }
+
+    private func pane(tabs: [String] = [], selected: Int = 0) throws -> (BrowserPaneViewController, NSWindow, URL) {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("vibex-sleep-\(UUID().uuidString)")
+        let folder = root.appendingPathComponent("app")
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        let store = ProjectStore(directory: root.appendingPathComponent("state"))
+        let project = Project(url: folder)
+        var state = ProjectState()
+        state.browserTabURLs = tabs
+        state.browserSelectedTab = selected
+        store.save(state, for: project)
+        let pane = BrowserPaneViewController(session: ProjectSession(project: project, store: store))
+        let window = NSWindow(contentRect: NSRect(x: -6000, y: 0, width: 800, height: 600), styleMask: [.titled], backing: .buffered, defer: false)
+        window.isReleasedWhenClosed = false
+        window.contentViewController = pane
+        window.orderFront(nil)
+        return (pane, window, root)
+    }
+
+    private func until(_ done: () -> Bool) async throws {
+        for _ in 0..<50 where !done() { try await Task.sleep(for: .milliseconds(100)) }
+    }
+
+    @Test func `an idle tab sleeps and comes back where it was`() async throws {
+        let (pane, window, root) = try pane()
+        defer { window.close(); try? FileManager.default.removeItem(at: root) }
+        let front = try #require(pane.selectedTab)
+        let back = pane.openTab(url: page("First"), select: false)
+        try await until { back.title == "First" }
+        back.load(page("Second"))
+        try await until { back.title == "Second" && back.canGoBack }
+
+        pane.sleepIdleTabs(at: .now)
+        #expect(!back.isAsleep)
+        pane.sleepIdleTabs(at: later)
+        #expect(back.isAsleep)
+        #expect(!front.isAsleep)
+        // Asleep, it still says what it is.
+        #expect(back.title == "Second")
+        #expect(back.url == page("Second"))
+
+        pane.select(back.id)
+        #expect(!back.isAsleep)
+        try await until { !back.isWaking && back.canGoBack }
+        #expect(back.title == "Second")
+        #expect(back.url == page("Second"))
+        #expect(back.canGoBack)
+        back.webView.goBack()
+        try await until { back.title == "First" }
+        #expect(back.title == "First")
+        // The tab it left behind was just in use, so it gets its full idle time.
+        pane.sleepIdleTabs(at: .now)
+        #expect(!front.isAsleep)
+    }
+
+    @Test func `a tab playing media or holding typed text stays awake`() async throws {
+        let (pane, window, root) = try pane()
+        defer { window.close(); try? FileManager.default.removeItem(at: root) }
+        let typed = pane.openTab(url: page("Form", "<input id=f>"), select: false)
+        let playing = pane.openTab(url: page("Film", "<audio id=a></audio>"), select: false)
+        try await until { typed.title == "Form" && playing.title == "Film" }
+
+        _ = try await typed.webView.evaluateJavaScript("f.value='x'; f.dispatchEvent(new Event('input', {bubbles: true})); 1")
+        try await until { typed.hasUserInput }
+        _ = try await playing.webView.evaluateJavaScript("Object.defineProperty(a, 'paused', {value: false}); a.dispatchEvent(new Event('playing')); 1")
+        try await until { playing.lastMedia != nil }
+
+        let longAgo = Date.now.addingTimeInterval(-BrowserTab.idleLimit - 60)
+        typed.markUsed(at: longAgo)
+        playing.markUsed(at: longAgo)
+        pane.sleepIdleTabs()
+        #expect(!typed.isAsleep)
+        #expect(!playing.isAsleep)
+        // Long enough without a playback report means it stopped, so it can sleep.
+        pane.sleepIdleTabs(at: Date.now.addingTimeInterval(3 * 60))
+        #expect(playing.isAsleep)
+        #expect(!typed.isAsleep)
+    }
+
+    @Test func `restored tabs wait asleep until they're opened`() async throws {
+        let (pane, window, root) = try pane(tabs: ["https://example.com/one", "https://example.com/two"], selected: 1)
+        defer { window.close(); try? FileManager.default.removeItem(at: root) }
+        pane.loadViewIfNeeded()
+        #expect(pane.tabs.map(\.isAsleep) == [true, false])
+        #expect(pane.tabs[0].url?.absoluteString == "https://example.com/one")
+        #expect(pane.tabs[0].title == "example.com")
+        pane.prepareForTermination()
+        #expect(pane.session.state.browserTabURLs == ["https://example.com/one", "https://example.com/two"])
+    }
+}

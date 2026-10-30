@@ -22,7 +22,7 @@ final class BrowserAutomation {
     func describeTabs() -> String {
         pane.tabs.map { tab in
             let marker = tab.id == pane.selectedID ? "*" : " "
-            return "\(marker) #\(tab.number)  \(tab.title)  \(tab.url?.absoluteString ?? "")"
+            return "\(marker) #\(tab.number)  \(tab.title)  \(tab.url?.absoluteString ?? "")\(tab.isAsleep ? "  (asleep; wakes when used)" : "")"
         }.joined(separator: "\n")
     }
 
@@ -38,7 +38,9 @@ final class BrowserAutomation {
     @discardableResult
     func evaluate(_ script: String, in tab: BrowserTab) async throws -> Any? {
         do {
-            return try await tab.webView.evaluateJavaScript(script)
+            let web = tab.webView
+            await tab.finishWaking()
+            return try await web.evaluateJavaScript(script)
         } catch {
             throw ToolError("JavaScript failed: \(error.localizedDescription)")
         }
@@ -103,7 +105,9 @@ final class BrowserAutomation {
         """
         let result: Any?
         do {
-            result = try await tab.webView.callAsyncJavaScript(body, arguments: [:], in: nil, contentWorld: .page)
+            let web = tab.webView
+            await tab.finishWaking()
+            result = try await web.callAsyncJavaScript(body, arguments: [:], in: nil, contentWorld: .page)
         } catch {
             throw ToolError("JavaScript failed: \(error.localizedDescription)")
         }
@@ -152,7 +156,9 @@ final class BrowserAutomation {
         configuration.afterScreenUpdates = true
         let image: NSImage
         do {
-            image = try await tab.webView.takeSnapshot(configuration: configuration)
+            let web = tab.webView
+            await tab.finishWaking()
+            image = try await web.takeSnapshot(configuration: configuration)
         } catch {
             throw ToolError("snapshot failed: \(error.localizedDescription)")
         }
