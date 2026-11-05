@@ -17,6 +17,7 @@ final class EditorTabsModel {
         case devices
         case mcp
         case design
+        case qa
         /// A file (or a skill's SKILL.md), by OpenDocument.id.
         case file(String)
 
@@ -31,6 +32,7 @@ final class EditorTabsModel {
             case .devices: "devices"
             case .mcp: "mcp"
             case .design: "design"
+            case .qa: "qa"
             case .file: "file"
             }
         }
@@ -51,6 +53,7 @@ final class EditorTabsModel {
     var selected: Tab?
     /// The Design chat is waiting on the user.
     var designNeedsAttention = false
+    var qaNeedsAttention = false
     /// No tabs at all: the workspace collapses the editor column.
     var isEmpty: Bool { items.isEmpty }
 }
@@ -82,6 +85,10 @@ final class EditorAreaViewController: NSViewController {
     private var mcpHost: NSView?
     private var designHost: NSView?
     private var designModel: DesignModel?
+    private var qaHost: NSView?
+    private var qaModel: QAModel?
+    var restoreQA: () -> Void = {}
+    var qaPID: pid_t? { qaModel?.chat.processID }
     /// Reopens the Design tab that was showing when the project closed.
     var restoreDesign: () -> Void = {}
     /// The Design chat's process, for finding which window an MCP caller runs in.
@@ -168,6 +175,7 @@ final class EditorAreaViewController: NSViewController {
         case "agents": openAgents()
         case "skills": openSkillsMarketplace()
         case "design": restoreDesign()
+        case "qa": restoreQA()
         default: break
         }
         if tabs.selected == nil {
@@ -208,6 +216,7 @@ final class EditorAreaViewController: NSViewController {
         devicesController?.view.isHidden = tab != .devices
         mcpHost?.isHidden = tab != .mcp
         designHost?.isHidden = tab != .design
+        qaHost?.isHidden = tab != .qa
         for (id, host) in fileHosts { host.isHidden = tab != .file(id) }
         if case let .file(id) = tab { onFileShown(fileDocuments[id]?.file) } else { onFileShown(nil) }
         session.update { $0.editorTab = tab.kind }
@@ -225,7 +234,7 @@ final class EditorAreaViewController: NSViewController {
 
     private func showNothing() {
         tabs.selected = nil
-        for view in [browserPane.view, simulatorPane.view, diffHost, agentsHost, skillsHost, compareHost, devicesController?.view, mcpHost, designHost] + fileHosts.values.map(Optional.some) { view?.isHidden = true }
+        for view in [browserPane.view, simulatorPane.view, diffHost, agentsHost, skillsHost, compareHost, devicesController?.view, mcpHost, designHost, qaHost] + fileHosts.values.map(Optional.some) { view?.isHidden = true }
         simulatorPane.setVisible(false)
         reportPreferredWidth()
     }
@@ -299,6 +308,16 @@ final class EditorAreaViewController: NSViewController {
         select(.design)
     }
 
+    /// QA: a chat, the devices running, and what passed.
+    func openQA(model: QAModel, openDevices: @escaping () -> Void) {
+        if qaHost == nil {
+            qaModel = model
+            qaHost = host(QATabView(model: model, openDevices: openDevices))
+            rebuildItems()
+        }
+        select(.qa)
+    }
+
     /// Several simulators side by side.
     func openDevices(model: DeviceMatrixModel, runner: Runner) {
         if devicesController == nil {
@@ -370,6 +389,12 @@ final class EditorAreaViewController: NSViewController {
             designHost?.removeFromSuperview()
             designHost = nil
             rebuildItems()
+        case .qa:
+            qaModel?.stop()
+            qaModel = nil
+            qaHost?.removeFromSuperview()
+            qaHost = nil
+            rebuildItems()
         case .mcp:
             mcpHost?.removeFromSuperview()
             mcpHost = nil
@@ -426,6 +451,9 @@ final class EditorAreaViewController: NSViewController {
         if designHost != nil {
             items.append(EditorTabsModel.Item(tab: .design, title: "Design", icon: .feather))
         }
+        if qaHost != nil {
+            items.append(EditorTabsModel.Item(tab: .qa, title: "QA", icon: .beaker))
+        }
         if mcpHost != nil {
             items.append(EditorTabsModel.Item(tab: .mcp, title: "MCP Servers", icon: .server))
         }
@@ -454,12 +482,16 @@ final class EditorAreaViewController: NSViewController {
     private func observeSimulator() {
         let model = simulatorPane.model
         var wasBooted = model.bootedDevice != nil
+        // Until the first device list arrives, a booted device was already running, not just started.
+        var hasListed = !model.devices.isEmpty
         Task { [weak self] in
-            for await state in Observations({ (model.bootedDevice?.udid, model.selectedDevice?.name, model.selectedDevice?.isBooted) }) {
+            for await state in Observations({ (model.bootedDevice?.udid, model.selectedDevice?.name, model.selectedDevice?.isBooted, model.devices.isEmpty) }) {
                 guard let self else { return }
                 let booted = state.0 != nil
+                let listedBefore = hasListed
+                hasListed = hasListed || !state.3
                 // A device starting (from the header, Run or MCP) brings its tab forward.
-                if booted, !wasBooted { openSimulator(select: true) } else if booted, !isSimulatorOpen { openSimulator(select: session.state.editorTab == "simulator") }
+                if booted, !wasBooted, listedBefore { openSimulator(select: true) } else if booted, !isSimulatorOpen { openSimulator(select: session.state.editorTab == "simulator") }
                 wasBooted = booted
                 rebuildItems()
             }

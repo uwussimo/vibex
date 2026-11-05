@@ -50,6 +50,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
         window.delegate = self
         // Before the window loads its views, which is when a saved tab comes back.
         workspace.editor.restoreDesign = { [weak self] in self?.openDesignTab() }
+        workspace.editor.restoreQA = { [weak self] in self?.openQATab() }
         // A plain container holds the activity bar and the split views, so overlays (toast, palette)
         // float above them instead of becoming extra split panes.
         let root = NSViewController()
@@ -137,6 +138,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
                 showSimulator: { [weak self] in self?.workspace.focusSimulator(nil) },
                 showBrowser: { [weak self] in self?.workspace.focusBrowser(nil) },
                 showDesign: { [weak self] in self?.showDesign(nil) },
+                showQA: { [weak self] in self?.showQA(nil) },
                 toggleSourceControl: { [weak self] in self?.toggleSourceControl(nil) },
                 toggleSkills: { [weak self] in self?.toggleSkills(nil) },
                 toggleExplorer: { [weak self] in self?.toggleExplorer(nil) },
@@ -255,6 +257,45 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
             }
         }
         return design
+    }
+
+    // MARK: - QA
+
+    private var qaModel: QAModel?
+
+    @objc func showQA(_ sender: Any?) {
+        workspace.apply(mode: .watch, animated: true)
+        openQATab()
+    }
+
+    private func openQATab() {
+        let model = workspace.editor.tabs.items.contains { $0.tab == .qa } ? qaModel : nil
+        let qa = model ?? makeQAModel()
+        qaModel = qa
+        workspace.editor.openQA(model: qa) { [weak self] in self?.showDevices(nil) }
+    }
+
+    /// The QA model, made when a tool needs it before the tab was ever opened.
+    func qaModelForTools() -> QAModel {
+        if let qaModel { return qaModel }
+        let qa = makeQAModel()
+        qaModel = qa
+        return qa
+    }
+
+    private func makeQAModel() -> QAModel {
+        let qa = QAModel(project: project.url, environment: session.terminalEnvironment, resuming: session.state.qaSession, matrix: deviceMatrix)
+        qa.chat.actions = ClaudeChatActions(
+            openFile: { [weak self] url in self?.openFile(url, keep: true) },
+            runInTerminal: { [weak self] command in
+                guard let self else { return }
+                workspace.showTerminalTab(workspace.terminalPane.runCommandInNewTab(command, directory: project.path))
+            }
+        )
+        qa.onSessionChange = { [weak self] id in self?.session.update { $0.qaSession = id } }
+        qa.onAttentionChange = { [weak self] waiting in self?.workspace.editor.tabs.qaNeedsAttention = waiting }
+        qa.lastLaunch = { [weak self] in self?.runner.lastLaunch }
+        return qa
     }
 
     // MARK: - Agents

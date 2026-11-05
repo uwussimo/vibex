@@ -83,4 +83,5 @@ hardDrive HardDrive
 layers LayersThree01
 palette Palette
 eyeOff EyeOff
+beaker Beaker01
 moon Moon01

@@ -51,6 +51,28 @@ final class DeviceMatrixModel {
         for device in presets where !selected.contains(device.udid) { await add(device) }
     }
 
+    /// A small iPhone, a large one and an iPad, creating whichever this Mac doesn't have yet.
+    func addStandardDevices() async {
+        busy = "Setting up devices…"
+        problem = nil
+        await refresh()
+        for (kind, matches) in Self.standardKinds where !devices.contains(where: matches) {
+            busy = "Creating \(kind)…"
+            do { _ = try await simctl.create(kind) } catch { problem = error.localizedDescription }
+        }
+        await refresh()
+        busy = nil
+        let picks = Self.standardKinds.compactMap { _, matches in devices.first(where: matches) }
+        for device in picks where !selected.contains(device.udid) { await add(device) }
+    }
+
+    /// Device types by their name in Xcode, and how to recognise one already here.
+    private static let standardKinds: [(String, (SimDevice) -> Bool)] = [
+        ("iPhone SE (3rd generation)", { $0.name.hasPrefix("iPhone SE") || $0.name.hasSuffix("e") && $0.name.hasPrefix("iPhone") }),
+        ("iPhone 17 Pro Max", { $0.name.hasPrefix("iPhone") && ($0.name.contains("Pro Max") || $0.name.contains("Plus")) }),
+        ("iPad (A16)", { $0.name.hasPrefix("iPad") }),
+    ]
+
     func remove(_ udid: String) {
         save(selected.filter { $0 != udid })
     }

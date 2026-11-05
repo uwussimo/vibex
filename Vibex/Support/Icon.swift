@@ -72,6 +72,7 @@ enum Icon: String, CaseIterable, Sendable {
     case layers
     case palette
     case eyeOff
+    case beaker
     case package
     case eye
     case key

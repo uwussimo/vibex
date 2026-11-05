@@ -61,6 +61,22 @@ nonisolated struct Simctl: Sendable {
         return String(decoding: output, as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
+    /// Creates a device of this type on the newest iOS runtime that offers it, and returns its UDID.
+    @concurrent
+    func create(_ typeName: String) async throws -> String {
+        let data = try run("/usr/bin/xcrun", ["simctl", "list", "-j", "runtimes", "available"])
+        let runtimes = try JSONDecoder().decode(RuntimeList.self, from: data).runtimes
+            .filter { $0.platform == "iOS" && ($0.isAvailable ?? true) }
+            .sorted { $0.version.localizedStandardCompare($1.version) == .orderedDescending }
+        for runtime in runtimes {
+            guard let type = (runtime.supportedDeviceTypes ?? []).first(where: { $0.name == typeName })
+                ?? (runtime.supportedDeviceTypes ?? []).first(where: { $0.name.hasPrefix(typeName.components(separatedBy: " (").first ?? typeName) }) else { continue }
+            let output = try run("/usr/bin/xcrun", ["simctl", "create", type.name, type.identifier, runtime.identifier])
+            return String(decoding: output, as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        throw SimctlError.noRuntime
+    }
+
     @concurrent
     func boot(_ udid: String) async throws {
         do {

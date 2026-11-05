@@ -54,6 +54,8 @@ nonisolated struct ProjectState: Codable, Equatable, Sendable {
     var claudeChats: [ClaudeChatState]?
     /// The Design tab's conversation, to resume.
     var designSession: String?
+    /// The QA tab's conversation, to resume.
+    var qaSession: String?
     var browserClosed: Bool?
     /// The simulators in the Devices tab, by UDID.
     var matrixDevices: [String]?

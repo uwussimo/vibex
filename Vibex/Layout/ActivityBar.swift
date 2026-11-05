@@ -65,6 +65,14 @@ struct ActivityBar: View {
                 attention: tabs.designNeedsAttention ? 1 : 0,
                 action: actions.showDesign
             )
+            ActivityButton(
+                icon: .beaker,
+                label: "QA",
+                help: "QA: Claude tests the app on several simulators at once (⌘5)",
+                isSelected: isEditorShowing(.qa),
+                attention: tabs.qaNeedsAttention ? 1 : 0,
+                action: actions.showQA
+            )
             groupDivider
             ActivityButton(
                 icon: .files,
@@ -150,6 +158,7 @@ struct ActivityBarActions {
     var showSimulator: () -> Void
     var showBrowser: () -> Void
     var showDesign: () -> Void
+    var showQA: () -> Void
     var toggleSourceControl: () -> Void
     var toggleSkills: () -> Void
     var toggleExplorer: () -> Void

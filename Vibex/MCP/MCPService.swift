@@ -42,7 +42,7 @@ final class MCPService {
         let resolver = CallerResolver()
         server.resolveCaller = { port in
             let candidates = WindowManager.shared.windows.map {
-                CallerResolver.Candidate(windowID: $0.session.windowID, shellPIDs: $0.workspace.terminalPane.shellPIDs + [$0.workspace.editor.designPID].compactMap(\.self))
+                CallerResolver.Candidate(windowID: $0.session.windowID, shellPIDs: $0.workspace.terminalPane.shellPIDs + [$0.workspace.editor.designPID, $0.workspace.editor.qaPID].compactMap(\.self))
             }
             return resolver.windowID(forClientPort: port, among: candidates)
         }

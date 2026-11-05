@@ -9,6 +9,9 @@ packages:
   SwiftTerm:
     url: https://github.com/migueldeicaza/SwiftTerm
     exactVersion: 1.99.0
+  Yams:
+    url: https://github.com/jpsim/Yams
+    exactVersion: 6.2.2
 settings:
   base:
     SWIFT_VERSION: "6.0"
@@ -41,6 +44,7 @@ targets:
         buildPhase: resources
     dependencies:
       - package: SwiftTerm
+      - package: Yams
     info:
       path: Vibex/Resources/Info.plist
       properties:

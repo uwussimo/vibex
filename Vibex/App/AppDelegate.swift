@@ -33,6 +33,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         windows.updater = updater
         mcp.registry.register(WorkspaceTools.make())
         mcp.registry.register(DesignTools.make())
+        mcp.registry.register(QATools.make())
         mcp.registry.register(BrowserTools.make())
         mcp.registry.register(SimulatorTools.make())
         mcp.start()
