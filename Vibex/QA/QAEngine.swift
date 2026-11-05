@@ -75,8 +75,9 @@ final class QADevice {
         framebuffer = SimulatorFramebuffer(renderable: try bridge.mainDisplay(of: device))
     }
 
-    deinit {
-        MainActor.assumeIsolated { framebuffer.stop() }
+    // On the main actor, wherever the last reference goes: the display connection is the main actor's.
+    isolated deinit {
+        framebuffer.stop()
     }
 
     /// The screen in points.
@@ -86,9 +87,11 @@ final class QADevice {
         try await AXTranslation.shared().frontmostTree(device: device)
     }
 
-    /// The tree, or nil while there's no app in front to read, as for a moment after a launch.
+    /// The tree, or nil while there's nothing to read: no app in front, as for a moment after a launch,
+    /// or an app that came back empty because the simulator is too busy to answer.
     func treeIfReady() async -> AXNode? {
-        try? await tree()
+        guard let tree = try? await tree(), !tree.children.isEmpty else { return nil }
+        return tree
     }
 
     func image() -> CGImage? {
@@ -173,6 +176,8 @@ final class QAExecution {
 
     /// How long finding something waits before it gives up, as in Maestro.
     static let findTimeout = 7.0
+    /// Extra time when the screen can't be read at all, which is the simulator being slow, not the app.
+    static let unreadableGrace = 13.0
 
     private var stepCount = 0
 
@@ -258,7 +263,7 @@ final class QAExecution {
             // A first launch after an install takes a while to come to the front.
             let deadline = Date.now.addingTimeInterval(20)
             while Date.now < deadline {
-                if let tree = await device.treeIfReady(), !tree.children.isEmpty { break }
+                if await device.treeIfReady() != nil { break }
                 try await Task.sleep(for: .milliseconds(300))
             }
         case let .stopApp(id):
@@ -299,10 +304,8 @@ final class QAExecution {
             await swipe(.up)
         case let .scrollUntilVisible(selector, direction, timeout):
             let deadline = Date.now.addingTimeInterval(timeout)
-            var found = QASelector()
-            found = selector
             while true {
-                if let tree = await device.treeIfReady(), !QAMatcher.matches(found, in: tree, screen: device.screen).isEmpty { return }
+                if let tree = await device.treeIfReady(), !QAMatcher.matches(selector, in: tree, screen: device.screen).isEmpty { return }
                 if Date.now > deadline { throw QAFailure("Scrolled for \(Int(timeout)) seconds and didn't find \(selector.summary).") }
                 // Scrolling down moves the content up.
                 await swipe(Self.opposite(direction), short: true)
@@ -348,12 +351,19 @@ final class QAExecution {
             guard let at = QAMatcher.point(point, screen: device.screen) else { throw QAFailure("\(point) isn't a point. Write \"50%,90%\" or \"120,400\".") }
             return at
         }
-        let deadline = Date.now.addingTimeInterval(Self.findTimeout)
+        var deadline = Date.now.addingTimeInterval(Self.findTimeout)
+        var waitedForScreen = false
         while true {
-            if let tree = await device.treeIfReady(), let match = QAMatcher.matches(selector, in: tree, screen: device.screen).first { return match.center }
+            let tree = await device.treeIfReady()
+            if let tree, let match = QAMatcher.matches(selector, in: tree, screen: device.screen).first { return match.center }
+            // A screen that can't be read isn't a screen without the element: give a busy simulator longer.
+            if tree == nil, !waitedForScreen {
+                waitedForScreen = true
+                deadline = deadline.addingTimeInterval(Self.unreadableGrace)
+            }
             if Date.now > deadline {
                 if selector.isOptional { return nil }
-                if await device.treeIfReady() == nil { throw QAFailure("No app is in front on \(device.name), so nothing could be found. Did it crash?") }
+                if tree == nil { throw QAFailure("Couldn't read \(device.name)'s screen, so \(selector.summary) couldn't be looked for. The app may have crashed, or the Mac is too busy: close simulators you don't need.") }
                 throw QAFailure("Couldn't find \(selector.summary) on screen.")
             }
             try await Task.sleep(for: .milliseconds(300))

@@ -14,16 +14,24 @@ struct QATabView: View {
             HStack(spacing: 0) {
                 VStack(spacing: 0) {
                     toolbar
-                    Rectangle().fill(Theme.line).frame(height: 1)
+                    QARunProgress(model: model)
                     if model.devices.isEmpty {
                         noDevices
                     } else {
                         QADeviceStrip(model: model)
-                            .frame(height: 340)
+                            .frame(height: 320)
+                        problem(.devices)
                         Rectangle().fill(Theme.line).frame(height: 1)
                     }
+                    if let run = model.run, run.isFinished, !model.isRunning, !model.isSummaryDismissed {
+                        QARunSummary(model: model, run: run)
+                            .transition(.opacity.combined(with: .move(edge: .top)))
+                    }
+                    problem(.flows)
                     QAResultsView(model: model)
                 }
+                .animation(.easeOut(duration: 0.2), value: model.isRunning)
+                .onChange(of: model.devices.count) { _, _ in model.devicesChanged() }
                 // A column of its own, so the grid's devices and Run stay in reach while it's open.
                 if let id = model.selectedResult, let result = model.run?.results.first(where: { $0.id == id }) {
                     QAResultDetail(model: model, result: result)
@@ -42,9 +50,6 @@ struct QATabView: View {
             Text("QA").font(.vibex(size: 13, weight: .semibold)).foregroundStyle(Theme.text)
             let flows = model.flows.count, devices = model.devices.count
             Text("\(flows) flow\(flows == 1 ? "" : "s") · \(devices) device\(devices == 1 ? "" : "s")").font(.vibex(size: 12)).foregroundStyle(Theme.faint)
-            if let problem = model.problem {
-                Text(problem).font(.vibex(size: 12)).foregroundStyle(Theme.orange).lineLimit(1)
-            }
             Spacer()
             if model.isRunning, let run = model.run {
                 ProgressView().controlSize(.mini)
@@ -65,13 +70,8 @@ struct QATabView: View {
                 .buttonStyle(.plain)
                 .menuIndicator(.hidden)
                 .fixedSize()
-                if model.flows.isEmpty {
-                    // Nothing to run yet, so the button says what comes first.
-                    Button("Write Tests", action: model.writeTests)
-                        .buttonStyle(.borderedProminent)
-                        .disabled(model.chat.isBusy)
-                        .help("Ask Claude to write test flows for this app")
-                } else {
+                // With no flows, the way forward is the empty state's button, right where it's explained.
+                if !model.flows.isEmpty {
                     Button("Run All") { Task { await model.runFlows() } }
                         .buttonStyle(.borderedProminent)
                         .disabled(model.devices.isEmpty)
@@ -82,6 +82,21 @@ struct QATabView: View {
         .controlSize(.regular)
         .padding(.horizontal, 12)
         .frame(height: 44)
+    }
+
+    /// A run that couldn't start says why next to what it needs: the devices, or the flows.
+    @ViewBuilder
+    private func problem(_ place: QAProblem.Place) -> some View {
+        if let problem = model.problem, problem.place == place {
+            HStack(spacing: 7) {
+                IconView(.alert, size: 12).foregroundStyle(Theme.orange)
+                Text(problem.message).font(.vibex(size: 12)).foregroundStyle(Theme.text)
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 8)
+            .background(Theme.orange.opacity(0.1))
+        }
     }
 
     private var noDevices: some View {
@@ -101,6 +116,61 @@ struct QATabView: View {
         }
         .frame(maxWidth: .infinity)
         .frame(height: 240)
+    }
+}
+
+/// How far the run has got, under the toolbar, for as long as it runs.
+private struct QARunProgress: View {
+    let model: QAModel
+
+    var body: some View {
+        let results = model.run?.results ?? []
+        let done = results.count { [.passed, .failed, .skipped].contains($0.status) }
+        let fraction = model.isRunning && !results.isEmpty ? Double(done) / Double(results.count) : 0
+        ZStack(alignment: .leading) {
+            Rectangle().fill(Theme.line)
+            Rectangle()
+                .fill(results.contains { $0.status == .failed } ? Theme.orange : Theme.accent)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .scaleEffect(x: max(fraction, model.isRunning ? 0.02 : 0), y: 1, anchor: .leading)
+                .opacity(model.isRunning ? 1 : 0)
+                .animation(.linear(duration: 0.25), value: fraction)
+        }
+        .frame(height: model.isRunning ? 2 : 1)
+    }
+}
+
+/// How the run ended, with the next step: Claude takes the failures, or there's nothing to do.
+private struct QARunSummary: View {
+    let model: QAModel
+    let run: QARun
+
+    var body: some View {
+        HStack(spacing: 10) {
+            QAStatusDot(status: run.failed > 0 ? .failed : .passed)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(run.failed > 0 ? "\(run.failed) failed, \(run.passed) passed" : "All \(run.passed) passed")
+                    .font(.vibex(size: 12.5, weight: .semibold)).foregroundStyle(Theme.text)
+                Text("\(run.summary) · \(run.date.formatted(date: .omitted, time: .shortened))")
+                    .font(.vibex(size: 11)).foregroundStyle(Theme.faint)
+            }
+            Spacer(minLength: 0)
+            if run.failed > 0 {
+                Button("Ask Claude to Fix", action: model.fixFailures)
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.small)
+                    .disabled(model.chat.isBusy)
+            }
+            Button { model.isSummaryDismissed = true } label: {
+                IconView(.close, size: 10).foregroundStyle(Theme.faint).frame(width: 20, height: 20).contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .help("Dismiss")
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 9)
+        .background((run.failed > 0 ? Theme.red : Theme.green).opacity(0.07))
+        .overlay(alignment: .bottom) { Rectangle().fill(Theme.line).frame(height: 1) }
     }
 }
 
@@ -236,9 +306,18 @@ private struct QAResultsView: View {
     private func row(_ entry: QAFlowEntry) -> some View {
         HStack(spacing: 0) {
             VStack(alignment: .leading, spacing: 2) {
-                Text(entry.name).font(.vibex(size: 12.5, weight: .medium)).foregroundStyle(Theme.text).lineLimit(1)
+                Button { model.open(entry) } label: {
+                    Text(entry.name).font(.vibex(size: 12.5, weight: .medium)).foregroundStyle(Theme.text).lineLimit(1)
+                }
+                .buttonStyle(.plain)
+                .help("Open \(entry.file)")
                 if let error = entry.error {
-                    Text(error).font(.vibex(size: 11)).foregroundStyle(Theme.red).lineLimit(2)
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        Text(error).font(.vibex(size: 11)).foregroundStyle(Theme.red).lineLimit(2)
+                        Button("Fix with Claude") { model.fix(entry) }
+                            .controlSize(.small)
+                            .disabled(model.chat.isBusy)
+                    }
                 } else {
                     Text("\(entry.file) · \(entry.flow?.commands.count ?? 0) steps").font(.vibex(size: 11)).foregroundStyle(Theme.faint).lineLimit(1)
                 }
@@ -259,7 +338,7 @@ private struct QAResultsView: View {
                     .background(RoundedRectangle(cornerRadius: 6, style: .continuous).fill(result?.id == model.selectedResult && result != nil ? Theme.accent.opacity(0.18) : .clear))
                     .contentShape(Rectangle())
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(PressFeedbackButtonStyle())
                 .disabled(result == nil)
             }
             Button { Task { await model.runFlows([entry.file]) } } label: {
@@ -294,6 +373,8 @@ private struct QAResultDetail: View {
                     IconView(.close, size: 11).foregroundStyle(Theme.muted).frame(width: 20, height: 20).contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .keyboardShortcut(.cancelAction)
+                .help("Close (Esc)")
             }
             .padding(.horizontal, 12)
             .frame(height: 48)

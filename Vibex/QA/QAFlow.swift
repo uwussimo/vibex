@@ -218,9 +218,18 @@ nonisolated enum QAMatcher {
     /// Elements the selector matches and that are on screen, top to bottom.
     static func matches(_ selector: QASelector, in root: AXNode, screen: CGSize) -> [AXNode] {
         let bounds = CGRect(origin: .zero, size: screen)
+        // Compiled once per look at the screen, not once per element in it.
+        let text = selector.text.map(Pattern.init)
+        let id = selector.id.map(Pattern.init)
+        guard text != nil || id != nil else { return [] }
         var found: [AXNode] = []
+        func fits(_ node: AXNode) -> Bool {
+            if let id, node.identifier != id.source, !id.matches(node.identifier) { return false }
+            if let text, !text.matches(node.label), !text.matches(node.value) { return false }
+            return true
+        }
         func walk(_ node: AXNode) {
-            if fits(node, selector), node.frame.width > 0, node.frame.height > 0, node.frame.intersects(bounds),
+            if fits(node), node.frame.width > 0, node.frame.height > 0, node.frame.intersects(bounds),
                !found.contains(where: { $0.frame == node.frame }) {
                 found.append(node)
             }
@@ -228,30 +237,35 @@ nonisolated enum QAMatcher {
         }
         walk(root)
         // A label that matches exactly beats one the pattern only happens to fit.
-        let exact = found.filter { node in selector.text.map { isExact($0, node) } ?? true }
+        let exact = found.filter { node in text.map { $0.isExact(node.label) || $0.isExact(node.value) } ?? true }
         let ordered = (exact.isEmpty ? found : exact).sorted { ($0.frame.minY, $0.frame.minX) < ($1.frame.minY, $1.frame.minX) }
         guard let index = selector.index else { return ordered }
         return ordered.indices.contains(index) ? [ordered[index]] : []
     }
 
-    private static func fits(_ node: AXNode, _ selector: QASelector) -> Bool {
-        if let id = selector.id, node.identifier != id, !matchesPattern(id, node.identifier) { return false }
-        if let text = selector.text, !([node.label, node.value].contains { matchesPattern(text, $0) }) { return false }
-        return selector.text != nil || selector.id != nil
+    /// Maestro reads text as a regular expression for the whole label, ignoring case. Text that isn't
+    /// a valid pattern, such as "$4.50 (each)", is compared as it's written.
+    struct Pattern {
+        let source: String
+        private let regex: Regex<AnyRegexOutput>?
+
+        init(_ source: String) {
+            self.source = source
+            regex = try? Regex(source).ignoresCase().dotMatchesNewlines()
+        }
+
+        func isExact(_ text: String) -> Bool {
+            !text.isEmpty && text.compare(source, options: .caseInsensitive) == .orderedSame
+        }
+
+        func matches(_ text: String) -> Bool {
+            guard !text.isEmpty else { return false }
+            if isExact(text) { return true }
+            return (try? regex?.wholeMatch(in: text)) != nil
+        }
     }
 
-    private static func isExact(_ text: String, _ node: AXNode) -> Bool {
-        [node.label, node.value].contains { $0.compare(text, options: [.caseInsensitive]) == .orderedSame }
-    }
-
-    /// Maestro reads text as a regular expression for the whole label. Text that isn't a valid
-    /// pattern, such as "$4.50 (each)", is compared as it's written.
-    static func matchesPattern(_ pattern: String, _ text: String) -> Bool {
-        guard !text.isEmpty else { return false }
-        if text.compare(pattern, options: [.caseInsensitive]) == .orderedSame { return true }
-        guard let regex = try? NSRegularExpression(pattern: "^(?:\(pattern))$", options: [.caseInsensitive, .dotMatchesLineSeparators]) else { return false }
-        return regex.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)) != nil
-    }
+    static func matchesPattern(_ pattern: String, _ text: String) -> Bool { Pattern(pattern).matches(text) }
 
     /// "50%,90%" or "120, 400" as a point on a screen of this size.
     static func point(_ text: String, screen: CGSize) -> CGPoint? {

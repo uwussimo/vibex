@@ -142,18 +142,21 @@ final class WorkspaceSplitViewController: NSSplitViewController, NSMenuItemValid
     // MARK: - Modes
 
     @objc func toggleBuildMode(_ sender: Any?) {
-        apply(mode: mode == .build ? .balanced : .build, animated: true)
+        apply(mode: mode == .build ? .balanced : .build, animated: true, revealing: true)
     }
 
     @objc func toggleWatchMode(_ sender: Any?) {
-        apply(mode: mode == .watch ? .balanced : .watch, animated: true)
+        apply(mode: mode == .watch ? .balanced : .watch, animated: true, revealing: true)
     }
 
     @objc func balancedMode(_ sender: Any?) {
         apply(mode: .balanced, animated: true)
     }
 
-    func apply(mode newMode: LayoutMode, animated: Bool) {
+    /// `revealing` brings the mode's own pane forward: the browser for Watch, the simulator for Build.
+    /// Only a deliberate switch does that. Restoring a layout, reopening a column, or making room for
+    /// a tab only sets the widths, so whatever was just opened stays in front.
+    func apply(mode newMode: LayoutMode, animated: Bool, revealing: Bool = false) {
         if mode == .balanced, newMode != .balanced, hasAppliedInitialLayout {
             captureManualWidths()
         }
@@ -161,10 +164,12 @@ final class WorkspaceSplitViewController: NSSplitViewController, NSMenuItemValid
         session.update { $0.layout = newMode }
         Log.layout.info("layout mode → \(newMode.rawValue, privacy: .public)")
         // Watch is for the browser (Netflix); Build is for the app being built.
-        switch newMode {
-        case .watch: editor.showBrowser()
-        case .build: if editor.isSimulatorOpen { editor.select(.simulator) }
-        case .balanced: break
+        if revealing {
+            switch newMode {
+            case .watch: editor.showBrowser()
+            case .build: if editor.isSimulatorOpen { editor.select(.simulator) }
+            case .balanced: break
+            }
         }
 
         // With one column closed there is no divider to place.

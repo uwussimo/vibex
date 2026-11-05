@@ -71,4 +71,36 @@ import Testing
         await wait(0.3)
         try? FileManager.default.removeItem(at: root)
     }
+
+    @Test func `widening for a tab or restoring the layout doesn't bring the browser forward`() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("vibex-watch-\(UUID().uuidString)")
+        let folder = root.appendingPathComponent("app")
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let store = ProjectStore(directory: root.appendingPathComponent("state"))
+        let project = Project(url: folder)
+        var state = ProjectState()
+        state.browserTabURLs = ["about:blank"]
+        state.layout = .watch
+        state.editorTab = "design"
+        store.save(state, for: project)
+        let controller = MainWindowController(session: ProjectSession(project: project, store: store))
+        controller.window?.setFrame(NSRect(x: -6000, y: 200, width: 1500, height: 820), display: false)
+        controller.showWindow(nil)
+        defer { controller.close() }
+        try await Task.sleep(for: .seconds(1))
+        let editor = controller.workspace.editor
+        // Reopened in the Watch layout, the tab that was showing stays showing.
+        #expect(editor.tabs.selected == .design)
+        // Opening QA widens the area, and QA stays in front.
+        controller.showQA(nil)
+        try await Task.sleep(for: .seconds(0.5))
+        #expect(editor.tabs.selected == .qa)
+        // Choosing Watch yourself is what brings the browser.
+        controller.workspace.toggleWatchMode(nil)
+        controller.workspace.toggleWatchMode(nil)
+        try await Task.sleep(for: .seconds(0.3))
+        if case .browser = editor.tabs.selected {} else { Issue.record("Watch from the menu should show the browser, got \(String(describing: editor.tabs.selected))") }
+    }
 }
+

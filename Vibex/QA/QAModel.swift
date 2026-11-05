@@ -10,6 +10,13 @@ nonisolated struct QAFlowEntry: Equatable, Sendable, Identifiable {
     var name: String { flow?.name ?? (file as NSString).deletingPathExtension }
 }
 
+/// Why a run couldn't start, and where on screen the fix is.
+nonisolated struct QAProblem: Equatable, Sendable {
+    enum Place: Sendable { case flows, devices }
+    var place: Place
+    var message: String
+}
+
 /// The QA tab: flows on disk, the run in progress or the last one, and a Claude chat that writes,
 /// runs and explains them. Runs use the Devices grid's simulators, side by side.
 @Observable
@@ -24,9 +31,12 @@ final class QAModel {
     private(set) var isRunning = false
     /// What each device is doing right now, by UDID.
     private(set) var liveStep: [String: String] = [:]
-    var problem: String?
+    private(set) var problem: QAProblem?
     /// The result whose steps are open, by its id.
     var selectedResult: String?
+    /// The finished run's summary was closed; the next run brings it back.
+    var isSummaryDismissed = false
+    var openFile: (URL) -> Void = { _ in }
     var onSessionChange: (String?) -> Void = { _ in }
     var onAttentionChange: (Bool) -> Void = { _ in }
     /// The app the last iOS Run built, so a run can install it on every device first.
@@ -35,8 +45,6 @@ final class QAModel {
     @ObservationIgnored private var watcher: FileWatcher?
     @ObservationIgnored private var fingerprint = ""
     @ObservationIgnored private var runTask: Task<QARun?, Never>?
-    /// One per device, so stopping reaches each.
-    @ObservationIgnored private var deviceTasks: [Task<Void, Never>] = []
 
     static let folderName = "vibex-qa"
     var flowsFolder: URL { folder.appendingPathComponent("flows", isDirectory: true) }
@@ -113,6 +121,13 @@ final class QAModel {
             }
         }
         if loaded != flows { flows = loaded }
+        // The problem goes the moment what caused it does.
+        if problem?.place == .flows, !flows.isEmpty { problem = nil }
+    }
+
+    /// Clears a device problem once the grid has devices again.
+    func devicesChanged() {
+        if problem?.place == .devices, !devices.isEmpty { problem = nil }
     }
 
     private func reloadIfChanged() {
@@ -140,10 +155,7 @@ final class QAModel {
         return await task.value
     }
 
-    func stopRun() {
-        runTask?.cancel()
-        deviceTasks.forEach { $0.cancel() }
-    }
+    func stopRun() { runTask?.cancel() }
 
     private func performRun(_ names: [String]?, _ deviceNames: [String]?) async -> QARun? {
         problem = nil
@@ -153,7 +165,7 @@ final class QAModel {
             wanted.map { $0.contains(flow.file.lowercased()) || $0.contains(flow.name.lowercased()) || $0.contains((flow.file as NSString).deletingPathExtension.lowercased()) } ?? true
         }
         guard !chosen.isEmpty else {
-            problem = flows.isEmpty ? "There are no flows yet. Ask Claude to write some." : "No flow matches \(names?.joined(separator: ", ") ?? "")."
+            problem = QAProblem(place: .flows, message: flows.isEmpty ? "There are no flows yet. Ask Claude to write some." : "No flow matches \(names?.joined(separator: ", ") ?? "").")
             return nil
         }
         await matrix.refresh()
@@ -161,7 +173,7 @@ final class QAModel {
             deviceNames.map { list in list.contains { device.udid == $0 || device.name.localizedCaseInsensitiveContains($0) } } ?? true
         }
         guard !targets.isEmpty else {
-            problem = devices.isEmpty ? "Add devices to the Devices grid to run tests on." : "No device in the grid matches \(deviceNames?.joined(separator: ", ") ?? "")."
+            problem = QAProblem(place: .devices, message: devices.isEmpty ? "Add devices to the Devices grid to run tests on." : "No device in the grid matches \(deviceNames?.joined(separator: ", ") ?? "").")
             return nil
         }
         isRunning = true
@@ -175,18 +187,18 @@ final class QAModel {
             targets.map { QAFlowResult(flow: flow.file, flowName: flow.name, device: $0.udid, deviceName: $0.name, status: .waiting) }
         })
         selectedResult = nil
+        isSummaryDismissed = false
         let launch = lastLaunch()
-        deviceTasks = targets.map { target in
-            Task { [weak self] in await self?.run(chosen, on: target, output: output, install: launch) }
-        }
-        for task in deviceTasks { await task.value }
-        let wasStopped = deviceTasks.contains { $0.isCancelled }
-        deviceTasks = []
-        if wasStopped || Task.isCancelled, var current = run {
-            for index in current.results.indices where [.waiting, .running].contains(current.results[index].status) {
-                current.results[index].status = .skipped
+        // A child per device: they run side by side, and stopping the run reaches every one.
+        await withDiscardingTaskGroup { group in
+            for target in targets {
+                group.addTask { await self.run(chosen, on: target, output: output, install: launch) }
             }
-            run = current
+        }
+        if Task.isCancelled, let results = run?.results {
+            for index in results.indices where [.waiting, .running].contains(results[index].status) {
+                run?.results[index].status = .skipped
+            }
         }
         run?.isFinished = true
         if let run { save(run, to: output) }
@@ -234,10 +246,10 @@ final class QAModel {
         throw lastError
     }
 
+    /// Changes one result in place, without copying the run.
     private func update(_ flow: String, _ device: String, _ change: (inout QAFlowResult) -> Void) {
-        guard var current = run, let index = current.results.firstIndex(where: { $0.flow == flow && $0.device == device }) else { return }
-        change(&current.results[index])
-        run = current
+        guard let index = run?.results.firstIndex(where: { $0.flow == flow && $0.device == device }) else { return }
+        change(&run!.results[index])
     }
 
     /// Runs a few steps on one device and says what's on screen afterwards: how Claude explores.
@@ -283,10 +295,7 @@ final class QAModel {
     }
 
     nonisolated static func runID(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.dateFormat = "yyyy-MM-dd-HHmmss"
-        return formatter.string(from: date)
+        date.formatted(.verbatim("\(year: .defaultDigits)-\(month: .twoDigits)-\(day: .twoDigits)-\(hour: .twoDigits(clock: .twentyFourHour, hourCycle: .zeroBased))\(minute: .twoDigits)\(second: .twoDigits)", timeZone: .current, calendar: Calendar(identifier: .gregorian)))
     }
 
     func screenshot(_ name: String?) -> URL? {
@@ -296,6 +305,25 @@ final class QAModel {
 
     func result(for flow: String, device: String) -> QAFlowResult? {
         run?.results.first { $0.flow == flow && $0.device == device }
+    }
+
+    func open(_ entry: QAFlowEntry) {
+        openFile(flowsFolder.appendingPathComponent(entry.file))
+    }
+
+    /// A flow that doesn't read goes to Claude with what's wrong with it.
+    func fix(_ entry: QAFlowEntry) {
+        chat.send("\(Self.folderName)/flows/\(entry.file) doesn't load: \(entry.error ?? "unknown error"). Fix it.")
+    }
+
+    /// Every failure of the last run, in one message.
+    func fixFailures() {
+        guard let run else { return }
+        let failures = run.results.filter { $0.status == .failed }.map { result in
+            "- \(result.flow) on \(result.deviceName), step \(result.failure?.index ?? 0) \"\(result.failure?.title ?? "")\": \(result.failure?.message ?? "")"
+        }
+        guard !failures.isEmpty else { return }
+        chat.send("These flows failed in the last run (screenshots in \(runsFolder.appendingPathComponent(run.id).path)):\n\(failures.joined(separator: "\n"))\nFind out why each failed. Fix the tests that are wrong, tell me which failures are app bugs, and run them again.")
     }
 
     func writeTests() {

@@ -221,7 +221,6 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
 
     /// A canvas needs the room, so the design gets the wide side of the window.
     @objc func showDesign(_ sender: Any?) {
-        // In this order, because the wide layout brings the browser forward.
         workspace.apply(mode: .watch, animated: true)
         openDesignTab()
     }
@@ -295,6 +294,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
         qa.onSessionChange = { [weak self] id in self?.session.update { $0.qaSession = id } }
         qa.onAttentionChange = { [weak self] waiting in self?.workspace.editor.tabs.qaNeedsAttention = waiting }
         qa.lastLaunch = { [weak self] in self?.runner.lastLaunch }
+        qa.openFile = { [weak self] url in self?.openFile(url, keep: true) }
         return qa
     }
 

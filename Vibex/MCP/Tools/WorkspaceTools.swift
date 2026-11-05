@@ -25,7 +25,7 @@ enum WorkspaceTools {
             ) { args in
                 let raw = try args.requireString("mode")
                 guard let mode = LayoutMode(rawValue: raw) else { throw ToolError("unknown mode \(raw)") }
-                try window().workspace.apply(mode: mode, animated: true)
+                try window().workspace.apply(mode: mode, animated: true, revealing: true)
                 return .text("Layout: \(raw).")
             },
             Tool(

@@ -35,7 +35,7 @@ enum QATools {
                 let model = try qa()
                 try WindowManager.shared.toolTarget().showQA(nil)
                 guard let run = await model.runFlows(list(args, "flows"), on: list(args, "devices")) else {
-                    throw ToolError(model.problem ?? (model.isRunning ? "A run is already going." : "Nothing ran."))
+                    throw ToolError(model.problem?.message ?? (model.isRunning ? "A run is already going." : "Nothing ran."))
                 }
                 var lines = [run.summary + (run.isFinished ? "." : ", stopped early.")]
                 for result in run.results {
