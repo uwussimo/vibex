@@ -65,10 +65,18 @@ struct QATabView: View {
                 .buttonStyle(.plain)
                 .menuIndicator(.hidden)
                 .fixedSize()
-                Button("Run All") { Task { await model.runFlows() } }
-                    .buttonStyle(.borderedProminent)
-                    .disabled(model.flows.isEmpty || model.devices.isEmpty)
-                    .help("Run every flow on every device in the grid")
+                if model.flows.isEmpty {
+                    // Nothing to run yet, so the button says what comes first.
+                    Button("Write Tests", action: model.writeTests)
+                        .buttonStyle(.borderedProminent)
+                        .disabled(model.chat.isBusy)
+                        .help("Ask Claude to write test flows for this app")
+                } else {
+                    Button("Run All") { Task { await model.runFlows() } }
+                        .buttonStyle(.borderedProminent)
+                        .disabled(model.devices.isEmpty)
+                        .help(model.devices.isEmpty ? "Add devices first" : "Run every flow on every device in the grid")
+                }
             }
         }
         .controlSize(.regular)
@@ -185,7 +193,7 @@ private struct QAResultsView: View {
                 Text("No test flows yet").font(.vibex(size: 14, weight: .semibold)).foregroundStyle(Theme.text)
                 Text("Ask Claude to write tests for this app. They're Maestro-style YAML files in \(QAModel.folderName)/flows, one journey per file.")
                     .font(.vibex(size: 12)).foregroundStyle(Theme.muted).multilineTextAlignment(.center).frame(maxWidth: 380)
-                Button("Write Tests for This App") { model.chat.send("Write test flows for this app's main journeys, then run them on every device.") }
+                Button("Write Tests for This App", action: model.writeTests)
                     .buttonStyle(.borderedProminent)
                     .disabled(model.chat.isBusy)
                     .padding(.top, 4)

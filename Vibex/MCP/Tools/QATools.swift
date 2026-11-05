@@ -11,13 +11,18 @@ enum QATools {
         return [
             Tool(
                 name: "qa_devices",
-                description: "The simulators in Vibex's Devices grid, which QA runs use: name, udid, screen size and whether each is booted.",
-                inputSchema: Schema.object()
-            ) { _ in
+                description: "The simulators in Vibex's Devices grid, which QA runs use: name, runtime, whether each is booted, and udid. Pass `add` to put more simulators in the grid, by name or udid; they boot.",
+                inputSchema: Schema.object(["add": Schema.string("Simulators to add to the grid, comma-separated names or udids (optional)")])
+            ) { args in
                 let model = try qa()
+                var note = ""
+                if let wanted = list(args, "add") {
+                    let added = await model.addDevices(wanted)
+                    note = added.isEmpty ? "None of \(wanted.joined(separator: ", ")) is a simulator on this Mac. Create it with `xcrun simctl create` first.\n" : "Added \(added.joined(separator: ", ")).\n"
+                }
                 await model.matrix.refresh()
                 guard !model.devices.isEmpty else { return .text("The Devices grid is empty. Ask the user to add devices in the QA tab.") }
-                return .text(model.devices.map { "\($0.name)  \($0.runtime)  \($0.state)  \($0.udid)" }.joined(separator: "\n"))
+                return .text(note + model.devices.map { "\($0.name)  \($0.runtime)  \($0.state)  \($0.udid)" }.joined(separator: "\n"))
             },
             Tool(
                 name: "qa_run",

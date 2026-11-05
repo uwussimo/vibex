@@ -298,6 +298,23 @@ final class QAModel {
         run?.results.first { $0.flow == flow && $0.device == device }
     }
 
+    func writeTests() {
+        chat.send("Write test flows for this app's main journeys, then run them on every device.")
+    }
+
+    /// Puts simulators in the Devices grid by name or udid, booting them.
+    func addDevices(_ names: [String]) async -> [String] {
+        await matrix.refresh()
+        var added: [String] = []
+        for name in names {
+            guard let device = matrix.devices.first(where: { $0.udid == name || $0.name.localizedCaseInsensitiveCompare(name) == .orderedSame })
+                ?? matrix.devices.first(where: { $0.name.localizedCaseInsensitiveContains(name) }) else { continue }
+            await matrix.add(device)
+            added.append(device.name)
+        }
+        return added
+    }
+
     /// Hands a failure to Claude, with where to look.
     func diagnose(_ result: QAFlowResult) {
         guard let failure = result.failure else { return }
