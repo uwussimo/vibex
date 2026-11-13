@@ -73,6 +73,8 @@ final class MCPService {
     }
 
     func register(force: Bool) async {
+        let codex = await CodexRegistrar(url: url, token: token).ensureRegistered()
+        Log.mcp.info("Codex: \(String(describing: codex), privacy: .public)")
         let outcome = await registrar.ensureRegistered(force: force)
         switch outcome {
         case .alreadyRegistered: registration = "Registered with Claude Code"

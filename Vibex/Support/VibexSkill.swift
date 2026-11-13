@@ -2,8 +2,9 @@ import Foundation
 import os
 
 /// Keeps the `vibex` skill in `~/.claude/skills/vibex`, so Claude Code in any project knows what Vibex
-/// is and how to use its MCP tools. Installed at launch and refreshed when Vibex updates. A skill the
-/// user wrote themselves (no Vibex marker), or one they removed in the Skills sidebar, is left alone.
+/// is and how to use its MCP tools, and in `~/.agents/skills/vibex` for Codex. Installed at launch
+/// and refreshed when Vibex updates. A skill the user wrote themselves (no Vibex marker), or one they
+/// removed in the Skills sidebar, is left alone.
 nonisolated enum VibexSkill {
     enum Status: Equatable { case current, outdated, missing, userOwned }
 
@@ -14,6 +15,11 @@ nonisolated enum VibexSkill {
         FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".claude/skills/\(name)")
     }
     static var file: URL { folder.appendingPathComponent("SKILL.md") }
+
+    /// Where Codex looks for skills shared between agents.
+    static var codexFolder: URL {
+        FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".agents/skills/\(name)")
+    }
 
     static var version: String { Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0" }
 
@@ -39,19 +45,22 @@ nonisolated enum VibexSkill {
         return status(of: try? String(contentsOf: file, encoding: .utf8), bundled: bundledText())
     }
 
-    /// At launch: install or update, unless the user removed it.
+    /// At launch: install or update, unless the user removed it. Codex gets it once it's been used here.
     static func installIfNeeded(removedByUser: Bool) {
         guard !removedByUser else { return }
-        switch status {
-        case .missing, .outdated:
-            do {
-                try install()
-                Log.app.info("installed the vibex skill for Claude Code")
-            } catch {
-                Log.app.error("could not install the vibex skill: \(error.localizedDescription, privacy: .public)")
+        let targets = [(folder, "Claude Code")] + (CodexRegistrar.isInstalled ? [(codexFolder, "Codex")] : [])
+        for (target, agent) in targets {
+            switch status(in: target) {
+            case .missing, .outdated:
+                do {
+                    try install(into: target)
+                    Log.app.info("installed the vibex skill for \(agent, privacy: .public)")
+                } catch {
+                    Log.app.error("could not install the vibex skill for \(agent, privacy: .public): \(error.localizedDescription, privacy: .public)")
+                }
+            case .current, .userOwned:
+                break
             }
-        case .current, .userOwned:
-            break
         }
     }
 
