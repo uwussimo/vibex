@@ -44,7 +44,8 @@ enum TerminalTheme {
     /// The pane behind the terminal, following the appearance.
     static let background = NSColor.vibex(0xFBFBF9, 0x161618)
     static let tabBar = NSColor.vibex(0xF4F3F0, 0x1D1D20)
-    static let font = AppFont.code(size: 13)
+    /// Settings › Terminal › Font size.
+    static var font: NSFont { AppFont.code(size: AppSettings.terminalFontSize) }
 
     static func apply(to terminal: LocalProcessTerminalView) {
         terminal.font = font

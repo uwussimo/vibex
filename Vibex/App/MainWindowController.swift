@@ -140,7 +140,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
                 toggleMCP: { [weak self] in self?.toggleMCPServers(nil) },
                 toggleServers: { [weak self] in self?.toggleServers(nil) },
                 showAgents: { [weak self] in self?.showAgents(nil) },
-                showSetup: { NSApp.sendAction(#selector(AppDelegate.showSetup(_:)), to: nil, from: nil) }
+                showSetup: { NSApp.sendAction(#selector(AppDelegate.showSettings(_:)), to: nil, from: nil) }
             )
         ))
         bar.sizingOptions = []

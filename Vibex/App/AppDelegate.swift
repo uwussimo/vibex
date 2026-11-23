@@ -10,7 +10,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var hasLaunched = false
     /// Folders macOS hands over before launch finishes (`vibex .` on a cold start); opened once MCP is up.
     private var pendingURLs: [URL] = []
-    private var setup: SetupWindowController?
+    private var settings: SettingsWindowController?
     private var menuBar: MenuBarController?
 
     func applicationWillFinishLaunching(_ notification: Notification) {
@@ -53,7 +53,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             openFolders(pendingURLs)
             pendingURLs = []
         }
-        if SetupModel.needsSetup { showSetup(nil) }
+        KeepAwake.shared.start()
+        // A first launch lands on Get Started, where one button sets up the rest.
+        if SetupModel.needsSetup { showSettingsSection(.getStarted) }
         NSApp.activate()
         Log.app.info("Vibex launched")
     }
@@ -99,10 +101,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc func showUpdate(_ sender: Any?) { updateWindow.showWindow(sender) }
 
-    @objc func showSetup(_ sender: Any?) {
-        let controller = setup ?? SetupWindowController()
-        setup = controller
-        controller.showWindow(sender)
+    /// Vibex › Settings… (⌘,).
+    @objc func showSettings(_ sender: Any?) { showSettingsSection(nil) }
+
+    /// Settings › Get Started: permissions and tools.
+    @objc func showSetup(_ sender: Any?) { showSettingsSection(.getStarted) }
+
+    @objc func showKeepAwakeSettings(_ sender: Any?) { showSettingsSection(.keepAwake) }
+
+    func showSettingsSection(_ section: SettingsWindowController.Section?) {
+        let controller = settings ?? SettingsWindowController()
+        settings = controller
+        controller.show(section)
     }
 
     @objc func copyMCPConfig(_ sender: Any?) {
@@ -157,6 +167,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationWillTerminate(_ notification: Notification) {
         guard !Self.isRunningTests else { return }
         windows.prepareForTermination()
+        KeepAwake.shared.prepareToQuit()
         updater.installOnQuitIfNeeded()
     }
 }

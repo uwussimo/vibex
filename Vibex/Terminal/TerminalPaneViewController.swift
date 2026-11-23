@@ -104,6 +104,12 @@ final class TerminalPaneViewController: NSViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         observeAttention()
+        NotificationCenter.default.addObserver(forName: AppSettings.terminalFontSizeChanged, object: nil, queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated {
+                guard let self else { return }
+                for tab in self.tabs { tab.terminal?.font = TerminalTheme.font }
+            }
+        }
         // SwiftTerm's mouseDown does not claim first responder, so after a click in the browser
         // keystrokes would keep going to the web view. Claim it on any click inside the pane.
         clickMonitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown, .otherMouseDown]) { [weak self] event in
@@ -145,7 +151,7 @@ final class TerminalPaneViewController: NSViewController {
         for directory in directories { openTab(directory: directory) }
         if directories.isEmpty, session.state.terminalClosed != true {
             // A new project starts with Claude Code running if it's installed; otherwise with a shell.
-            if ClaudeCodeRegistrar.findClaude() != nil {
+            if AppSettings.startProjectsWithClaude, ClaudeCodeRegistrar.findClaude() != nil {
                 runCommandInNewTab("claude", directory: session.project.path)
             } else {
                 openTab(directory: session.project.path)

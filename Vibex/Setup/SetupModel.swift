@@ -109,6 +109,44 @@ final class SetupModel {
 
     func markSeen() { Defaults.setupVersion = Self.currentVersion }
 
+    /// Everything Vibex can do itself, one after another: install Claude Code, the skill, the
+    /// approval hooks and the vibex command, ask for notifications and folders, and download the iOS
+    /// simulator when Xcode is there. Only what needs System Settings (Full Disk Access) or the App
+    /// Store (Xcode) is left for the user, and the rows say so.
+    private(set) var isSettingUpEverything = false
+
+    var canSetUpEverything: Bool { !isSettingUpEverything && !automaticSteps.isEmpty }
+
+    private var automaticSteps: [SetupItem.ID] {
+        let order: [SetupItem.ID] = [.claude, .vibexSkill, .approvalHooks, .commandLine, .notifications, .folders, .xcode]
+        return order.filter { id in
+            guard status(id) == .needed || { if case .failed = status(id) { true } else { false } }() else { return false }
+            switch id {
+            case .folders: return status(.fullDiskAccess) != .ready
+            case .notifications: return !Defaults.notificationsRequested
+            case .xcode: return FileManager.default.fileExists(atPath: Toolchain.developerDir)
+            default: return true
+            }
+        }
+    }
+
+    func setUpEverything() {
+        guard canSetUpEverything else { return }
+        isSettingUpEverything = true
+        let steps = automaticSteps
+        Task {
+            for id in steps {
+                perform(id)
+                // Each step runs in the background; wait for it before starting the next, so prompts
+                // and installs come one at a time.
+                while isWorking(id) || status(id) == .checking {
+                    try? await Task.sleep(for: .milliseconds(250))
+                }
+            }
+            isSettingUpEverything = false
+        }
+    }
+
     // MARK: - Private
 
     private func run(_ id: SetupItem.ID, _ activity: String, _ work: @escaping () async throws -> Void) {

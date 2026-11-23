@@ -94,6 +94,9 @@ final class AttentionCenter {
     }
 
     private(set) var waiting: [UUID: Item] = [:]
+    /// Tabs where Claude Code is in the middle of a turn: from a prompt until it stops. Keep Awake
+    /// holds the Mac awake while this isn't empty.
+    private(set) var working: Set<UUID> = []
     /// Tabs whose Claude session just finished a turn, briefly, for "done" notifications.
     private var notified: Set<UUID> = []
 
@@ -104,6 +107,11 @@ final class AttentionCenter {
     // MARK: - Events
 
     func handle(_ event: Event, tabID: UUID, windowID: String) {
+        switch event.name {
+        case .userPromptSubmit, .postToolUse: working.insert(tabID)
+        case .stop, .sessionEnd: working.remove(tabID)
+        default: break
+        }
         if let (kind, message) = event.waitingMessage {
             // A Notification right after a PermissionRequest repeats it; keep the more specific one.
             if event.name == .notification, waiting[tabID]?.kind == .permission { return }
@@ -124,6 +132,10 @@ final class AttentionCenter {
 
     /// Tabs that closed can't be waiting.
     func forget(tabs: Set<UUID>, inWindow windowID: String) {
+        // Tabs are per window, so only this window's closed tabs can be dropped here; the ids are
+        // unique, so a working tab that's gone from every window simply never stops otherwise.
+        let open = Set(WindowManager.shared.windows.flatMap { $0.workspace.terminalPane.tabSummaries().map(\.id) }).union(tabs)
+        working.formIntersection(open)
         for item in waiting.values where item.windowID == windowID && !tabs.contains(item.tabID) {
             clear(item.tabID)
         }

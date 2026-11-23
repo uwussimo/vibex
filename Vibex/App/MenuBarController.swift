@@ -10,6 +10,9 @@ final class MenuBarController: NSObject, NSMenuDelegate {
     private let updater: Updater
     private var windows: WindowManager { .shared }
     private var bootedDevices: [SimDevice] = []
+    /// A coffee cup beside the Vibex icon, only while Keep Awake is on; its menu is Keep Awake's.
+    private var keepAwakeItem: NSStatusItem?
+    private var keepAwake: KeepAwake { .shared }
 
     init(mcp: MCPService, updater: Updater) {
         self.mcp = mcp
@@ -21,6 +24,34 @@ final class MenuBarController: NSObject, NSMenuDelegate {
         statusItem.button?.image = Self.icon(dot: nil)
         statusItem.button?.toolTip = "Vibex"
         observeRuns()
+        observeKeepAwake()
+    }
+
+    private func observeKeepAwake() {
+        Task { [weak self] in
+            let changes = Observations { (KeepAwake.shared.isActive, KeepAwake.shared.summary) }
+            for await (active, summary) in changes {
+                guard let self else { return }
+                if active {
+                    let item = keepAwakeItem ?? NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
+                    if keepAwakeItem == nil {
+                        let image = NSImage(named: "ph.coffee.fill")
+                        image?.size = NSSize(width: 16, height: 16)
+                        image?.isTemplate = true
+                        item.button?.image = image
+                        let menu = NSMenu()
+                        menu.delegate = self
+                        menu.autoenablesItems = false
+                        item.menu = menu
+                        keepAwakeItem = item
+                    }
+                    item.button?.toolTip = "Keep Awake: \(summary)"
+                } else if let item = keepAwakeItem {
+                    NSStatusBar.system.removeStatusItem(item)
+                    keepAwakeItem = nil
+                }
+            }
+        }
     }
 
     /// Filled while any project is running, so a glance at the menu bar says something is live.
@@ -57,7 +88,14 @@ final class MenuBarController: NSObject, NSMenuDelegate {
 
     // MARK: - NSMenuDelegate
 
-    func menuNeedsUpdate(_ menu: NSMenu) { rebuild() }
+    func menuNeedsUpdate(_ menu: NSMenu) {
+        if menu === keepAwakeItem?.menu {
+            menu.removeAllItems()
+            fillKeepAwake(menu)
+        } else {
+            rebuild()
+        }
+    }
 
     func menuWillOpen(_ menu: NSMenu) {
         Task {
@@ -137,7 +175,19 @@ final class MenuBarController: NSObject, NSMenuDelegate {
         } else {
             menu.addItem(action("Check for Updates…", #selector(AppDelegate.checkForUpdates(_:)), icon: .download, target: NSApp.delegate))
         }
-        menu.addItem(action("Setup & Permissions…", #selector(AppDelegate.showSetup(_:)), icon: .checkCircle, target: NSApp.delegate))
+        let awake = NSMenuItem(title: "Keep Awake", action: nil, keyEquivalent: "")
+        awake.image = NSImage(named: keepAwake.isActive ? "ph.coffee.fill" : "ph.coffee").map { image in
+            image.size = NSSize(width: 16, height: 16)
+            image.isTemplate = true
+            return image
+        }
+        if keepAwake.isActive { awake.badge = NSMenuItemBadge(string: keepAwake.summary) }
+        let submenu = NSMenu()
+        submenu.autoenablesItems = false
+        fillKeepAwake(submenu)
+        awake.submenu = submenu
+        menu.addItem(awake)
+        menu.addItem(action("Settings…", #selector(AppDelegate.showSettings(_:)), icon: .settings, target: NSApp.delegate, key: ","))
         if CommandLineTool.installedPath == nil {
             menu.addItem(action("Install 'vibex' Command", #selector(AppDelegate.installCommandLineTool(_:)), icon: .terminal, target: NSApp.delegate))
         }
@@ -185,6 +235,44 @@ final class MenuBarController: NSObject, NSMenuDelegate {
         item.submenu = submenu
         return item
     }
+
+    // MARK: - Keep Awake
+
+    /// The lengths (checked when running), Stop, and the Claude option. "Until…" and the rest live in
+    /// Settings, which a menu can't hold well.
+    private func fillKeepAwake(_ menu: NSMenu) {
+        menu.addItem(disabled(keepAwake.isActive ? "Awake: \(keepAwake.summary)" : "Keep your Mac awake for"))
+        for length in KeepAwake.presets {
+            let item = action(length == .indefinitely ? "Until I turn it off" : Self.longLabel(length), #selector(toggleKeepAwake(_:)), icon: nil)
+            item.representedObject = length.id
+            item.state = keepAwake.length == length ? .on : .off
+            menu.addItem(item)
+        }
+        menu.addItem(action("Until a Time…", #selector(AppDelegate.showKeepAwakeSettings(_:)), icon: nil, target: NSApp.delegate))
+        if keepAwake.length != nil {
+            menu.addItem(.separator())
+            menu.addItem(action("Stop", #selector(stopKeepAwake(_:)), icon: nil))
+        }
+        menu.addItem(.separator())
+        let claude = action("While Claude Code Works", #selector(toggleWhileClaude(_:)), icon: nil)
+        claude.state = keepAwake.whileClaudeWorks ? .on : .off
+        menu.addItem(claude)
+        menu.addItem(action("Keep Awake Settings…", #selector(AppDelegate.showKeepAwakeSettings(_:)), icon: nil, target: NSApp.delegate))
+    }
+
+    private static func longLabel(_ length: KeepAwake.Length) -> String {
+        guard case let .minutes(m) = length else { return length.label }
+        return m < 60 ? "\(m) minutes" : (m == 60 ? "1 hour" : "\(m / 60) hours")
+    }
+
+    @objc private func toggleKeepAwake(_ sender: NSMenuItem) {
+        guard let id = sender.representedObject as? String, let length = KeepAwake.presets.first(where: { $0.id == id }) else { return }
+        keepAwake.toggle(length)
+    }
+
+    @objc private func stopKeepAwake(_ sender: Any?) { keepAwake.stop() }
+
+    @objc private func toggleWhileClaude(_ sender: Any?) { keepAwake.whileClaudeWorks.toggle() }
 
     // MARK: - Actions
 

@@ -104,7 +104,7 @@ struct ActivityBar: View {
                 isSelected: isEditorShowing(.agents),
                 action: actions.showAgents
             )
-            ActivityButton(icon: .settings, label: "Setup", help: "Setup & Permissions", isSelected: false, action: actions.showSetup)
+            ActivityButton(icon: .settings, label: "Settings", help: "Settings (⌘,)", isSelected: false, action: actions.showSetup)
                 .padding(.bottom, 10)
         }
         .padding(.top, 8)
