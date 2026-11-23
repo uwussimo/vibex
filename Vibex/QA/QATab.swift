@@ -185,7 +185,7 @@ private struct QADeviceStrip: View {
                     VStack(spacing: 6) {
                         QATile(device: device, matrix: model.matrix)
                             .frame(width: width(device), height: 290)
-                            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                            .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
                         caption(device)
                     }
                 }
@@ -335,7 +335,7 @@ private struct QAResultsView: View {
                         }
                     }
                     .frame(width: 92, height: 30)
-                    .background(RoundedRectangle(cornerRadius: 6, style: .continuous).fill(result?.id == model.selectedResult && result != nil ? Theme.accent.opacity(0.18) : .clear))
+                    .background(RoundedRectangle(cornerRadius: 3, style: .continuous).fill(result?.id == model.selectedResult && result != nil ? Theme.accent.opacity(0.18) : .clear))
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(PressFeedbackButtonStyle())
@@ -391,13 +391,13 @@ private struct QAResultDetail: View {
                         }
                         .padding(10)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Theme.red.opacity(0.08), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                        .background(Theme.red.opacity(0.08), in: RoundedRectangle(cornerRadius: 4, style: .continuous))
                     }
                     if let image = (shown.flatMap { index in result.steps.first { $0.index == index } } ?? result.failure ?? result.steps.last)
                         .flatMap({ model.screenshot($0.screenshot) }).flatMap({ NSImage(contentsOf: $0) }) {
                         Image(nsImage: image).resizable().aspectRatio(contentMode: .fit)
                             .frame(maxWidth: .infinity, maxHeight: 360)
-                            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                            .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
                     }
                     VStack(alignment: .leading, spacing: 1) {
                         ForEach(result.steps) { step in
@@ -410,7 +410,7 @@ private struct QAResultDetail: View {
                                 }
                                 .padding(.horizontal, 6)
                                 .frame(height: 26)
-                                .background(RoundedRectangle(cornerRadius: 5, style: .continuous).fill(shown == step.index ? Theme.wash(0.06) : .clear))
+                                .background(RoundedRectangle(cornerRadius: 3, style: .continuous).fill(shown == step.index ? Theme.wash(0.06) : .clear))
                                 .contentShape(Rectangle())
                             }
                             .buttonStyle(.plain)
@@ -422,8 +422,8 @@ private struct QAResultDetail: View {
         }
         .frame(width: 320)
         .frame(maxHeight: .infinity, alignment: .top)
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(Theme.line))
+        .background(Theme.card, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).strokeBorder(Theme.line))
         .shadow(color: .black.opacity(0.3), radius: 16, y: 6)
     }
 }

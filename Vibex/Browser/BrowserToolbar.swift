@@ -86,11 +86,11 @@ struct BrowserToolbar: View {
         .padding(.horizontal, 10)
         .frame(height: 28)
         .background(
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
+            RoundedRectangle(cornerRadius: 4, style: .continuous)
                 .fill(Color.primary.opacity(isEditing ? 0.08 : 0.05))
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
+            RoundedRectangle(cornerRadius: 4, style: .continuous)
                 .strokeBorder(isEditing ? Color.accentColor.opacity(0.6) : Color.clear, lineWidth: 1)
         )
         .animation(.spring(response: 0.25, dampingFraction: 1), value: isEditing)

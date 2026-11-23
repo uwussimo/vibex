@@ -119,8 +119,8 @@ struct UpdateView: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .background(Theme.card)
-                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(Theme.line))
+                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).strokeBorder(Theme.line))
                 .padding(.horizontal, 24)
                 .padding(.bottom, 16)
             } else {

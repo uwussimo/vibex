@@ -24,7 +24,7 @@ struct ClaudeChatView: View {
         .task { ClaudeCatalog.shared.load(folder: model.folder, environment: model.environment) }
         .overlay {
             if isDropTargeted {
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
                     .strokeBorder(Theme.accent, lineWidth: 2)
                     .padding(6)
                     .allowsHitTesting(false)
@@ -169,7 +169,7 @@ private struct ClaudeItemRow: View, Equatable {
                     .textSelection(.enabled)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 8)
-                    .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Theme.raised))
+                    .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Theme.raised))
             }
         case let .attachments(images, files):
             HStack(spacing: 6) {
@@ -183,7 +183,7 @@ private struct ClaudeItemRow: View, Equatable {
                             .resizable()
                             .scaledToFit()
                             .frame(maxWidth: 220, maxHeight: 180)
-                            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                            .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
                     }
                 }
             }
@@ -201,7 +201,7 @@ private struct ClaudeItemRow: View, Equatable {
                     .controlSize(.small)
             }
             .padding(10)
-            .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Theme.muted.opacity(0.1)))
+            .background(RoundedRectangle(cornerRadius: 6, style: .continuous).fill(Theme.muted.opacity(0.1)))
         case let .notice(message, isError):
             HStack(alignment: .top, spacing: 8) {
                 IconView(isError ? .alert : .info, size: 14).foregroundStyle(isError ? Theme.red : Theme.muted)
@@ -209,7 +209,7 @@ private struct ClaudeItemRow: View, Equatable {
             }
             .padding(10)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill((isError ? Theme.red : Theme.muted).opacity(0.1)))
+            .background(RoundedRectangle(cornerRadius: 6, style: .continuous).fill((isError ? Theme.red : Theme.muted).opacity(0.1)))
         case let .done(seconds):
             Text(seconds > 0 ? "Finished in \(Self.duration(seconds))" : "Finished")
                 .font(.vibex(size: 11))
@@ -543,8 +543,8 @@ private struct ClaudeComposer: View {
             .padding(.horizontal, 8)
             .padding(.bottom, 8)
         }
-        .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Theme.surface))
-        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(isFocused ? Theme.lineStrong : Theme.line))
+        .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Theme.surface))
+        .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(isFocused ? Theme.lineStrong : Theme.line))
         .contentShape(Rectangle())
         .onTapGesture { isFocused = true }
         .frame(maxWidth: 820)
@@ -886,7 +886,7 @@ private struct ClaudeFileChip: View {
         }
         .padding(.horizontal, 9)
         .frame(height: 30)
-        .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Theme.raised))
+        .background(RoundedRectangle(cornerRadius: 4, style: .continuous).fill(Theme.raised))
     }
 }
 
@@ -903,7 +903,7 @@ private struct ClaudeAttachmentChip: View {
                         .resizable()
                         .scaledToFill()
                         .frame(width: 44, height: 44)
-                        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                        .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
                 }
             case let .file(url):
                 ClaudeFileChip(name: url.lastPathComponent).padding(.vertical, 7)
@@ -1024,14 +1024,14 @@ private struct ClaudeToolCard: View {
                     .resizable()
                     .scaledToFit()
                     .frame(maxWidth: 320, maxHeight: 420, alignment: .leading)
-                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
                     .padding(.horizontal, 10)
                     .padding(.bottom, 10)
             }
             if isExpanded { details }
         }
-        .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Theme.card))
-        .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(result?.isError == true ? Theme.red.opacity(0.4) : Theme.line))
+        .background(RoundedRectangle(cornerRadius: 6, style: .continuous).fill(Theme.card))
+        .overlay(RoundedRectangle(cornerRadius: 6, style: .continuous).strokeBorder(result?.isError == true ? Theme.red.opacity(0.4) : Theme.line))
     }
 
     @ViewBuilder
@@ -1049,7 +1049,7 @@ private struct ClaudeToolCard: View {
                 Button { openFile(URL(fileURLWithPath: path)) } label: {
                     Text(path.hasPrefix(folder + "/") ? String(path.dropFirst(folder.count + 1)) : path)
                         .font(.vibexCode(size: 11))
-                        .foregroundStyle(Theme.accent)
+                        .foregroundStyle(Theme.link)
                 }
                 .buttonStyle(.plain)
             }
@@ -1098,8 +1098,8 @@ private struct ClaudePermissionCard: View {
         }
         .padding(12)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Theme.accent.opacity(0.09)))
-        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(Theme.accent.opacity(0.5)))
+        .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Theme.accent.opacity(0.09)))
+        .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).strokeBorder(Theme.accent.opacity(0.5)))
     }
 
     private var approval: some View {
@@ -1203,7 +1203,7 @@ private struct ClaudeQuestionCard: View {
                             }
                             .padding(9)
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(RoundedRectangle(cornerRadius: 9, style: .continuous).fill(answers[question.question] == option.label ? Theme.accent.opacity(0.25) : Theme.card))
+                            .background(RoundedRectangle(cornerRadius: 4, style: .continuous).fill(answers[question.question] == option.label ? Theme.accent.opacity(0.25) : Theme.card))
                             .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)

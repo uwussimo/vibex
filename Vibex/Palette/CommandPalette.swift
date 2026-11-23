@@ -113,8 +113,8 @@ struct CommandPaletteView: View {
         }
         .frame(width: 620)
         .fixedSize(horizontal: false, vertical: true)
-        .background(Theme.background, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(Color.primary.opacity(0.1)))
+        .background(Theme.background, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(Color.primary.opacity(0.1)))
         .shadow(color: .black.opacity(0.3), radius: 30, y: 14)
     }
 
@@ -157,7 +157,7 @@ private struct PaletteRow: View {
         .padding(.horizontal, 10)
         .frame(height: row.item.subtitle == nil ? 34 : 42)
         .background(
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
+            RoundedRectangle(cornerRadius: 4, style: .continuous)
                 .fill(isSelected ? Color.accentColor : Color.clear)
         )
         .contentShape(Rectangle())

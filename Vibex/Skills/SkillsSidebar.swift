@@ -126,7 +126,7 @@ struct SkillsSidebar: View {
         }
         .padding(.leading, 10)
         .padding(.vertical, 4)
-        .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Color.primary.opacity(0.06)))
+        .background(RoundedRectangle(cornerRadius: 4, style: .continuous).fill(Color.primary.opacity(0.06)))
         .padding(.horizontal, 12)
     }
 }
@@ -169,7 +169,7 @@ private struct SkillRow: View {
         .padding(.trailing, 10)
         .padding(.vertical, 6)
         .background(
-            RoundedRectangle(cornerRadius: 6, style: .continuous)
+            RoundedRectangle(cornerRadius: 3, style: .continuous)
                 .fill(Color.primary.opacity(isHovering ? 0.05 : 0))
                 .padding(.horizontal, 6)
         )
@@ -203,7 +203,7 @@ struct RowIconButton: View {
             IconView(icon, size: 12.5)
                 .frame(width: 24, height: 24)
                 .background(
-                    RoundedRectangle(cornerRadius: 5, style: .continuous)
+                    RoundedRectangle(cornerRadius: 3, style: .continuous)
                         .fill(Color.primary.opacity(isHovering ? 0.1 : 0))
                 )
                 .contentShape(Rectangle())

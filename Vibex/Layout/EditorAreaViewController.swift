@@ -623,14 +623,14 @@ private struct EditorTabCell: View {
         .frame(height: 26)
         .frame(minWidth: 90, maxWidth: 210)
         .background(
-            RoundedRectangle(cornerRadius: 7, style: .continuous)
+            RoundedRectangle(cornerRadius: 4, style: .continuous)
                 .fill(Theme.wash(isSelected ? 0.08 : (isHovering ? 0.04 : 0)))
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 7, style: .continuous)
+            RoundedRectangle(cornerRadius: 4, style: .continuous)
                 .strokeBorder(isSelected ? Theme.line : .clear)
         )
-        .contentShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
+        .contentShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
         .onTapGesture {
             select()
             if NSApp.currentEvent?.clickCount == 2 { duplicate() }

@@ -122,7 +122,7 @@ private struct InstalledServerRow: View {
         }
         .padding(.horizontal, 8)
         .frame(height: 44)
-        .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Theme.wash(isHovering ? 0.05 : 0)))
+        .background(RoundedRectangle(cornerRadius: 4, style: .continuous).fill(Theme.wash(isHovering ? 0.05 : 0)))
         .onHover { isHovering = $0 }
         .help(server.isVibex ? "Vibex's own server; it registers itself" : helpText)
     }
@@ -220,8 +220,8 @@ struct MCPMarketplaceView: View {
                 }
                 .padding(.horizontal, 12)
                 .frame(height: 36)
-                .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Theme.raised))
-                .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(searchFocused ? Theme.accent.opacity(0.6) : Theme.line))
+                .background(RoundedRectangle(cornerRadius: 6, style: .continuous).fill(Theme.raised))
+                .overlay(RoundedRectangle(cornerRadius: 6, style: .continuous).strokeBorder(searchFocused ? Theme.accent.opacity(0.6) : Theme.line))
             }
             .padding(.horizontal, 20)
             .padding(.vertical, 16)
@@ -294,7 +294,7 @@ private struct ServerCard: View {
             if let homepage = spec.homepage {
                 Link(destination: homepage) {
                     HStack(spacing: 4) { Text("More info"); IconView(.arrowUpRight, size: 11) }
-                        .font(.vibex(size: 11.5, weight: .medium)).foregroundStyle(Theme.accent)
+                        .font(.vibex(size: 11.5, weight: .medium)).foregroundStyle(Theme.link)
                 }
             }
             if model.installedScope(of: spec) == nil { installButtons }

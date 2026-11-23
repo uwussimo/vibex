@@ -119,7 +119,7 @@ struct ClaudeAgentsBar: View {
         }
         .padding(.leading, 10)
         .padding(.vertical, 4)
-        .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Theme.green.opacity(0.1)))
+        .background(RoundedRectangle(cornerRadius: 6, style: .continuous).fill(Theme.green.opacity(0.1)))
     }
 
     private func message(_ text: String, icon: Icon, tint: Color, dismiss: @escaping () -> Void) -> some View {
@@ -132,7 +132,7 @@ struct ClaudeAgentsBar: View {
         }
         .padding(.leading, 10)
         .padding(.vertical, 2)
-        .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(tint.opacity(0.1)))
+        .background(RoundedRectangle(cornerRadius: 6, style: .continuous).fill(tint.opacity(0.1)))
     }
 }
 
@@ -161,7 +161,7 @@ private struct AgentPill: View {
             .monospacedDigit()
             .padding(.horizontal, 9)
             .frame(height: 26)
-            .background(RoundedRectangle(cornerRadius: 7, style: .continuous).fill(Theme.wash(isCurrent ? 0.09 : (isHovering ? 0.05 : 0))))
+            .background(RoundedRectangle(cornerRadius: 4, style: .continuous).fill(Theme.wash(isCurrent ? 0.09 : (isHovering ? 0.05 : 0))))
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)

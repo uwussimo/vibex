@@ -91,11 +91,11 @@ struct SetupView: View {
                 }
             }
             .background(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
                     .fill(Color.primary.opacity(0.04))
             )
             .overlay(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
                     .strokeBorder(Color.primary.opacity(0.06))
             )
         }
@@ -145,12 +145,12 @@ private struct SetupRow: View {
                 if let logo {
                     BrandLogoView(logo, size: 20)
                         .frame(width: 30, height: 30)
-                        .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Theme.raised))
+                        .background(RoundedRectangle(cornerRadius: 4, style: .continuous).fill(Theme.raised))
                 } else {
                     IconView(content.icon, size: 16)
                         .foregroundStyle(.white)
                         .frame(width: 30, height: 30)
-                        .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(content.tint.gradient))
+                        .background(RoundedRectangle(cornerRadius: 4, style: .continuous).fill(content.tint.gradient))
                 }
             }
             VStack(alignment: .leading, spacing: 2) {

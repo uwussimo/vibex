@@ -74,7 +74,7 @@ struct ServersSidebar: View {
         }
         .padding(.horizontal, 10)
         .frame(height: 30)
-        .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Theme.raised))
+        .background(RoundedRectangle(cornerRadius: 4, style: .continuous).fill(Theme.raised))
         .padding(.horizontal, 10)
         .padding(.bottom, 4)
     }
@@ -135,7 +135,7 @@ struct ServersSidebar: View {
             .help("Dismiss")
         }
         .padding(8)
-        .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Theme.red.opacity(0.1)))
+        .background(RoundedRectangle(cornerRadius: 6, style: .continuous).fill(Theme.red.opacity(0.1)))
     }
 }
 
@@ -156,7 +156,7 @@ private struct ServerRow: View {
                     .font(.vibex(size: 12, weight: .semibold))
                     .foregroundStyle(Theme.text)
                     .frame(width: 26, height: 26)
-                    .background(RoundedRectangle(cornerRadius: 7, style: .continuous).fill(Theme.raised))
+                    .background(RoundedRectangle(cornerRadius: 4, style: .continuous).fill(Theme.raised))
                 VStack(alignment: .leading, spacing: 1) {
                     Text(server.name).font(.vibex(size: 12.5, weight: .medium)).foregroundStyle(Theme.text).lineLimit(1)
                     Text(server.endpointDescription)
@@ -174,7 +174,7 @@ private struct ServerRow: View {
             }
             .padding(.horizontal, 8)
             .frame(height: 44)
-            .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Theme.wash(isHovering ? 0.05 : 0)))
+            .background(RoundedRectangle(cornerRadius: 4, style: .continuous).fill(Theme.wash(isHovering ? 0.05 : 0)))
             .contentShape(Rectangle())
         }
         .buttonStyle(PressFeedbackButtonStyle())

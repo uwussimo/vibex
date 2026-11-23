@@ -285,8 +285,8 @@ struct MarkdownView: View {
                         Divider().gridCellUnsizedAxes(.horizontal)
                     }
                 }
-                .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).strokeBorder(Theme.line))
-                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 4, style: .continuous).strokeBorder(Theme.line))
+                .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
             }
         case .rule:
             Rectangle().fill(Theme.line).frame(height: 1).padding(.vertical, 4)
@@ -338,8 +338,8 @@ private struct CodeBlock: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Theme.code).overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(Theme.line)))
-        .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(Theme.line))
+        .background(RoundedRectangle(cornerRadius: 6, style: .continuous).fill(Theme.code).overlay(RoundedRectangle(cornerRadius: 6, style: .continuous).strokeBorder(Theme.line)))
+        .overlay(RoundedRectangle(cornerRadius: 6, style: .continuous).strokeBorder(Theme.line))
     }
 
     private var highlighted: AttributedString {

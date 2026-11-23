@@ -62,8 +62,8 @@ struct ToastView: View {
                 .padding(.horizontal, 14)
                 .padding(.vertical, 10)
                 .frame(width: 360, alignment: .leading)
-                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(Color.primary.opacity(0.08)))
+                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).strokeBorder(Color.primary.opacity(0.08)))
                 .shadow(color: .black.opacity(0.25), radius: 18, y: 8)
                 .onTapGesture {
                     toast.action?()

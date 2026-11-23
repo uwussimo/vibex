@@ -52,7 +52,7 @@ struct WelcomeView: View {
         .frame(width: 520, height: 540)
         .background(Theme.background)
         .overlay {
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
                 .strokeBorder(Color.accentColor, lineWidth: 2)
                 .padding(6)
                 .opacity(isDropTargeted ? 1 : 0)
@@ -170,10 +170,10 @@ private struct WelcomeAction: View {
             .padding(.horizontal, 14)
             .frame(height: 40)
             .background(
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                RoundedRectangle(cornerRadius: 6, style: .continuous)
                     .fill(Color.primary.opacity(isHovering ? 0.08 : 0.05))
             )
-            .contentShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .contentShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
         }
         .buttonStyle(PressFeedbackButtonStyle())
         .onHover { isHovering = $0 }

@@ -209,7 +209,7 @@ struct ActivityButton: View {
                 .foregroundStyle(isSelected ? Theme.text : (isHovering ? Theme.text.opacity(0.85) : Theme.muted))
                 .frame(width: 48, height: 44)
                 .background(
-                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    RoundedRectangle(cornerRadius: 6, style: .continuous)
                         .fill(Theme.wash(isSelected ? 0.08 : (isHovering ? 0.045 : 0)))
                 )
                 .overlay(alignment: .topTrailing) { indicator }

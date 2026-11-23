@@ -212,7 +212,7 @@ struct FileTabView: View {
                         .foregroundStyle(Theme.text)
                         .padding(.horizontal, 8)
                         .frame(height: 24)
-                        .background(RoundedRectangle(cornerRadius: 6, style: .continuous).fill(Theme.raised))
+                        .background(RoundedRectangle(cornerRadius: 3, style: .continuous).fill(Theme.raised))
                     }
                     .buttonStyle(.plain)
                 }

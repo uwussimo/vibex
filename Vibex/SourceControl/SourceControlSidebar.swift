@@ -99,7 +99,7 @@ struct SourceControlSidebar: View {
                 .help("Show this project's own changes")
         }
         .padding(10)
-        .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Theme.accent.opacity(0.12)))
+        .background(RoundedRectangle(cornerRadius: 6, style: .continuous).fill(Theme.accent.opacity(0.12)))
         .padding(.horizontal, 12)
         .padding(.bottom, 10)
     }
@@ -117,11 +117,11 @@ struct SourceControlSidebar: View {
                 .padding(.horizontal, 9)
                 .padding(.vertical, 7)
                 .background(
-                    RoundedRectangle(cornerRadius: 7, style: .continuous)
+                    RoundedRectangle(cornerRadius: 4, style: .continuous)
                         .fill(Color.primary.opacity(0.06))
                 )
                 .overlay(
-                    RoundedRectangle(cornerRadius: 7, style: .continuous)
+                    RoundedRectangle(cornerRadius: 4, style: .continuous)
                         .strokeBorder(messageFocused ? Color.accentColor.opacity(0.7) : Color.primary.opacity(0.08), lineWidth: messageFocused ? 1.5 : 1)
                 )
                 .onKeyPress(.return, phases: .down) { press in
@@ -417,7 +417,7 @@ private struct ChangeRow: View {
         .padding(.trailing, 12)
         .frame(height: 26)
         .background(
-            RoundedRectangle(cornerRadius: 6, style: .continuous)
+            RoundedRectangle(cornerRadius: 3, style: .continuous)
                 .fill(isSelected ? Color.accentColor.opacity(0.22) : (isHovering ? Color.primary.opacity(0.06) : .clear))
                 .padding(.horizontal, 6)
         )
@@ -463,7 +463,7 @@ private struct HoverIconButton: View {
             IconView(icon, size: 12.5)
                 .frame(width: 24, height: 24)
                 .background(
-                    RoundedRectangle(cornerRadius: 5, style: .continuous)
+                    RoundedRectangle(cornerRadius: 3, style: .continuous)
                         .fill(Color.primary.opacity(isHovering ? 0.1 : 0))
                 )
                 .contentShape(Rectangle())
@@ -532,7 +532,7 @@ private struct NoticeRow: View {
         }
         .padding(.leading, 10)
         .padding(.vertical, 4)
-        .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(tint.opacity(0.1)))
+        .background(RoundedRectangle(cornerRadius: 4, style: .continuous).fill(tint.opacity(0.1)))
     }
 
     private var icon: Icon {
@@ -626,7 +626,7 @@ private struct ProblemRow: View {
         }
         .padding(.leading, 10)
         .padding(.vertical, 2)
-        .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Color(nsColor: .systemRed).opacity(0.1)))
+        .background(RoundedRectangle(cornerRadius: 4, style: .continuous).fill(Color(nsColor: .systemRed).opacity(0.1)))
     }
 }
 

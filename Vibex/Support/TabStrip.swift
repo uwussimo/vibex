@@ -141,8 +141,8 @@ private struct TabStripCell: View {
         .padding(.trailing, 3)
         .frame(height: 26)
         .frame(minWidth: 90, maxWidth: 200)
-        .background(RoundedRectangle(cornerRadius: 7, style: .continuous).fill(fill))
-        .contentShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
+        .background(RoundedRectangle(cornerRadius: 4, style: .continuous).fill(fill))
+        .contentShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
         .onTapGesture {
             select()
             if NSApp.currentEvent?.clickCount == 2 { duplicate() }

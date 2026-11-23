@@ -59,11 +59,11 @@ struct CredentialPromptBar: View {
         .padding(.horizontal, 14)
         .padding(.vertical, 12)
         .background {
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
                 // Thick, not regular: terminal text must not read through a password prompt.
                 .fill(.thickMaterial)
                 .overlay {
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
                         .strokeBorder(Color.primary.opacity(0.10), lineWidth: 1)
                 }
         }

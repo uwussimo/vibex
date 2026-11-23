@@ -16,10 +16,10 @@ struct ToolbarIconButton: View {
                 .frame(width: 28, height: 28)
                 .foregroundStyle(isActive ? Theme.accent : (isHovering && isEnabled ? Theme.text : Theme.muted))
                 .background(
-                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    RoundedRectangle(cornerRadius: 3, style: .continuous)
                         .fill(isHovering && isEnabled ? Theme.wash(0.08) : Color.clear)
                 )
-                .contentShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+                .contentShape(RoundedRectangle(cornerRadius: 3, style: .continuous))
         }
         .buttonStyle(PressFeedbackButtonStyle())
         .disabled(!isEnabled)
