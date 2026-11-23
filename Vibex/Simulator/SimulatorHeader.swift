@@ -184,7 +184,7 @@ struct SimulatorEmptyState: View {
                 }
             }
             .font(.vibex(size: 13, weight: .medium))
-            .buttonStyle(.borderedProminent)
+            .buttonStyle(.primary)
             .controlSize(.regular)
             .disabled(isBusy || state == .connecting)
             if let errorMessage {

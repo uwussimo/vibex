@@ -43,7 +43,7 @@ struct SkillsSidebar: View {
                     .font(.vibex(size: 12.5, weight: .medium))
                     .frame(maxWidth: .infinity)
             }
-            .buttonStyle(.borderedProminent)
+            .buttonStyle(.primary)
             .controlSize(.regular)
             .padding(12)
         }

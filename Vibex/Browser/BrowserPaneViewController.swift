@@ -15,7 +15,7 @@ final class BrowserPaneViewController: NSViewController, NSMenuItemValidation {
     var onTabsChange: () -> Void = {}
     /// A tab became the selected one (by click, by a link opening a new tab, or by Run).
     var onSelect: (UUID) -> Void = { _ in }
-    private let container = NSView()
+    private let container = ThemedLayerView(fill: Theme.NS.background)
     private var hasRestored = false
 
     var selectedTab: BrowserTab? { tabs.first { $0.id == selectedID } }
@@ -45,8 +45,6 @@ final class BrowserPaneViewController: NSViewController, NSMenuItemValidation {
         toolbar.sizingOptions = []
         toolbar.translatesAutoresizingMaskIntoConstraints = false
         container.translatesAutoresizingMaskIntoConstraints = false
-        container.wantsLayer = true
-        container.layer?.backgroundColor = Theme.NS.background.cgColor
 
         root.addSubview(toolbar)
         root.addSubview(container)

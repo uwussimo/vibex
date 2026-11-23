@@ -53,9 +53,9 @@ private struct EmptyStateRow: View {
                 Spacer()
                 Text(shortcut)
                     .font(.vibex(size: 12))
-                    .foregroundStyle(isPrimary ? Color.white.opacity(0.7) : Theme.faint)
+                    .foregroundStyle(isPrimary ? Theme.onAccent.opacity(0.7) : Theme.faint)
             }
-            .foregroundStyle(isPrimary ? Color.white : Theme.text)
+            .foregroundStyle(isPrimary ? Theme.onAccent : Theme.text)
             .padding(.horizontal, 14)
             .frame(height: 38)
             .background(

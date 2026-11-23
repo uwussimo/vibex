@@ -328,7 +328,7 @@ private struct ServerCard: View {
             Button { model.install(spec, scope: .user) } label: {
                 Text("Global install").font(.vibex(size: 12, weight: .medium)).frame(maxWidth: .infinity)
             }
-            .buttonStyle(.borderedProminent)
+            .buttonStyle(.primary)
             .help("Install for every project")
         }
         .controlSize(.small)
@@ -374,7 +374,7 @@ private struct InstallFieldsSheet: View {
                     model.install(spec, scope: scope, values: values)
                     dismiss()
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.primary)
                 .keyboardShortcut(.defaultAction)
                 .disabled(spec.inputs.contains { $0.isRequired && (values[$0.name] ?? "").isEmpty })
             }

@@ -14,8 +14,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var menuBar: MenuBarController?
 
     func applicationWillFinishLaunching(_ notification: Notification) {
-        // Vibex is dark everywhere, like its terminal and its site.
-        NSApp.appearance = NSAppearance(named: .aqua)
+        // System, Light or Dark, as chosen in Settings.
+        AppearanceChoice.current.apply()
         NSApp.mainMenu = MainMenu.build()
     }
 

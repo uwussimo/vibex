@@ -118,7 +118,7 @@ struct SetupView: View {
                     .font(.vibex(size: 13, weight: .medium))
                     .frame(minWidth: 120)
             }
-            .buttonStyle(.borderedProminent)
+            .buttonStyle(.primary)
             .controlSize(.large)
             .keyboardShortcut(.defaultAction)
         }

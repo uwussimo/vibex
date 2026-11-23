@@ -133,9 +133,7 @@ final class DeviceMatrixViewController: NSViewController {
     required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
 
     override func loadView() {
-        let root = NSView()
-        root.wantsLayer = true
-        root.layer?.backgroundColor = Theme.NS.background.cgColor
+        let root = ThemedLayerView(fill: Theme.NS.background)
         let toolbar = NSHostingView(rootView: DeviceMatrixToolbar(model: model, runner: runner))
         toolbar.sizingOptions = []
         toolbar.translatesAutoresizingMaskIntoConstraints = false
@@ -402,7 +400,7 @@ private struct DeviceMatrixToolbar: View {
                 HStack(spacing: 5) { IconView(.play, size: 13); Text("Run on All") }
                     .font(.vibex(size: 12, weight: .medium))
             }
-            .buttonStyle(.borderedProminent)
+            .buttonStyle(.primary)
             .disabled(runner.lastLaunch == nil || model.shown.isEmpty || model.busy != nil)
             .help(runner.lastLaunch.map { "Install \($0.app.deletingPathExtension().lastPathComponent) on every device here and launch it" }
                 ?? "Run the app once (Claude's vibex_run builds it), then install it on every device here")
@@ -436,7 +434,7 @@ private struct DeviceMatrixEmptyState: View {
                 } label: {
                     Text("Add \(model.presets.map(\.name).joined(separator: ", "))").font(.vibex(size: 12.5, weight: .medium))
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.primary)
                 .controlSize(.large)
                 .disabled(model.busy != nil)
             }

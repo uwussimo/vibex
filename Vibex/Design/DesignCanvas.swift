@@ -303,7 +303,7 @@ private struct DesignFrame: View {
             IconView(.alert, size: 26).foregroundStyle(Theme.red)
             Text("This screen didn't load").font(.vibex(size: 20, weight: .semibold)).foregroundStyle(Theme.text)
             Text(error).font(.vibex(size: 15)).foregroundStyle(Theme.muted).fixedSize(horizontal: false, vertical: true)
-            Button("Ask Claude to Fix It", action: fix).buttonStyle(.borderedProminent)
+            Button("Ask Claude to Fix It", action: fix).buttonStyle(.primary)
         }
         .padding(28)
         .frame(width: 393, alignment: .leading)

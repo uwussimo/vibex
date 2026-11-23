@@ -115,7 +115,7 @@ struct ServersSidebar: View {
             Button { editing = .new } label: {
                 Text("Add Server").font(.vibex(size: 12.5, weight: .medium)).frame(minWidth: 110)
             }
-            .buttonStyle(.borderedProminent)
+            .buttonStyle(.primary)
             .controlSize(.regular)
             .padding(.top, 4)
         }

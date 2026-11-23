@@ -73,7 +73,7 @@ struct QATabView: View {
                 // With no flows, the way forward is the empty state's button, right where it's explained.
                 if !model.flows.isEmpty {
                     Button("Run All") { Task { await model.runFlows() } }
-                        .buttonStyle(.borderedProminent)
+                        .buttonStyle(.primary)
                         .disabled(model.devices.isEmpty)
                         .help(model.devices.isEmpty ? "Add devices first" : "Run every flow on every device in the grid")
                 }
@@ -107,7 +107,7 @@ struct QATabView: View {
                 .font(.vibex(size: 12)).foregroundStyle(Theme.muted).multilineTextAlignment(.center).frame(maxWidth: 340)
             HStack(spacing: 8) {
                 Button("Add Standard Devices") { Task { await model.matrix.addStandardDevices() } }
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(.primary)
                     .disabled(model.matrix.busy != nil)
                 Button("Choose Devices…", action: openDevices)
             }
@@ -157,7 +157,7 @@ private struct QARunSummary: View {
             Spacer(minLength: 0)
             if run.failed > 0 {
                 Button("Ask Claude to Fix", action: model.fixFailures)
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(.primary)
                     .controlSize(.small)
                     .disabled(model.chat.isBusy)
             }
@@ -264,7 +264,7 @@ private struct QAResultsView: View {
                 Text("Ask Claude to write tests for this app. They're Maestro-style YAML files in \(QAModel.folderName)/flows, one journey per file.")
                     .font(.vibex(size: 12)).foregroundStyle(Theme.muted).multilineTextAlignment(.center).frame(maxWidth: 380)
                 Button("Write Tests for This App", action: model.writeTests)
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(.primary)
                     .disabled(model.chat.isBusy)
                     .padding(.top, 4)
             }

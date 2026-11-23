@@ -202,7 +202,7 @@ private struct MarketplaceRow: View {
             .help(scope == .global ? "Installed for every project" : "Installed for \(projectName)")
         } else if scope == .global {
             Button { install(scope) } label: { Text(title).font(.vibex(size: 12, weight: .medium)) }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.primary)
                 .help(help)
         } else {
             Button { install(scope) } label: { Text(title).font(.vibex(size: 12, weight: .medium)) }

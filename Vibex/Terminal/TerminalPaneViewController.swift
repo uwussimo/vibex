@@ -36,7 +36,7 @@ final class TerminalPaneViewController: NSViewController {
     private var selectedID: UUID?
     var selectedTabID: UUID? { selectedID }
     let tabBarModel = TerminalTabBarModel()
-    private let container = NSView()
+    private let container = ThemedLayerView(fill: TerminalTheme.background)
     private var hasRestored = false
     private var clickMonitor: Any?
     /// Tabs were opened or closed (the workspace collapses the column when none are left).
@@ -60,9 +60,8 @@ final class TerminalPaneViewController: NSViewController {
     required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
 
     override func loadView() {
-        let root = NSView()
-        root.wantsLayer = true
-        root.layer?.backgroundColor = TerminalTheme.background.cgColor
+        let root = AppearanceObservingView(fill: TerminalTheme.background)
+        root.onAppearanceChange = { [weak self] in self?.applyTerminalColors() }
 
         let actions = TabStripActions(
             select: { [weak self] id in self?.select(id) },
@@ -74,8 +73,6 @@ final class TerminalPaneViewController: NSViewController {
         tabBar.sizingOptions = []
         tabBar.translatesAutoresizingMaskIntoConstraints = false
         container.translatesAutoresizingMaskIntoConstraints = false
-        container.wantsLayer = true
-        container.layer?.backgroundColor = TerminalTheme.background.cgColor
 
         root.addSubview(tabBar)
         root.addSubview(container)
@@ -195,6 +192,11 @@ final class TerminalPaneViewController: NSViewController {
         )
         Log.terminal.info("opened tab in \(session.directory, privacy: .public)")
         return tab
+    }
+
+    /// Light or Dark changed: every terminal takes the other palette.
+    private func applyTerminalColors() {
+        for tab in tabs { tab.terminal.map(TerminalTheme.applyColors(to:)) }
     }
 
     // MARK: - Claude Code
@@ -514,5 +516,15 @@ extension TerminalPaneViewController: LocalProcessTerminalViewDelegate {
         }
         guard tab.fixedTitle == nil else { return }
         close(tab.id)
+    }
+}
+
+/// The pane's root: its fill follows the appearance, and it says when the appearance changed.
+private final class AppearanceObservingView: ThemedLayerView {
+    var onAppearanceChange: () -> Void = {}
+
+    override func viewDidChangeEffectiveAppearance() {
+        super.viewDidChangeEffectiveAppearance()
+        onAppearanceChange()
     }
 }

@@ -1063,7 +1063,7 @@ private struct ClaudePermissionCard: View {
             }
             HStack(spacing: 8) {
                 Button("Allow") { model.allow(request) }
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(.primary)
                     .keyboardShortcut(.return, modifiers: .command)
                     .help("⌘Return")
                 if request.suggestions != nil {
@@ -1090,7 +1090,7 @@ private struct ClaudePermissionCard: View {
                     model.mode = .acceptEdits
                     model.allow(request)
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.primary)
                 .keyboardShortcut(.return, modifiers: .command)
                 .help("Edits go ahead; commands still ask")
                 Button("Build on Auto") {

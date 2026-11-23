@@ -108,7 +108,7 @@ struct DiffView: View {
         return Button { model.toggleStageAndAdvance(change) } label: {
             Text(title).font(.vibex(size: 12.5, weight: .medium))
         }
-        .buttonStyle(.borderedProminent)
+        .buttonStyle(.primary)
         .controlSize(.regular)
         .disabled(model.busy != nil)
         .help("\(title) and open the next change")

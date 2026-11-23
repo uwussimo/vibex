@@ -158,7 +158,7 @@ struct UpdateView: View {
             }
             .controlSize(.large)
             Button("Restart to Update", action: updater.restartToUpdate)
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.primary)
                 .controlSize(.large)
                 .keyboardShortcut(.defaultAction)
         case .failed:
@@ -167,12 +167,12 @@ struct UpdateView: View {
             }
             .controlSize(.large)
             Button("Try Again") { Task { await updater.check(userInitiated: true) } }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.primary)
                 .controlSize(.large)
                 .keyboardShortcut(.defaultAction)
         case .idle, .checking, .upToDate, .installing:
             Button("Done", action: close)
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.primary)
                 .controlSize(.large)
                 .keyboardShortcut(.defaultAction)
         }
@@ -229,7 +229,7 @@ struct TitlebarStatusView: View {
                         IconView(.download, size: 12)
                         Text(label).font(.vibex(size: 11.5, weight: .medium))
                     }
-                    .foregroundStyle(Theme.background)
+                    .foregroundStyle(Theme.onAccent)
                     .padding(.horizontal, 9)
                     .frame(height: 20)
                     .background(Capsule().fill(Theme.accent))

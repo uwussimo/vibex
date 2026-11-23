@@ -141,7 +141,7 @@ struct SourceControlSidebar: View {
                 }
                 .frame(maxWidth: .infinity)
             }
-            .buttonStyle(.borderedProminent)
+            .buttonStyle(.primary)
             .controlSize(.regular)
             .disabled(!model.canCommit)
 
@@ -296,7 +296,7 @@ struct SourceControlSidebar: View {
                 } label: {
                     Text("Initialize Repository").font(.vibex(size: 12.5, weight: .medium))
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.primary)
                 .disabled(model.busy != nil)
             }
         }
@@ -579,7 +579,7 @@ private struct NoticeRow: View {
     private func noticeButton(_ title: String, prominent: Bool, action: @escaping () -> Void) -> some View {
         let label = Text(title).font(.vibex(size: 12, weight: .medium))
         if prominent {
-            Button(action: action) { label }.buttonStyle(.borderedProminent).controlSize(.small).disabled(model.busy != nil)
+            Button(action: action) { label }.buttonStyle(.primary).controlSize(.small).disabled(model.busy != nil)
         } else {
             Button(action: action) { label }.buttonStyle(.bordered).controlSize(.small).disabled(model.busy != nil)
         }

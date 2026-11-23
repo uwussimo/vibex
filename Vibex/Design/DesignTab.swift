@@ -319,7 +319,7 @@ struct DesignTabView: View {
         HStack(spacing: 10) {
             Text("This design has no UI kit, so each screen has to be restyled by hand.")
                 .font(.vibex(size: 12)).foregroundStyle(Theme.muted)
-            Button("Make UI Kit", action: model.makeKit).buttonStyle(.borderedProminent).controlSize(.small)
+            Button("Make UI Kit", action: model.makeKit).buttonStyle(.primary).controlSize(.small)
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 8)
@@ -374,7 +374,7 @@ struct DesignTabView: View {
                 .fixedSize()
                 .help("More")
                 Button("Build This") { model.build(model.buildPrompt, false) }
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(.primary)
                     .disabled(model.chat.isBusy)
                     .help("Ask Claude to build this design in your project")
             }
