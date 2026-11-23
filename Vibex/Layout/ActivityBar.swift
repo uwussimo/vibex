@@ -1,8 +1,9 @@
 import SwiftUI
 
-/// The thin icon column on the far left, as in VS Code, in groups by what each button opens:
-/// the panes (Terminal, Simulator, Browser, in ⌘1–⌘3 order), then the sidebar views (Source Control,
-/// Skills), with AI Usage and Setup at the bottom.
+/// The thin icon column on the far left, as in VS Code. Grouped by what a button opens, then chunked:
+/// panes (Terminal, Simulator, Browser in ⌘1–⌘3 order · Design, QA), a hairline, sidebar views
+/// (Files, Git · Skills, MCP, Servers), and AI Usage and Settings at the bottom. The terminal, where
+/// the work happens, comes first.
 struct ActivityBar: View {
     let sidebar: SidebarModel
     let sourceControl: SourceControlModel
@@ -43,6 +44,7 @@ struct ActivityBar: View {
                 isSelected: isBrowserShowing,
                 action: actions.showBrowser
             )
+            chunkGap
             ActivityButton(
                 icon: .feather,
                 label: "Design",
@@ -75,6 +77,7 @@ struct ActivityBar: View {
                 badge: sourceControl.status.changeCount,
                 action: actions.toggleSourceControl
             )
+            chunkGap
             ActivityButton(
                 icon: .skills,
                 label: "Skills",
@@ -118,6 +121,10 @@ struct ActivityBar: View {
 
     /// Terminal tabs waiting on the user.
     private var waiting: Int { attention.count(windowID: windowID) }
+
+    /// Space within a group, between chunks: live panes, then make-and-check; the project's own
+    /// files, then what connects to it.
+    private var chunkGap: some View { Color.clear.frame(height: 8) }
 
     /// Space plus a hairline: the panes above, the sidebar views below.
     private var groupDivider: some View {

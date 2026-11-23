@@ -497,7 +497,6 @@ private struct ShortcutLabel: View {
 
 private struct DevicesPage: View {
     @State private var slim = Defaults.slimPreferred
-    @State private var sdk = AndroidSDK.location?.path ?? ""
 
     var body: some View {
         VStack(alignment: .leading, spacing: 22) {
@@ -510,26 +509,7 @@ private struct DevicesPage: View {
                         .onChange(of: slim) { _, on in Defaults.slimPreferred = on }
                 }
             }
-            SettingsGroup(title: "Android Emulator", footer: "Vibex looks in $ANDROID_HOME and ~/Library/Android/sdk. Make emulators in Android Studio's Device Manager; they show up in the Simulator tab.") {
-                SettingsRow(title: "Android SDK", caption: sdk.isEmpty ? "Not found. Install Android Studio, or choose the SDK folder." : (sdk as NSString).abbreviatingWithTildeInPath) {
-                    Button("Choose…", action: choose)
-                }
-                SettingsRow(title: "Emulators", caption: AndroidSDK.avds().isEmpty ? "None yet." : AndroidSDK.avds().joined(separator: ", ")) {
-                    EmptyView()
-                }
-            }
         }
-    }
-
-    private func choose() {
-        let panel = NSOpenPanel()
-        panel.canChooseDirectories = true
-        panel.canChooseFiles = false
-        panel.message = "Choose the Android SDK folder (it holds emulator and platform-tools)."
-        panel.directoryURL = AndroidSDK.location ?? FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Library/Android")
-        guard panel.runModal() == .OK, let url = panel.url else { return }
-        AndroidSDK.customLocation = url
-        sdk = AndroidSDK.location?.path ?? ""
     }
 }
 
