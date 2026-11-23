@@ -6,19 +6,16 @@ struct ClaudeChatView: View {
     let model: ClaudeChatModel
     /// What an empty chat invites; Design has its own.
     var welcome = ClaudeChatWelcome.standard
-    /// Nil where agents don't belong, such as Design.
-    var agents: ClaudeAgentsContext?
     @State private var isDropTargeted = false
 
     var body: some View {
         VStack(spacing: 0) {
-            if let agents { ClaudeAgentsBar(model: agents.model, actions: agents.actions, folder: model.folder) }
             if model.items.isEmpty, !model.isLoadingHistory {
                 ClaudeChatEmptyState(welcome: welcome, model: model)
             } else {
                 transcript
             }
-            ClaudeComposer(model: model, placeholder: welcome.placeholder, agents: agents)
+            ClaudeComposer(model: model, placeholder: welcome.placeholder)
         }
         .background(Theme.background)
         .task { ClaudeCatalog.shared.load(folder: model.folder, environment: model.environment) }
@@ -333,8 +330,7 @@ struct ClaudeChatWelcome {
             ("Build and run this app, then check it works", .play),
             ("Explain how this project is put together", .book),
             ("Find a bug and fix it", .search),
-        ],
-        tip: "Want to try several ideas at once? ⌘Return starts a message as its own agent, on its own branch."
+        ]
     )
 }
 
@@ -417,7 +413,6 @@ private struct ClaudeChatEmptyState: View {
 private struct ClaudeComposer: View {
     let model: ClaudeChatModel
     let placeholder: String
-    let agents: ClaudeAgentsContext?
     @State private var text = ""
     @State private var pasteMonitor: Any?
     @State private var highlighted = 0
@@ -481,7 +476,7 @@ private struct ClaudeComposer: View {
                 .padding(.horizontal, 10)
                 .padding(.top, 10)
             }
-            TextField(isAgentMode ? "Describe the task. It gets its own branch and its own chat." : placeholder, text: $text, axis: .vertical)
+            TextField(placeholder, text: $text, axis: .vertical)
                 .textFieldStyle(.plain)
                 .font(.vibex(size: 13.5))
                 .lineLimit(1...10)
@@ -490,7 +485,6 @@ private struct ClaudeComposer: View {
                 .padding(.top, 11)
                 .padding(.bottom, 8)
                 .onKeyPress(phases: [.down, .repeat], action: handleKey)
-                .onExitCommand { if isAgentMode { agents?.model.isComposing = false } }
                 .onChange(of: text) { old, new in
                     highlighted = 0
                     isMenuDismissed = false
@@ -510,7 +504,6 @@ private struct ClaudeComposer: View {
                 modelMenu
                 Spacer()
                 contextMeter
-                agentToggle
                 if model.isBusy {
                     Button(action: model.stopTurn) {
                         IconView(.stop, size: 13)
@@ -524,13 +517,7 @@ private struct ClaudeComposer: View {
                     .help("Stop (Esc)")
                 }
                 Button(action: submit) {
-                    Group {
-                        if isAgentMode {
-                            Text("Start Agent").font(.vibex(size: 12, weight: .semibold)).padding(.horizontal, 12)
-                        } else {
-                            IconView(.arrowUp, size: 15).frame(width: 28)
-                        }
-                    }
+                    IconView(.arrowUp, size: 15).frame(width: 28)
                     .foregroundStyle(canSend ? Theme.background : Theme.faint)
                     .frame(height: 28)
                     .background(Capsule().fill(canSend ? Theme.accent : Theme.raised))
@@ -538,7 +525,7 @@ private struct ClaudeComposer: View {
                 }
                 .buttonStyle(PressFeedbackButtonStyle())
                 .disabled(!canSend)
-                .help(isAgentMode ? "Start this as a new agent (Return)" : "Send (Return). Shift-Return adds a line. ⌘Return starts it as a new agent.")
+                .help("Send (Return). Shift-Return adds a line.")
             }
             .padding(.horizontal, 8)
             .padding(.bottom, 8)
@@ -584,8 +571,6 @@ private struct ClaudeComposer: View {
         case .return:
             if press.modifiers.contains(.shift) || press.modifiers.contains(.option) {
                 text += "\n"
-            } else if press.modifiers.contains(.command) {
-                startAgent()
             } else if !rows.isEmpty {
                 choose(rows[min(highlighted, rows.count - 1)])
             } else {
@@ -780,49 +765,8 @@ private struct ClaudeComposer: View {
         }
     }
 
-    private var isAgentMode: Bool { agents?.model.isComposing == true }
-
-    /// Sits right by Send, because whether this runs here or as its own agent is decided while writing it.
-    @ViewBuilder
-    private var agentToggle: some View {
-        if let agents {
-            let isAvailable = agents.model.state == .ready
-            Button { agents.model.isComposing.toggle() } label: {
-                HStack(spacing: 5) {
-                    IconView(.branch, size: 12)
-                    Text("Agent").font(.vibex(size: 11.5, weight: isAgentMode ? .medium : .regular))
-                }
-                .foregroundStyle(isAgentMode ? Theme.accent : Theme.muted)
-                .padding(.horizontal, 8)
-                .frame(height: 24)
-                .background(Capsule().fill(isAgentMode ? Theme.accent.opacity(0.14) : .clear))
-                .contentShape(Capsule())
-            }
-            .buttonStyle(.plain)
-            .disabled(!isAvailable)
-            .opacity(isAvailable ? 1 : 0.5)
-            .help(isAvailable
-                ? "Run this message as a parallel agent, on its own branch and in its own chat (⌘Return)"
-                : "Agents need a Git repository. Initialize one in Source Control.")
-        }
-    }
-
-    private func startAgent() {
-        guard canSend, let agents, agents.model.state == .ready, agents.model.busy == nil else { return }
-        let task = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        agents.actions.create(AgentsModel.slug(task.isEmpty ? "agent" : task), task, model.attachments)
-        model.attachments = []
-        agents.model.isComposing = false
-        text = ""
-        historyIndex = nil
-    }
-
     private func submit() {
         guard canSend else { return }
-        if isAgentMode {
-            startAgent()
-            return
-        }
         model.send(text)
         text = ""
         historyIndex = nil

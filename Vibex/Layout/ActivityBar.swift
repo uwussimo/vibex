@@ -8,11 +8,8 @@ struct ActivityBar: View {
     let sourceControl: SourceControlModel
     let tabs: EditorTabsModel
     let panes: PaneVisibility
-    /// The left column's tabs, to tell Claude from Terminal.
-    let leftTabs: TerminalTabBarModel
     let simulator: SimulatorModel
     let attention: AttentionCenter
-    let agents: AgentsModel
     let windowID: String
     let actions: ActivityBarActions
 
@@ -21,24 +18,12 @@ struct ActivityBar: View {
     var body: some View {
         VStack(spacing: 2) {
             ActivityButton(
-                icon: .sparkles,
-                logo: .claude,
-                label: "Claude",
-                help: chatsWaiting > 0
-                    ? "Claude needs you in \(chatsWaiting) chat\(chatsWaiting == 1 ? "" : "s")"
-                    : "Claude (⌃⇧C for a new chat)" + (agents.agents.isEmpty ? "" : ", with \(agents.agents.count) agent\(agents.agents.count == 1 ? "" : "s")"),
-                isSelected: panes.terminal && leftTabs.isClaudeSelected,
-                badge: agents.agents.count,
-                attention: chatsWaiting,
-                action: actions.showClaude
-            )
-            ActivityButton(
                 icon: .terminal,
                 label: "Terminal",
                 help: waiting > 0
                     ? "Claude is waiting in \(waiting) tab\(waiting == 1 ? "" : "s") (⌘1)"
                     : (panes.terminal ? "Terminal (⌘1)" : "Open Terminal (⌘1)"),
-                isSelected: panes.terminal && !leftTabs.isClaudeSelected,
+                isSelected: panes.terminal,
                 attention: waiting,
                 action: actions.showTerminal
             )
@@ -130,9 +115,8 @@ struct ActivityBar: View {
         }
     }
 
-    private var chatsWaiting: Int { leftTabs.tabs.count { $0.isClaude && $0.needsAttention } }
-    /// Terminal tabs waiting on the user; chats count on the Claude button.
-    private var waiting: Int { max(0, attention.count(windowID: windowID) - chatsWaiting) }
+    /// Terminal tabs waiting on the user.
+    private var waiting: Int { attention.count(windowID: windowID) }
 
     /// Space plus a hairline: the panes above, the sidebar views below.
     private var groupDivider: some View {
@@ -153,7 +137,6 @@ struct ActivityBar: View {
 }
 
 struct ActivityBarActions {
-    var showClaude: () -> Void
     var showTerminal: () -> Void
     var showSimulator: () -> Void
     var showBrowser: () -> Void

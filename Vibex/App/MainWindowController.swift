@@ -9,7 +9,6 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
     let toast = ToastModel()
     let sourceControl: SourceControlModel
     let skills: SkillsModel
-    let agents: AgentsModel
     let sidebar = SidebarModel()
     private let columns = NSSplitViewController()
     private var sidebarItem: NSSplitViewItem { columns.splitViewItems[0] }
@@ -29,7 +28,6 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
         self.session = session
         sourceControl = SourceControlModel(folder: session.project.url)
         skills = SkillsModel(folder: session.project.url)
-        agents = AgentsModel(project: session.project)
         workspace = WorkspaceSplitViewController(session: session, sourceControl: sourceControl, skills: skills)
         let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 1880, height: 1040),
@@ -108,16 +106,11 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
         installActivityBar(in: activityBar)
         sidebar.isVisible = !sidebarItem.isCollapsed
         sourceControl.start()
-        agents.refresh()
         workspace.simulatorPane.openDevices = { [weak self] in self?.showDevices(nil) }
         workspace.terminalPane.connectServer = { [weak self] id in
             guard let server = ServersModel.shared.servers.first(where: { $0.id == id }) else { return }
             self?.connect(to: server)
         }
-        workspace.terminalPane.openFile = { [weak self] url in self?.openFile(url, keep: true) }
-        workspace.terminalPane.agents = ClaudeAgentsContext(model: agents, actions: agentActions())
-        workspace.terminalPane.showSkills = { [weak self] in self?.showSidebar(.skills) }
-        workspace.terminalPane.showMCP = { [weak self] in self?.showSidebar(.mcp) }
         workspace.editor.onFileShown = { [weak self] url in if let url { self?.explorer.selection = url.standardizedFileURL } }
     }
 
@@ -127,13 +120,10 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
             sourceControl: sourceControl,
             tabs: workspace.editor.tabs,
             panes: workspace.panes,
-            leftTabs: workspace.terminalPane.tabBarModel,
             simulator: workspace.simulatorPane.model,
             attention: .shared,
-            agents: agents,
             windowID: session.windowID,
             actions: ActivityBarActions(
-                showClaude: { [weak self] in self?.showClaude() },
                 showTerminal: { [weak self] in self?.showTerminalOrWaiting() },
                 showSimulator: { [weak self] in self?.workspace.focusSimulator(nil) },
                 showBrowser: { [weak self] in self?.workspace.focusBrowser(nil) },
@@ -209,11 +199,6 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
     @objc func toggleSourceControl(_ sender: Any?) { toggleSidebar(.sourceControl) }
     @objc func showDevices(_ sender: Any?) { workspace.editor.openDevices(model: deviceMatrix, runner: runner) }
 
-    /// File › New Agent: Claude's composer, ready to start one.
-    @objc func newAgent(_ sender: Any?) {
-        showClaude()
-        agents.isComposing = true
-    }
 
     // MARK: - Design
 
@@ -244,16 +229,11 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
         )
         design.onSessionChange = { [weak self] id in self?.session.update { $0.designSession = id } }
         design.onAttentionChange = { [weak self] waiting in self?.workspace.editor.tabs.designNeedsAttention = waiting }
-        design.build = { [weak self] prompt, asAgent in
+        design.build = { [weak self] prompt, _ in
             guard let self else { return }
-            if asAgent {
-                agents.isComposing = false
-                agentActions().create("build-design", prompt, [])
-            } else {
-                workspace.apply(mode: .balanced, animated: true)
-                workspace.terminalPane.sendToClaude(prompt)
-                workspace.updatePanesAfterTabChange()
-            }
+            workspace.apply(mode: .balanced, animated: true)
+            workspace.terminalPane.sendToClaude(prompt)
+            workspace.updatePanesAfterTabChange()
         }
         return design
     }
@@ -298,80 +278,6 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
         return qa
     }
 
-    // MARK: - Agents
-
-    private func agentActions() -> AgentActions {
-        AgentActions(
-            create: { [weak self] name, task, attachments in
-                guard let self else { return }
-                Task {
-                    guard let folder = await self.agents.create(name: name, task: task) else { return }
-                    self.workspace.showTerminalTab(self.workspace.terminalPane.openAgentChat(in: folder, name: name, task: task, attachments: attachments))
-                }
-            },
-            open: { [weak self] agent in
-                guard let self else { return }
-                if let id = workspace.terminalPane.tabIDs(inside: agent.path).first {
-                    workspace.showTerminalTab(id)
-                } else {
-                    Task {
-                        let session = await ClaudeTranscript.latestSession(folder: agent.path.path)
-                        self.workspace.showTerminalTab(self.workspace.terminalPane.openAgentChat(in: agent.path, name: agent.name, task: nil, resuming: session))
-                    }
-                }
-            },
-            review: { [weak self] agent in
-                guard let self else { return }
-                sourceControl.show(checkout: agent.path, agent: agent.name)
-                showSidebar(.sourceControl)
-            },
-            merge: { [weak self] agent in self?.confirmMerge(agent) },
-            remove: { [weak self] agent in self?.confirmRemove(agent) },
-            reveal: { agent in NSWorkspace.shared.activateFileViewerSelecting([agent.path]) },
-            waiting: { [weak self] agent in
-                guard let self else { return nil }
-                let tabs = workspace.terminalPane.tabIDs(inside: agent.path)
-                return tabs.lazy.compactMap { AttentionCenter.shared.waiting[$0]?.message }.first
-            },
-            isOpen: { [weak self] agent in !(self?.workspace.terminalPane.tabIDs(inside: agent.path).isEmpty ?? true) },
-            isWorking: { [weak self] agent in self?.workspace.terminalPane.chat(inside: agent.path)?.isBusy == true }
-        )
-    }
-
-    private func confirmMerge(_ agent: AgentsModel.Agent) {
-        guard let window else { return }
-        let alert = NSAlert()
-        let base = agents.baseBranch ?? "the current branch"
-        alert.messageText = "Merge \(agent.name) into \(base)?"
-        alert.informativeText = agent.stats.uncommitted
-            ? "Its uncommitted changes are committed first, then \(agent.branch) is merged into \(base) in this project."
-            : "\(agent.branch) is merged into \(base) in this project."
-        alert.addButton(withTitle: "Merge")
-        alert.addButton(withTitle: "Cancel")
-        alert.beginSheetModal(for: window) { [weak self] response in
-            guard response == .alertFirstButtonReturn, let self else { return }
-            Task {
-                await self.agents.merge(agent)
-                self.sourceControl.refresh()
-            }
-        }
-    }
-
-    private func confirmRemove(_ agent: AgentsModel.Agent) {
-        guard let window else { return }
-        let alert = NSAlert()
-        alert.messageText = "Remove \(agent.name)?"
-        alert.informativeText = "Its folder, chat and terminal tabs close. The branch \(agent.branch) is deleted only if it was merged; otherwise Vibex keeps it."
-        alert.alertStyle = .warning
-        alert.addButton(withTitle: "Remove").hasDestructiveAction = true
-        alert.addButton(withTitle: "Cancel")
-        alert.beginSheetModal(for: window) { [weak self] response in
-            guard response == .alertFirstButtonReturn, let self else { return }
-            workspace.terminalPane.closeTabs(inside: agent.path)
-            if sourceControl.folder.standardizedFileURL == agent.path.standardizedFileURL { sourceControl.show(checkout: nil) }
-            Task { await self.agents.remove(agent) }
-        }
-    }
     @objc func toggleSkills(_ sender: Any?) { toggleSidebar(.skills) }
     @objc func toggleExplorer(_ sender: Any?) { toggleSidebar(.explorer) }
 
@@ -402,12 +308,6 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
                 return session
             }
         }
-    }
-
-    /// A terminal tab running Claude Code in the project, e.g. to sign in to MCP servers with /mcp.
-    func showClaude() {
-        workspace.terminalPane.showClaude()
-        workspace.updatePanesAfterTabChange()
     }
 
     func openClaudeCode() {

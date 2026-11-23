@@ -43,13 +43,9 @@ enum MainMenu {
         recentMenu.delegate = NSApp.delegate as? NSMenuDelegate
         recent.submenu = recentMenu
         menu.addItem(withTitle: "New Window in Home Folder", action: #selector(AppDelegate.newHomeWindow(_:)), keyEquivalent: "n")
-        let newAgent = menu.addItem(withTitle: "New Agent…", action: #selector(MainWindowController.newAgent(_:)), keyEquivalent: "n")
-        newAgent.keyEquivalentModifierMask = [.command, .option]
         menu.addItem(withTitle: "Welcome", action: #selector(AppDelegate.showWelcome(_:)), keyEquivalent: "")
         menu.addItem(.separator())
         menu.addItem(withTitle: "New Tab", action: #selector(TerminalPaneViewController.newTab(_:)), keyEquivalent: "t")
-        let claudeChat = menu.addItem(withTitle: "New Claude Chat", action: #selector(TerminalPaneViewController.newClaudeChat(_:)), keyEquivalent: "c")
-        claudeChat.keyEquivalentModifierMask = [.control, .shift]
         menu.addItem(withTitle: "Close Tab", action: #selector(TerminalPaneViewController.closeTab(_:)), keyEquivalent: "w")
         menu.addItem(.separator())
         let next = menu.addItem(withTitle: "Next Tab", action: #selector(TerminalPaneViewController.nextTab(_:)), keyEquivalent: "]")
