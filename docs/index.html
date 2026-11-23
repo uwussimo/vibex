@@ -20,9 +20,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300..600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/site.css">
+<link rel="stylesheet" href="/assets/site.css?v=7">
 <script>document.documentElement.classList.add('js')</script>
-<script type="module" src="/assets/site.js"></script>
+<script type="module" src="/assets/site.js?v=7"></script>
 </head>
 <body>
 <div class="frame">
@@ -56,22 +56,22 @@
   <section class="action" aria-label="Claude runs Ridge, a demo app, finds a button off the screen and fixes it.">
     <div class="sky">
       <div class="stage">
-        <div class="ask"><span>Run Ridge and check the permit screen</span></div>
+        <div class="ask"><span>Run Trails and check the permit screen</span></div>
         <div class="phone">
-          <img class="screen is-on" data-step="0" src="/assets/ridge/01-welcome.jpg" alt="Ridge welcome screen">
-          <img class="screen" data-step="1" src="/assets/ridge/02-today.jpg" alt="Ridge Today screen" loading="lazy">
-          <img class="screen" data-step="2" src="/assets/ridge/08-permit-bug.jpg" alt="Permit screen with the Pay button running off the edge" loading="lazy">
-          <img class="screen" data-step="3" src="/assets/ridge/04-permit.jpg" alt="Permit screen after the fix" loading="lazy">
+          <div class="screen is-on" data-step="0" data-ios="home"></div>
+          <div class="screen" data-step="1" data-ios="detail"></div>
+          <div class="screen" data-step="2" data-ios="pay-bug"></div>
+          <div class="screen" data-step="3" data-ios="pay"></div>
           <span class="flag" aria-hidden="true">77 pt off the screen</span>
         </div>
         <svg class="wires" viewBox="0 0 1000 640" preserveAspectRatio="none" aria-hidden="true">
-          <path data-step="0" pathLength="1" d="M262 150 C 330 150, 330 200, 392 200"/>
-          <path data-step="1" pathLength="1" d="M262 430 C 330 430, 330 380, 392 380"/>
-          <path data-step="2" pathLength="1" d="M738 150 C 670 150, 670 220, 608 220"/>
-          <path data-step="3" pathLength="1" d="M738 430 C 670 430, 670 400, 608 400"/>
+          <path data-step="0" pathLength="1" d="M262 150 C 330 150, 320 200, 380 200"/>
+          <path data-step="1" pathLength="1" d="M262 430 C 330 430, 320 380, 380 380"/>
+          <path data-step="2" pathLength="1" d="M738 150 C 670 150, 680 220, 620 220"/>
+          <path data-step="3" pathLength="1" d="M738 430 C 670 430, 680 400, 620 400"/>
         </svg>
-        <div class="note n0" data-step="0"><span class="tag">vibex_run</span><b>Built and launched Ridge</b><p>On the iPhone 17 Pro in the same window. No Xcode, no Simulator app to find.</p></div>
-        <div class="note n1" data-step="1"><span class="tag">simulator_tap</span><b>Tapped “Get Started”</b><p>It reads every element by name, so it taps what it means to.</p></div>
+        <div class="note n0" data-step="0"><span class="tag">vibex_run</span><b>Built and launched Trails</b><p>On the iPhone 17 Pro in the same window. No Xcode, no Simulator app to find.</p></div>
+        <div class="note n1" data-step="1"><span class="tag">simulator_tap</span><b>Tapped “Eagle Ridge”</b><p>It reads every element by name, so it taps what it means to.</p></div>
         <div class="note n2" data-step="2"><span class="tag">simulator_find</span><b>“Pay $48” is cut off</b><p>The button sits 77 pt past the edge on small phones.</p></div>
         <div class="note n3" data-step="3"><span class="tag ok">fixed</span><b>Edited PermitView.swift</b><p>Then took a screenshot to check. You come back to a fix, not a bug report.</p></div>
       </div>
@@ -116,9 +116,9 @@
         <h3><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7.5"/><path d="M6.5 10.2l2.3 2.3 4.7-5"/></svg>Closes the loop</h3>
         <p>Builds, launches, looks at the real screen and fixes what’s wrong. Then looks again.</p>
         <div class="win"><div class="win-top"><i></i><i></i><i></i></div><pre class="code">
-<span class="u">› Run Ridge and check the permit screen</span>
+<span class="u">› Run Trails and check the permit screen</span>
 
-<span class="d">●</span> vibex_run <span class="m">→ launched Ridge</span>
+<span class="d">●</span> vibex_run <span class="m">→ launched Trails</span>
 <span class="d">●</span> simulator_find <span class="s">"Pay $48"</span>
   <span class="r">→ 77 pt off the screen</span>
 <span class="d">●</span> Edit <span class="s">PermitView.swift</span>
@@ -132,17 +132,18 @@ every phone, checked on iPhone SE.</pre></div>
         <p>Every button and label comes back with its name and frame, like a tester sees it. No guessing at pixels.</p>
         <div class="win"><div class="win-top"><i></i><i></i><i></i></div><pre class="code">
 <span class="c"># simulator_describe</span>
-<span class="k">Application</span> <span class="s">"Ridge"</span>
-  <span class="k">StaticText</span> <span class="s">"Plan a hike"</span>
-  <span class="k">Button</span> <span class="s">"Trail: Eagle Ridge"</span>
-  <span class="k">Button</span> <span class="s">"Date"</span>
-  <span class="k">Stepper</span> <span class="s">"Party size: 2"</span>
-  <span class="k">Switch</span> <span class="s">"Water, 3 liters"</span> <span class="m">on</span>
-  <span class="k">Switch</span> <span class="s">"Headlamp"</span> <span class="m">off</span>
-  <span class="k">Button</span> <span class="s">"Create Plan"</span>
+<span class="k">Application</span> <span class="s">"Trails"</span>
+  <span class="k">Button</span> <span class="s">"Cancel"</span>
+  <span class="k">Heading</span> <span class="s">"Book a Permit"</span>
+  <span class="k">Button</span> <span class="s">"Date, Sat, Nov 7"</span>
+  <span class="k">Button</span> <span class="s">"Entry, Sunrise"</span>
+  <span class="k">Stepper</span> <span class="s">"Hikers, 2"</span>
+  <span class="k">StaticText</span> <span class="s">"Total, $48"</span>
+  <span class="k">Button</span> <span class="s">"Pay $48"</span>
+    <span class="r">frame 16, 770, 470×50 · past the edge</span>
 
 <span class="c"># simulator_tap_element</span>
-<span class="k">tap</span> <span class="s">"Headlamp"</span> <span class="g">✓</span></pre></div>
+<span class="k">tap</span> <span class="s">"Hikers"</span> <span class="m">increment</span> <span class="g">✓</span></pre></div>
       </article>
       <article class="cell">
         <h3><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 6l4 4-4 4M10 14.5h6"/></svg>Open source, one line</h3>
@@ -170,7 +171,7 @@ every phone, checked on iPhone SE.</pre></div>
     </div>
     <div class="grid three">
       <article class="cell">
-        <div class="shot device"><img src="/assets/ridge/05-plan.jpg" alt="Ridge running on the embedded iPhone" loading="lazy"></div>
+        <div class="shot device"><div class="mini-phone"><div class="screen-host" data-ios="detail"></div></div></div>
         <h3>Simulator</h3>
         <p>A live iPhone or iPad inside your window, not lost behind it. Run on All installs on every device at once.</p>
       </article>
@@ -203,7 +204,15 @@ every phone, checked on iPhone SE.</pre></div>
       <p>Describe an app. Claude designs every screen on a canvas, as JSON in your repo, then builds exactly that.</p>
     </div>
     <div class="showcase">
-      <div class="win wide"><div class="win-top"><i></i><i></i><i></i><span>ridge · Design</span></div><img src="/assets/shots/design-tab.jpg" alt="The Design tab: five Ridge screens on a canvas next to the chat" loading="lazy"></div>
+      <div class="win wide"><div class="win-top"><i></i><i></i><i></i><span>trails · Design</span></div>
+        <div class="canvas" role="img" aria-label="A design canvas with three Trails screens side by side">
+          <div class="canvas-bar"><b>Trails</b><span>3 screens</span><em>Build This</em></div>
+          <div class="boards">
+            <figure><figcaption>Hikes</figcaption><div class="mini-phone"><div class="screen-host" data-ios="home"></div></div></figure>
+            <figure><figcaption>Eagle Ridge</figcaption><div class="mini-phone"><div class="screen-host" data-ios="detail"></div></div></figure>
+            <figure><figcaption>Book a Permit</figcaption><div class="mini-phone"><div class="screen-host" data-ios="pay"></div></div></figure>
+          </div>
+        </div></div>
     </div>
     <div class="grid three plain">
       <div class="mini"><h3>Real renders</h3><p>Every screen is drawn in a real device frame, not a sketch of one.</p></div>
@@ -287,5 +296,69 @@ every phone, checked on iPhone SE.</pre></div>
     <div><h4>Install</h4><a href="/install.sh">install.sh</a><a href="#faq">FAQ</a></div>
   </footer>
 </div>
+<template id="ios-screens">
+<section class="ios" data-name="home"><div class="sb"><span>9:41</span><i class="island"></i><span class="sb-r"><svg viewBox="0 0 18 12"><rect x="0" y="8" width="3" height="4" rx=".7"/><rect x="5" y="5.5" width="3" height="6.5" rx=".7"/><rect x="10" y="3" width="3" height="9" rx=".7"/><rect x="15" y="0" width="3" height="12" rx=".7"/></svg><svg viewBox="0 0 26 12"><rect x=".5" y=".5" width="22" height="11" rx="3.2" fill="none" stroke="currentColor" opacity=".4"/><rect x="2" y="2" width="16" height="8" rx="2"/><rect x="23.5" y="4" width="1.6" height="4" rx=".8" opacity=".4"/></svg></span></div>
+  <h1 class="lt">Hikes</h1>
+  <div class="search"><svg viewBox="0 0 16 16"><circle cx="7" cy="7" r="5"/><path d="m11 11 3.5 3.5"/></svg>Search trails</div>
+  <p class="sec">Near Moab</p>
+  <div class="group">
+    <div class="row"><div><b>Eagle Ridge</b><small>6.8 mi · 1,940 ft · Hard</small></div><span class=v>22 min</span><svg class="chev" viewBox="0 0 8 13"><path d="M1.5 1.5 6.5 6.5 1.5 11.5"/></svg></div>
+    <div class="row"><div><b>Aspen Hollow</b><small>3.2 mi · 480 ft · Easy</small></div><span class=v>38 min</span><svg class="chev" viewBox="0 0 8 13"><path d="M1.5 1.5 6.5 6.5 1.5 11.5"/></svg></div>
+    <div class="row"><div><b>Fisher Towers</b><small>4.4 mi · 670 ft · Moderate</small></div><span class=v>41 min</span><svg class="chev" viewBox="0 0 8 13"><path d="M1.5 1.5 6.5 6.5 1.5 11.5"/></svg></div>
+    <div class="row"><div><b>Corona Arch</b><small>2.4 mi · 440 ft · Easy</small></div><span class=v>27 min</span><svg class="chev" viewBox="0 0 8 13"><path d="M1.5 1.5 6.5 6.5 1.5 11.5"/></svg></div>
+  </div>
+  <p class="sec">Saved</p>
+  <div class="group">
+    <div class="row"><div><b>Delicate Arch</b><small>3.0 mi · 610 ft · Moderate</small></div><svg class="chev" viewBox="0 0 8 13"><path d="M1.5 1.5 6.5 6.5 1.5 11.5"/></svg></div>
+    <div class="row"><div><b>Grandstaff Canyon</b><small>5.1 mi · 380 ft · Easy</small></div><svg class="chev" viewBox="0 0 8 13"><path d="M1.5 1.5 6.5 6.5 1.5 11.5"/></svg></div>
+  </div>
+  <nav class="tabs"><span class="on"><svg viewBox="0 0 24 24"><path d="M3 19 9 7l4 7 2-3 6 8z"/></svg>Hikes</span><span><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="14" rx="2.5"/><path d="M8 3v4M16 3v4M4 10h16"/></svg>Permits</span><span><svg viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.8"/><path d="M4.5 20c1.3-3.6 4.2-5.4 7.5-5.4s6.2 1.8 7.5 5.4"/></svg>Profile</span></nav>
+</section>
+<section class="ios" data-name="detail"><div class="sb"><span>9:41</span><i class="island"></i><span class="sb-r"><svg viewBox="0 0 18 12"><rect x="0" y="8" width="3" height="4" rx=".7"/><rect x="5" y="5.5" width="3" height="6.5" rx=".7"/><rect x="10" y="3" width="3" height="9" rx=".7"/><rect x="15" y="0" width="3" height="12" rx=".7"/></svg><svg viewBox="0 0 26 12"><rect x=".5" y=".5" width="22" height="11" rx="3.2" fill="none" stroke="currentColor" opacity=".4"/><rect x="2" y="2" width="16" height="8" rx="2"/><rect x="23.5" y="4" width="1.6" height="4" rx=".8" opacity=".4"/></svg></span></div>
+  <div class="navbar"><span class="back"><svg viewBox="0 0 10 17"><path d="M8.5 1.5 1.5 8.5l7 7"/></svg>Hikes</span></div>
+  <h1 class="lt">Eagle Ridge</h1>
+  <p class="lead">Moab, Utah · Out and back</p>
+  <div class="group stats"><div><small>Distance</small><b>6.8 mi</b></div><div><small>Elevation</small><b>1,940 ft</b></div><div><small>Difficulty</small><b>Hard</b></div></div>
+  <p class="sec">About</p>
+  <div class="group text"><p>A steady climb through juniper to an open ridgeline above the Colorado River. Little shade after the first mile; start at sunrise in summer.</p></div>
+  <p class="sec">Permit</p>
+  <div class="group">
+    <div class="row"><div><b>Required May to October</b><small>$18 per hiker</small></div><svg class="chev" viewBox="0 0 8 13"><path d="M1.5 1.5 6.5 6.5 1.5 11.5"/></svg></div>
+  </div>
+  <div class="cta"><span class="pay">Book a Permit</span></div>
+</section>
+<section class="ios sheet bug" data-name="pay-bug"><div class="sb"><span>9:41</span><i class="island"></i><span class="sb-r"><svg viewBox="0 0 18 12"><rect x="0" y="8" width="3" height="4" rx=".7"/><rect x="5" y="5.5" width="3" height="6.5" rx=".7"/><rect x="10" y="3" width="3" height="9" rx=".7"/><rect x="15" y="0" width="3" height="12" rx=".7"/></svg><svg viewBox="0 0 26 12"><rect x=".5" y=".5" width="22" height="11" rx="3.2" fill="none" stroke="currentColor" opacity=".4"/><rect x="2" y="2" width="16" height="8" rx="2"/><rect x="23.5" y="4" width="1.6" height="4" rx=".8" opacity=".4"/></svg></span></div>
+  <div class="navbar sheetbar"><span class="link">Cancel</span><b>Book a Permit</b><span></span></div>
+  <div class="group" style="margin-top:14px">
+    <div class="row"><div><b>Date</b></div><span class="v">Sat, Nov 7</span><svg class="chev" viewBox="0 0 8 13"><path d="M1.5 1.5 6.5 6.5 1.5 11.5"/></svg></div>
+    <div class="row"><div><b>Entry</b></div><span class="v">Sunrise, 6:00 AM</span><svg class="chev" viewBox="0 0 8 13"><path d="M1.5 1.5 6.5 6.5 1.5 11.5"/></svg></div>
+    <div class="row"><div><b>Hikers</b><small>$18 per hiker</small></div><span class="stepper"><i>−</i><em>2</em><i>+</i></span></div>
+  </div>
+  <div class="group">
+    <div class="row line"><span>Permit, 2 × $18</span><span>$36</span></div>
+    <div class="row line"><span>Conservation fee</span><span>$8</span></div>
+    <div class="row line"><span>Booking fee</span><span>$4</span></div>
+    <div class="row line total"><span>Total</span><span>$48</span></div>
+  </div>
+  <p class="foot-note">Free cancellation until Nov 5. Your permit goes to the Trails app and your email.</p>
+  <div class="cta"><span class="pay">Pay $48</span></div>
+</section>
+<section class="ios sheet" data-name="pay"><div class="sb"><span>9:41</span><i class="island"></i><span class="sb-r"><svg viewBox="0 0 18 12"><rect x="0" y="8" width="3" height="4" rx=".7"/><rect x="5" y="5.5" width="3" height="6.5" rx=".7"/><rect x="10" y="3" width="3" height="9" rx=".7"/><rect x="15" y="0" width="3" height="12" rx=".7"/></svg><svg viewBox="0 0 26 12"><rect x=".5" y=".5" width="22" height="11" rx="3.2" fill="none" stroke="currentColor" opacity=".4"/><rect x="2" y="2" width="16" height="8" rx="2"/><rect x="23.5" y="4" width="1.6" height="4" rx=".8" opacity=".4"/></svg></span></div>
+  <div class="navbar sheetbar"><span class="link">Cancel</span><b>Book a Permit</b><span></span></div>
+  <div class="group" style="margin-top:14px">
+    <div class="row"><div><b>Date</b></div><span class="v">Sat, Nov 7</span><svg class="chev" viewBox="0 0 8 13"><path d="M1.5 1.5 6.5 6.5 1.5 11.5"/></svg></div>
+    <div class="row"><div><b>Entry</b></div><span class="v">Sunrise, 6:00 AM</span><svg class="chev" viewBox="0 0 8 13"><path d="M1.5 1.5 6.5 6.5 1.5 11.5"/></svg></div>
+    <div class="row"><div><b>Hikers</b><small>$18 per hiker</small></div><span class="stepper"><i>−</i><em>2</em><i>+</i></span></div>
+  </div>
+  <div class="group">
+    <div class="row line"><span>Permit, 2 × $18</span><span>$36</span></div>
+    <div class="row line"><span>Conservation fee</span><span>$8</span></div>
+    <div class="row line"><span>Booking fee</span><span>$4</span></div>
+    <div class="row line total"><span>Total</span><span>$48</span></div>
+  </div>
+  <p class="foot-note">Free cancellation until Nov 5. Your permit goes to the Trails app and your email.</p>
+  <div class="cta"><span class="pay">Pay $48</span></div>
+</section>
+</template>
 </body>
 </html>

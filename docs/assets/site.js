@@ -4,6 +4,19 @@
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const narrow = matchMedia('(max-width: 880px)');
 
+/* ---------- Trails screens: cloned from the template and scaled to each frame ---------- */
+
+const screens = document.getElementById('ios-screens');
+const fit = new ResizeObserver((entries) => {
+  for (const entry of entries) entry.target.style.setProperty('--k', entry.contentRect.width / 393);
+});
+document.querySelectorAll('[data-ios]').forEach((host) => {
+  const screen = screens?.content.querySelector(`[data-name="${host.dataset.ios}"]`);
+  if (!screen) return;
+  host.append(screen.cloneNode(true));
+  fit.observe(host);
+});
+
 /* ---------- In action ---------- */
 
 const action = document.querySelector('.action');

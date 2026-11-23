@@ -152,7 +152,7 @@ h3 { font-size: 15.5px; font-weight: 500; letter-spacing: -.01em; }
 }
 .phone .screen {
   position: absolute; inset: 1.6%; width: calc(100% - 3.2%); height: calc(100% - 3.2%);
-  border-radius: 13% / 6%; object-fit: cover;
+  border-radius: 13% / 6%;
   opacity: 0; transition: opacity .5s ease;
 }
 .phone .screen.is-on { opacity: 1; }
@@ -378,6 +378,128 @@ h3 { font-size: 15.5px; font-weight: 500; letter-spacing: -.01em; }
   .cursor { animation: none; }
 }
 
-/* Crops: the Design tab's empty lower canvas, and the diff shown at a readable size. */
-.win.wide img { aspect-ratio: 3000 / 1150; object-fit: cover; object-position: top; }
+/* The diff, shown at a readable size. */
 .shot.diff img { width: 160%; max-width: none; }
+
+/* ---------- Trails: the demo app, drawn as plain native iOS ----------
+   Each screen is laid out at 393×852 points and scaled to its frame by site.js (--k). */
+
+.screen-host, .phone .screen { overflow: hidden; background: #f2f2f7; }
+.phone .screen { position: absolute; }
+.ios {
+  position: absolute; left: 0; top: 0; width: 393px; height: 852px;
+  transform: scale(var(--k, 1)); transform-origin: 0 0;
+  background: #f2f2f7; color: #000;
+  font: 400 17px/1.29 -apple-system, "SF Pro Text", system-ui, sans-serif; letter-spacing: -.41px;
+  -webkit-font-smoothing: antialiased;
+}
+.ios .sb { height: 54px; display: flex; align-items: center; justify-content: space-between; padding: 6px 30px 0 44px; font-weight: 600; font-size: 17px; }
+.ios .island { position: absolute; left: 50%; top: 11px; width: 124px; height: 36px; margin-left: -62px; border-radius: 20px; background: #000; }
+.ios .sb-r { display: flex; gap: 6px; align-items: center; }
+.ios .sb-r svg { height: 12px; fill: currentColor; }
+.ios .sb-r svg:first-child { width: 18px; } .ios .sb-r svg:last-child { width: 26px; }
+.ios .lt { font-size: 34px; line-height: 41px; font-weight: 700; letter-spacing: .37px; padding: 6px 16px 0; margin: 0; }
+.ios .lead { padding: 2px 16px 0; color: #8a8a8e; font-size: 15px; }
+.ios .navbar { height: 44px; display: flex; align-items: center; padding: 0 8px; color: #007aff; }
+.ios .back { display: inline-flex; align-items: center; gap: 6px; }
+.ios .back svg { width: 11px; height: 19px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.ios .search { margin: 10px 16px 0; height: 36px; border-radius: 10px; background: #e3e3e8; color: #8a8a8e; display: flex; align-items: center; gap: 6px; padding: 0 8px; }
+.ios .search svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
+.ios .sec { margin: 24px 32px 7px; font-size: 13px; color: #8a8a8e; text-transform: uppercase; letter-spacing: -.08px; }
+.ios .group { margin: 0 16px; background: #fff; border-radius: 10px; overflow: hidden; }
+.ios .group + .group { margin-top: 24px; }
+.ios .row { min-height: 44px; display: flex; align-items: center; gap: 8px; padding: 10px 16px; position: relative; }
+.ios .row + .row::before { content: ""; position: absolute; top: 0; left: 16px; right: 0; height: .5px; background: #c6c6c8; }
+.ios .row > div { flex: 1; min-width: 0; }
+.ios .row b { font-weight: 400; display: block; }
+.ios .row small { display: block; font-size: 13px; color: #8a8a8e; letter-spacing: -.08px; margin-top: 1px; }
+.ios .row .v { color: #8a8a8e; }
+.ios .chev { width: 8px; height: 13px; fill: none; stroke: #c4c4c7; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.ios .row.line { justify-content: space-between; min-height: 40px; }
+.ios .row.total { font-weight: 600; }
+.ios .stats { display: grid; grid-template-columns: repeat(3, 1fr); margin-top: 18px; }
+.ios .stats div { padding: 12px 16px; }
+.ios .stats div + div { border-left: .5px solid #c6c6c8; }
+.ios .stats small { display: block; font-size: 13px; color: #8a8a8e; }
+.ios .stats b { font-size: 20px; font-weight: 600; }
+.ios .text p { padding: 12px 16px; font-size: 15px; line-height: 1.4; color: #3c3c43; }
+.ios .sheetbar { justify-content: space-between; padding: 0 16px; }
+.ios .sheetbar b { color: #000; font-weight: 600; }
+.ios .sheetbar span:last-child { width: 52px; }
+.ios .stepper { display: flex; align-items: center; background: #eeeef0; border-radius: 8px; height: 32px; }
+.ios .stepper i, .ios .stepper em { font-style: normal; width: 44px; text-align: center; }
+.ios .stepper i { font-size: 22px; line-height: 32px; }
+.ios .stepper em { width: 22px; font-weight: 600; }
+.ios .foot-note { margin: 10px 32px 0; font-size: 13px; color: #8a8a8e; line-height: 1.38; }
+.ios .cta { position: absolute; left: 16px; right: 16px; bottom: 42px; }
+.ios .pay {
+  display: flex; align-items: center; justify-content: center; height: 50px; width: 361px;
+  background: #007aff; color: #fff; border-radius: 14px; font-weight: 600;
+}
+.ios.bug .pay { width: 470px; }
+.ios .tabs {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 83px; padding-top: 7px;
+  display: flex; justify-content: space-around; align-items: flex-start;
+  background: rgba(249,249,249,.94); border-top: .5px solid #c6c6c8;
+  font-size: 10px; font-weight: 500; color: #8a8a8e; letter-spacing: .1px;
+}
+.ios .tabs span { display: flex; flex-direction: column; align-items: center; gap: 3px; width: 80px; }
+.ios .tabs span.on { color: #007aff; }
+.ios .tabs svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round; }
+
+.mini-phone {
+  position: relative; aspect-ratio: 393 / 852; border-radius: 13% / 6%; overflow: hidden;
+  border: 5px solid #1b1b1d; background: #1b1b1d;
+}
+.mini-phone .screen-host { position: absolute; inset: 0; border-radius: 11% / 5%; }
+.shot.device .mini-phone { width: 46%; border-bottom: 0; border-radius: 22px 22px 0 0; aspect-ratio: auto; height: 100%; }
+.shot.device .mini-phone .screen-host { border-radius: 17px 17px 0 0; }
+
+.canvas { background: #1a1a1c; border-radius: 6px 6px 0 0; padding: 0 0 36px; }
+.canvas-bar { display: flex; align-items: center; gap: 8px; padding: 12px 16px; font-size: 13px; color: #8b8b92; border-bottom: 1px solid #2a2a2e; }
+.canvas-bar b { color: #f2f2f4; font-weight: 600; }
+.canvas-bar em { margin-left: auto; font-style: normal; color: #f2f2f4; background: #2c2c30; padding: 5px 10px; border-radius: 6px; font-size: 12px; }
+.boards {
+  display: flex; justify-content: center; gap: 5%; padding: 30px 6% 0;
+  background-image: radial-gradient(#2c2c31 1px, transparent 1px); background-size: 18px 18px;
+}
+.boards figure { margin: 0; flex: 0 1 25%; }
+.boards figcaption { font-size: 12px; color: #8b8b92; margin-bottom: 8px; }
+
+/* The phone is sized by its screen: 393×852 inside a fixed bezel, so nothing is clipped. */
+.phone { aspect-ratio: auto; padding: 7px; box-sizing: border-box; border-radius: 15% / 7%; }
+.phone::before { content: ""; display: block; aspect-ratio: 393 / 852; }
+.phone .screen { inset: 7px; width: auto; height: auto; border-radius: 13% / 6%; }
+.phone { left: 38%; width: 24%; transform: none; }
+.flag { bottom: 15.5%; right: -12%; }
+@media (max-width: 880px) { .phone { left: auto; width: 62%; } .flag { right: -6%; } }
+
+/* The iPhone frame: plum titanium rim, thin black bezel, side buttons. Matches the supplied mockup. */
+.phone, .mini-phone {
+  background: #0b0a0d;
+  border: 0;
+  box-shadow:
+    0 0 0 1.5px #2a1820,
+    0 0 0 3.5px #5b3a4a,
+    0 0 0 4.5px #8a6574,
+    0 0 0 5.5px #3b2430,
+    0 40px 80px -30px rgba(20,10,30,.55);
+}
+.phone { padding: 4.2%; border-radius: 16.5% / 7.6%; }
+.phone .screen { inset: 4.2%; border-radius: 13% / 6%; }
+.phone::after {
+  /* side buttons: action + volume on the left, power on the right */
+  content: ""; position: absolute; inset: 0 -7px; pointer-events: none;
+  background:
+    linear-gradient(#5b3a4a, #5b3a4a) left 0 top 21% / 2.5px 5% no-repeat,
+    linear-gradient(#5b3a4a, #5b3a4a) left 0 top 29% / 2.5px 9% no-repeat,
+    linear-gradient(#5b3a4a, #5b3a4a) left 0 top 40% / 2.5px 9% no-repeat,
+    linear-gradient(#5b3a4a, #5b3a4a) right 0 top 32% / 2.5px 13% no-repeat;
+}
+.mini-phone { border-radius: 14% / 6.6%; padding: 3.5%; }
+.mini-phone .screen-host { inset: 3.5%; }
+.shot.device .mini-phone { box-shadow: 0 0 0 1.5px #2a1820, 0 0 0 3.5px #5b3a4a, 0 0 0 4.5px #8a6574; padding: 9px 9px 0; }
+.shot.device .mini-phone .screen-host { inset: 9px 9px 0; }
+.ios .island { width: 126px; height: 37px; top: 11px; margin-left: -63px; background: #05050a; }
+.phone { padding: 9px; border-radius: 17% / 8%; }
+.phone .screen { inset: 9px; border-radius: 14% / 6.4%; }
