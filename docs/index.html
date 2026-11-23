@@ -3,455 +3,289 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Vibex: the Mac workstation where your coding agent sees what it builds</title>
-<meta name="description" content="Stop being your coding agent's eyes. In Vibex, Claude Code runs your app, taps through the live iOS Simulator and browser, and fixes what it finds. Free, open source, one command to install.">
-<meta name="theme-color" content="#0c0c0f">
+<title>Vibex: a Mac workstation where Claude checks its own work</title>
+<meta name="description" content="Vibex puts Claude Code, a live iOS Simulator, a browser and Git in one native Mac window. Claude runs your app, taps through it and fixes what it finds. Free and open source.">
+<meta name="theme-color" content="#f4f3f0">
 <link rel="icon" type="image/png" href="/icon.png">
 <link rel="apple-touch-icon" href="/icon.png">
-<meta property="og:title" content="Vibex: your coding agent finally has eyes">
-<meta property="og:description" content="Claude Code runs your app, taps through it and fixes what it finds, all in one native Mac window. Free and open source.">
+<meta property="og:title" content="Vibex: Claude checks its own work">
+<meta property="og:description" content="Claude Code, a live iOS Simulator, a browser and Git in one native Mac window. Free and open source.">
 <meta property="og:image" content="https://vibex.cc/og.png">
 <meta property="og:image:width" content="2400">
 <meta property="og:image:height" content="1260">
-<meta property="og:image:alt" content="The old way vs. the Vibex way: one window that Claude can see and drive.">
-<meta name="twitter:image" content="https://vibex.cc/og.png">
 <meta property="og:url" content="https://vibex.cc/">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://vibex.cc/og.png">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Vibex","operatingSystem":"macOS 26","applicationCategory":"DeveloperApplication","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"license":"https://opensource.org/licenses/MIT","url":"https://vibex.cc/"}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400..700&family=Google+Sans+Code:wght@400..600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300..600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/site.css">
-<link rel="stylesheet" href="/assets/scenes.css">
 <script>document.documentElement.classList.add('js')</script>
-<script type="module" src="/assets/home.js"></script>
+<script type="module" src="/assets/site.js"></script>
 </head>
 <body>
-<vx-nav></vx-nav>
-<main>
+<div class="frame">
+  <div class="chrome" aria-hidden="true"><i></i><i></i><i></i></div>
 
-<!-- Hero: the real window rises, then the camera follows Claude from the chat to the phone. -->
-<vx-scene length="540" timeline="hero" rest="1" style="--tint:255,170,90">
-  <div class="stage">
-    <div class="glow"></div>
-    <div class="hero-copy">
-      <h1 class="load-in">Your coding agent finally has <span class="eyes">eyes</span>.</h1>
-      <p class="lede load-in" style="--d:.08s">Claude writes the code, then runs it, taps through it and fixes what it finds. You stop being the one who checks.</p>
-      <div class="cta-row load-in" style="--d:.16s">
-        <a class="btn btn-primary" href="#install">Get Vibex free</a>
-        <vx-install></vx-install>
-        <vx-star big label="Star"></vx-star>
-      </div>
-      <p class="assure load-in" style="--d:.24s">For Mac. About a minute to install. No account. Open source.</p>
+  <header class="nav">
+    <a class="brand" href="/"><img src="/icon.png" alt="" width="22" height="22">Vibex</a>
+    <nav aria-label="Main">
+      <a href="#features">Features</a>
+      <a href="#design">Design</a>
+      <a href="#faq">FAQ</a>
+      <a href="https://github.com/uwussimo/vibex/releases">Changelog</a>
+      <a class="stars" href="https://github.com/uwussimo/vibex" aria-label="Star Vibex on GitHub"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg><span data-stars>GitHub</span></a>
+    </nav>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero">
+    <p class="eyebrow">Agentic Mac workstation</p>
+    <h1>Claude builds it.<br>Then it checks it.</h1>
+    <p class="sub">Vibex puts Claude Code, a live iOS Simulator, a browser and Git in one native Mac window. Claude runs your app, taps through it and fixes what it finds, before you look.</p>
+    <div class="actions">
+      <a class="btn" href="https://github.com/uwussimo/vibex/releases/latest">Download for Mac</a>
+      <button class="cmd" type="button" data-copy="curl -fsSL https://vibex.cc/install.sh | sh"><span class="prompt">$</span><code>curl -fsSL https://vibex.cc/install.sh | sh</code><span class="copied" aria-live="polite">Copy</span></button>
     </div>
-    <div class="world-box"><div class="world"><div class="cam" role="img" aria-label="The real Vibex window: Claude chats on the left while a beautiful hiking app runs on a live iPhone on the right, and Claude taps through it.">
-      <div class="h-rise"><vx-window class="at v-win h-win" title="ridge">
-        <img class="fill" src="/assets/shots/window.jpg" alt="">
-        <img class="col c0" src="/assets/shots/col-m-empty.jpg" alt="">
-        <img class="col c1" src="/assets/shots/col-h1.jpg" alt="" loading="lazy">
-        <img class="col c2" src="/assets/shots/col-h2.jpg" alt="" loading="lazy">
-        <img class="col c3" src="/assets/shots/col-h3.jpg" alt="" loading="lazy">
-        <img class="col c4" src="/assets/shots/col-h4.jpg" alt="" loading="lazy">
-        <div class="w-phone"><vx-phone class="real">
-          <img class="shot h-next" src="/assets/ridge/02-today.jpg" alt="">
-          <img class="shot h-first" src="/assets/ridge/01-welcome.jpg" alt="">
-          <span class="tap h-tap" style="left:196px;top:775px"></span>
-        </vx-phone></div>
-      </vx-window></div>
-    </div></div></div>
-    <ol class="notes">
-      <li data-beat=".3-.5">You ask once. Claude builds it and launches it.</li>
-      <li data-beat=".52-.76">Then it <strong>looks at the real screen</strong> and taps, like you would.</li>
-      <li data-beat=".8-1">And it tells you what it found, <strong>after it’s fixed</strong>.</li>
-    </ol>
-  </div>
-</vx-scene>
+    <p class="fine">Free and open source. macOS 26. No account.</p>
+  </section>
 
-<!-- The old way: the app switcher everyone knows, then everything collapses into one window. -->
-<vx-scene length="520" timeline="old" rest="1" style="--tint:255,99,105">
-  <div class="stage">
-    <div class="glow"></div>
-    <h2 class="statement"><span class="line">Right now, you’re your agent’s eyes.</span></h2>
-    <div class="world-box"><div class="world"><div class="cam" role="img" aria-label="Windows pile up while you switch between them, then collapse into one Vibex window.">
-      <vx-window class="at mess m1" title="Terminal" style="left:60px;top:60px"><div class="pane mono">$ claude<br><br>Done! Please run the app<br>and tell me how it looks.</div></vx-window>
-      <vx-window class="at mess m2" title="Simulator" style="left:940px;top:40px"><img class="mess-shot" src="/assets/ridge/03-trail.jpg" alt="" loading="lazy" style="object-position:center 8%"></vx-window>
-      <vx-window class="at mess m3" title="localhost:5173" style="left:500px;top:150px"><div class="pane mono"><span style="color:var(--red)">TypeError: cannot read 'trail'</span><br><br>Copy it. Switch. Paste it.<br>Switch back.</div></vx-window>
-      <vx-window class="at mess m4" title="Git" style="left:120px;top:400px"><div class="pane mono">What did it change?<br><br>$ git diff | less<br>…412 more lines</div></vx-window>
-      <vx-window class="at mess m5" title="Usage" style="left:900px;top:380px"><div class="pane" style="color:#fff;font-size:32px;font-weight:600;letter-spacing:-.02em;line-height:1.25">Limit reached.<br><span style="color:var(--muted)">Resets in 3 hours.</span></div></vx-window>
-      <div class="at switcher"><span class="sw-ring"></span><b style="background:#111">&gt;_</b><b style="background:linear-gradient(135deg,#3b82f6,#60a5fa)"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><rect x="7" y="2.5" width="10" height="19" rx="2.4"/><path d="M10.5 18.5h3"/></svg></b><b style="background:#fff"><svg viewBox="0 0 24 24" fill="none" stroke="#0a84ff" stroke-width="1.6"><circle cx="12" cy="12" r="9.5"/><path d="m15.8 8.2-2.4 5.2-5.2 2.4 2.4-5.2z" fill="#ff3b30" stroke="none"/></svg></b><b style="background:#fff"><img src="/logos/git.svg" alt=""></b><b style="background:linear-gradient(135deg,#f59e0b,#ef4444)"><svg viewBox="0 0 24 24" fill="#fff"><rect x="4" y="12" width="3.6" height="8" rx="1"/><rect x="10.2" y="7" width="3.6" height="13" rx="1"/><rect x="16.4" y="3.5" width="3.6" height="16.5" rx="1"/></svg></b></div>
-      <div class="at flash"></div>
-      <vx-window class="at v-win one-win" title="ridge">
-        <img class="fill" src="/assets/shots/window.jpg" alt="" loading="lazy">
-        <div class="w-phone"><vx-phone src="/assets/ridge/02-today.jpg"></vx-phone></div>
-      </vx-window>
-    </div></div></div>
-    <ol class="notes">
-      <li data-beat=".2-.42">It writes blind. So you run it, look at it, screenshot it and explain what broke.</li>
-      <li data-beat=".44-.66">Every check costs a Command-Tab and <strong>your train of thought</strong>. Then you do it again.</li>
-      <li data-beat=".78-1"><strong>Vibex puts it all in one window Claude can see and drive.</strong> You get your attention back.</li>
-    </ol>
-  </div>
-</vx-scene>
-
-<!-- The loop: a light circles the phone while the camera dives onto a real bug. -->
-<vx-scene id="features" length="560" timeline="loop" rest=".99" style="--tint:61,214,140">
-  <div class="stage">
-    <div class="glow"></div>
-    <h2 class="statement"><small>The loop</small><span class="line">It checks its own work.</span></h2>
-    <div class="world-box"><div class="world"><div class="cam" role="img" aria-label="A light circles a live iPhone. The camera dives onto a button that ran off the screen, and it gets fixed.">
-      <div class="at verbs"><span class="v1">Writes.</span><span class="v2">Runs.</span><span class="v3">Sees.</span><span class="v4">Fixes.</span></div>
-      <svg class="at comet" viewBox="0 0 458 916" aria-hidden="true"><rect x="3" y="3" width="452" height="910" rx="84" pathLength="1"/></svg>
-      <vx-phone class="at l-phone real">
-        <img class="shot" src="/assets/ridge/08-permit-bug.jpg" alt="" loading="lazy">
-        <img class="shot l-fixed" src="/assets/ridge/04-permit.jpg" alt="" loading="lazy">
-      </vx-phone>
-      <div class="at reticle"><span>Runs off the screen</span></div>
-      <div class="at good">✓</div>
-      <div class="at log">
-        <div class="l1">vibex_run → launched Ridge</div>
-        <div class="l2">simulator_find "Pay $48"</div>
-        <div class="l3"><i>→ 77 pt off the screen</i></div>
-        <div class="l4">Edit PermitView.swift</div>
-        <div class="l5"><b>simulator_screenshot → fixed</b></div>
+  <!-- In action: the phone stays put while Claude works through it. -->
+  <p class="eyebrow center">Vibex in action</p>
+  <section class="action" aria-label="Claude runs Ridge, a demo app, finds a button off the screen and fixes it.">
+    <div class="sky">
+      <div class="stage">
+        <div class="ask"><span>Run Ridge and check the permit screen</span></div>
+        <div class="phone">
+          <img class="screen is-on" data-step="0" src="/assets/ridge/01-welcome.jpg" alt="Ridge welcome screen">
+          <img class="screen" data-step="1" src="/assets/ridge/02-today.jpg" alt="Ridge Today screen" loading="lazy">
+          <img class="screen" data-step="2" src="/assets/ridge/08-permit-bug.jpg" alt="Permit screen with the Pay button running off the edge" loading="lazy">
+          <img class="screen" data-step="3" src="/assets/ridge/04-permit.jpg" alt="Permit screen after the fix" loading="lazy">
+          <span class="flag" aria-hidden="true">77 pt off the screen</span>
+        </div>
+        <svg class="wires" viewBox="0 0 1000 640" preserveAspectRatio="none" aria-hidden="true">
+          <path data-step="0" pathLength="1" d="M262 150 C 330 150, 330 200, 392 200"/>
+          <path data-step="1" pathLength="1" d="M262 430 C 330 430, 330 380, 392 380"/>
+          <path data-step="2" pathLength="1" d="M738 150 C 670 150, 670 220, 608 220"/>
+          <path data-step="3" pathLength="1" d="M738 430 C 670 430, 670 400, 608 400"/>
+        </svg>
+        <div class="note n0" data-step="0"><span class="tag">vibex_run</span><b>Built and launched Ridge</b><p>On the iPhone 17 Pro in the same window. No Xcode, no Simulator app to find.</p></div>
+        <div class="note n1" data-step="1"><span class="tag">simulator_tap</span><b>Tapped “Get Started”</b><p>It reads every element by name, so it taps what it means to.</p></div>
+        <div class="note n2" data-step="2"><span class="tag">simulator_find</span><b>“Pay $48” is cut off</b><p>The button sits 77 pt past the edge on small phones.</p></div>
+        <div class="note n3" data-step="3"><span class="tag ok">fixed</span><b>Edited PermitView.swift</b><p>Then took a screenshot to check. You come back to a fix, not a bug report.</p></div>
       </div>
-    </div></div></div>
-    <ol class="notes">
-      <li data-beat=".2-.42">Claude builds and launches your app, on its own.</li>
-      <li data-beat=".44-.66">It reads what’s <strong>actually on the screen</strong>, like a tester would.</li>
-      <li data-beat=".7-1">It fixes what’s wrong. <strong>You come back to review, not to debug.</strong></li>
-    </ol>
-  </div>
-</vx-scene>
+    </div>
+  </section>
 
-<!-- Design: starts inside the JSON, pulls back as real renders assemble, lands on the real tab. -->
-<vx-scene id="design" length="640" timeline="design" rest=".98" style="--tint:255,170,90">
-  <div class="stage">
-    <div class="glow"></div>
-    <h2 class="statement"><small>New · Vibex Design</small><span class="line">See it before you build it.</span></h2>
-    <div class="world-box"><div class="world"><div class="cam" role="img" aria-label="JSON types itself, the camera pulls back as five real rendered phone screens assemble on a canvas, and it lands on the real Design tab in Vibex.">
-      <div class="grid-plane"></div>
-      <div class="at code"><span class="ln c1"><b>"name"</b>: <em>"Ridge"</em>,</span><span class="ln c2"><b>"tokens"</b>: {</span><span class="ln c3">  <b>"primary"</b>: <em>"#F5A93F"</em>,</span><span class="ln c4">  <b>"background"</b>: <em>"#0B0A09"</em></span><span class="ln c5">},</span><span class="ln c6"><b>"device"</b>: <em>"iphone"</em>,</span><span class="ln c7"><b>"root"</b>: {</span><span class="ln c8">  <b>"type"</b>: <em>"layer"</em>,</span><span class="ln c9">  <b>"children"</b>: [</span><span class="ln c10">    { <b>"src"</b>: <em>"assets/desert.jpg"</em> },</span><span class="ln c11">    { <b>"text"</b>: <em>"Eagle Ridge"</em> }</span><span class="ln c12">  ]</span></div>
-      <span class="d-name n0" style="left:70px">Welcome</span><span class="d-name n1" style="left:368px">Today</span><span class="d-name n2" style="left:666px">Eagle Ridge</span><span class="d-name n3" style="left:964px">Book a permit</span><span class="d-name n4" style="left:1262px">Plan a hike</span>
-      <div class="d-frame f0" style="left:70px"><vx-phone class="real" data-slices="01-welcome"></vx-phone></div>
-      <div class="d-frame f1" style="left:368px"><vx-phone class="real" data-slices="02-today"></vx-phone></div>
-      <div class="d-frame f2" style="left:666px"><vx-phone class="real" data-slices="03-trail"></vx-phone></div>
-      <div class="d-frame f3" style="left:964px"><vx-phone class="real" data-slices="04-permit"></vx-phone></div>
-      <div class="d-frame f4" style="left:1262px"><vx-phone class="real" data-slices="05-plan"></vx-phone></div>
-      <vx-window class="at d-tab" title="ridge"><img src="/assets/shots/design-tab.jpg" alt="" loading="lazy"></vx-window>
-    </div></div></div>
-    <ol class="notes">
-      <li data-beat=".18-.4">Describe an app or a site. Claude writes the design as plain JSON in your repo.</li>
-      <li data-beat=".42-.66">It appears on a canvas, screen by screen. <strong>Nothing here is a mock-up.</strong></li>
-      <li data-beat=".68-.84">A wrong idea costs you a sentence. <strong>Not a week of code.</strong></li>
-      <li data-beat=".86-1">Love it? <strong>Build This</strong> hands the design to Claude.</li>
-    </ol>
-  </div>
-</vx-scene>
+  <!-- Works with -->
+  <section class="logos">
+    <p class="eyebrow center">Works with what you already use</p>
+    <div class="marquee"><div class="track">
+      <span><img src="/logos/claude.svg" alt="">Claude Code</span>
+      <span><img src="/logos/openai.svg" alt="">Codex</span>
+      <span><img src="/logos/xcode.svg" alt="">Xcode</span>
+      <span><img src="/logos/swift.svg" alt="">Swift</span>
+      <span><img src="/logos/react.svg" alt="">React</span>
+      <span><img src="/logos/nextjs.svg" alt="">Next.js</span>
+      <span><img src="/logos/vitejs.svg" alt="">Vite</span>
+      <span><img src="/logos/nodejs.svg" alt="">Node</span>
+      <span><img src="/logos/git.svg" alt="">Git</span>
+      <span><img src="/logos/github.svg" alt="">GitHub</span>
+      <span><img src="/logos/figma.svg" alt="">Figma</span>
+      <span><img src="/logos/linear.svg" alt="">Linear</span>
+      <span><img src="/logos/supabase.svg" alt="">Supabase</span>
+      <span><img src="/logos/sentry.svg" alt="">Sentry</span>
+    </div></div>
+  </section>
 
-<!-- The wall: the proof. Real renders, at full size, turning past as you scroll. -->
-<vx-scene length="420" timeline="wall" rest=".5" style="--tint:255,170,90">
-  <div class="stage">
-    <div class="glow"></div>
-    <h2 class="statement"><small>Made with Vibex Design</small><span class="line">Claude designed every pixel of this.</span></h2>
-    <div class="world-box"><div class="world"><div class="cam" role="img" aria-label="Seven real screens of Ridge, a hiking app, designed by Claude in Vibex Design, turning past at full size.">
-      <div class="w-track">
-        <vx-phone class="w-item" src="/assets/ridge/01-welcome.jpg"></vx-phone>
-        <vx-phone class="w-item" src="/assets/ridge/02-today.jpg"></vx-phone>
-        <vx-phone class="w-item" src="/assets/ridge/03-trail.jpg"></vx-phone>
-        <vx-phone class="w-item" src="/assets/ridge/04-permit.jpg"></vx-phone>
-        <vx-phone class="w-item" src="/assets/ridge/05-plan.jpg"></vx-phone>
-        <div class="w-item w-pad"><img src="/assets/ridge/06-today-ipad.jpg" alt="" loading="lazy"></div>
-      </div>
-    </div></div></div>
-    <ol class="notes">
-      <li data-beat=".16-.58">These are <strong>real renders</strong> from Vibex Design, not drawings of what it might do.</li>
-      <li data-beat=".6-1">The result is JSON in your repo, so Claude can <strong>build exactly this</strong>.</li>
-    </ol>
-  </div>
-</vx-scene>
+  <!-- Statement: fills in as you read it. -->
+  <section class="statement">
+    <p data-fill>Right now you run the app, look at it, screenshot it and explain what broke. Vibex hands that loop to Claude, and taps your shoulder only when it needs a yes.</p>
+  </section>
 
-<!-- Chat: the camera sits on the composer; commands open, the mode changes the light itself. -->
-<vx-scene length="600" timeline="chat" rest=".98" style="--tint:129,148,255">
-  <div class="stage">
-    <div class="glow"></div><div class="glow g2"></div><div class="glow g3"></div>
-    <h2 class="statement"><small>Claude, native</small><span class="line">All of Claude Code. None of the terminal.</span></h2>
-    <div class="world-box"><div class="world"><div class="cam" role="img" aria-label="The real chat in Vibex: a command menu opens, Claude proposes a plan, then works on its own in Auto mode.">
-      <vx-window class="at c-win" title="ridge">
-        <img class="cimg" src="/assets/shots/c-0.jpg" alt="" loading="lazy">
-        <img class="cimg ci1" src="/assets/shots/c-menu.jpg" alt="" loading="lazy">
-        <img class="cimg ci2" src="/assets/shots/c-plan.jpg" alt="" loading="lazy">
-        <img class="cimg ci3" src="/assets/shots/c-auto.jpg" alt="" loading="lazy">
-      </vx-window>
-    </div></div></div>
-    <ol class="notes">
-      <li data-beat=".18-.42">Type <code>/</code> for every command and skill, with what each one does.</li>
-      <li data-beat=".44-.62"><strong>Plan</strong> when it matters. Claude proposes, and nothing changes.</li>
-      <li data-beat=".64-.82"><strong>Auto</strong> when it doesn’t. It works on its own and stops only for risky actions.</li>
-      <li data-beat=".84-1">It’s the real Claude Code, with your CLAUDE.md, skills and hooks. <strong>There’s nothing to migrate.</strong></li>
-    </ol>
-  </div>
-</vx-scene>
+  <!-- Features -->
+  <section id="features" class="block">
+    <div class="bar"><i></i><i></i><i></i><span>Features</span></div>
+    <div class="head">
+      <h2>It checks its own work</h2>
+      <p>Claude gets eyes and hands on everything you’d otherwise check yourself.</p>
+    </div>
+    <div class="grid three">
+      <article class="cell">
+        <h3><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7.5"/><path d="M6.5 10.2l2.3 2.3 4.7-5"/></svg>Closes the loop</h3>
+        <p>Builds, launches, looks at the real screen and fixes what’s wrong. Then looks again.</p>
+        <div class="win"><div class="win-top"><i></i><i></i><i></i></div><pre class="code">
+<span class="u">› Run Ridge and check the permit screen</span>
 
-<!-- Agents: a keypress fires light down main; it splits, and only the winner comes home. -->
-<vx-scene id="agents" length="600" timeline="agents" rest=".98" style="--tint:167,139,250">
-  <div class="stage">
-    <div class="glow"></div>
-    <h2 class="statement"><small>Parallel agents</small><span class="line">Try three ideas. Keep the best one.</span></h2>
-    <div class="world-box"><div class="world"><div class="cam" role="img" aria-label="A keypress sends light along main. It splits into three branches with running agents. The best one merges home and the others fade.">
-      <svg class="tree" viewBox="0 0 1600 1000" aria-hidden="true">
-        <path class="p0" d="M-300 500 H430" stroke="#c9c9d4" pathLength="1"/>
-        <path class="p1 lit" d="M430 500 C 640 500 680 180 965 180" stroke="#a78bfa" style="color:#a78bfa" pathLength="1"/>
-        <path class="p2 lit" d="M430 500 H965" stroke="#3dd68c" style="color:#3dd68c" pathLength="1"/>
-        <path class="p3 lit" d="M430 500 C 640 500 680 820 965 820" stroke="#f17cc5" style="color:#f17cc5" pathLength="1"/>
-        <path class="p4 lit" d="M1510 500 H1900" stroke="#3dd68c" style="color:#3dd68c" pathLength="1"/>
-      </svg>
-      <div class="at keys"><span class="key k1">⌘</span><span class="key wide k2">return</span></div>
-      <span class="at main-label">main</span>
-      <div class="at agent ag1" style="top:92px;color:#a78bfa"><img src="/assets/ridge/08-permit-bug.jpg" alt="" loading="lazy"><div><h3><span class="dot" style="color:#a78bfa;background:#a78bfa"></span>sheet-checkout</h3><p><span class="plus x1" data-prefix="+">0</span> <span class="minus x2" data-prefix="−">0</span> · Pay button still clipped</p><div class="a-bar"><i class="b1"></i></div></div></div>
-      <div class="at agent ag2" style="top:412px;color:#3dd68c"><img src="/assets/ridge/04-permit.jpg" alt="" loading="lazy"><div><h3><span class="dot" style="color:#3dd68c"></span>one-page-checkout</h3><p><span class="plus x3" data-prefix="+">0</span> <span class="minus x4" data-prefix="−">0</span> · Checked on the simulator</p><div class="a-bar"><i class="b2"></i></div></div></div>
-      <div class="at agent ag3" style="top:732px;color:#f17cc5"><img src="/assets/ridge/05-plan.jpg" alt="" loading="lazy"><div><h3><span class="dot" style="color:#f17cc5;background:#f17cc5"></span>apple-pay-first</h3><p><span class="plus x5" data-prefix="+">0</span> <span class="minus x6" data-prefix="−">0</span> · Waiting for you</p><div class="a-bar"><i class="b3"></i></div></div></div>
-      <span class="at merged">✓ Merged into main</span>
-    </div></div></div>
-    <ol class="notes">
-      <li data-beat=".14-.34"><code>⌘Return</code> sends a message as its own agent, on its own branch, in its own folder.</li>
-      <li data-beat=".36-.66">They work side by side and can’t touch your project. <strong>A bad attempt costs you nothing.</strong></li>
-      <li data-beat=".68-1">Review each one, merge the winner, throw the rest away.</li>
-    </ol>
-  </div>
-</vx-scene>
+<span class="d">●</span> vibex_run <span class="m">→ launched Ridge</span>
+<span class="d">●</span> simulator_find <span class="s">"Pay $48"</span>
+  <span class="r">→ 77 pt off the screen</span>
+<span class="d">●</span> Edit <span class="s">PermitView.swift</span>
+<span class="d">●</span> simulator_screenshot <span class="g">→ fits</span>
 
-<!-- Simulator: a phone turns into place, the window forms around it, labels light up, it multiplies. -->
-<vx-scene id="simulator" length="600" timeline="sim" rest=".98" style="--tint:255,170,90">
-  <div class="stage">
-    <div class="glow"></div>
-    <h2 class="statement"><small>Simulator</small><span class="line">The iPhone, inside your window.</span></h2>
-    <div class="world-box"><div class="world"><div class="cam" role="img" aria-label="An iPhone turns into place and the Vibex window forms around it. Claude sees each element by name and taps one. Then a small phone and an iPad join it.">
-      <vx-window class="at v-win s-frame" title="ridge">
-        <img class="fill" src="/assets/shots/window-sim.jpg" alt="" loading="lazy">
-        <img class="col s-col2" src="/assets/shots/col-s1.jpg" alt="" loading="lazy">
-      </vx-window>
-      <div class="at dev-small"><img src="/assets/ridge/07-today-small.jpg" alt="" loading="lazy"></div>
-      <div class="at s-pad"><img src="/assets/ridge/06-today-ipad.jpg" alt="" loading="lazy"></div>
-      <vx-phone class="at s-phone real">
-        <img class="shot" src="/assets/ridge/05-plan.jpg" alt="" loading="lazy">
-        <img class="shot s-packed" src="/assets/ridge/09-plan-packed.jpg" alt="" loading="lazy">
-        <div class="ax a1" style="top:190px;height:44px"><span>Trail: Eagle Ridge</span></div>
-        <div class="ax a2" style="top:267px;height:44px"><span>Date</span></div>
-        <div class="ax a3" style="top:325px;height:58px"><span>Party size: 2</span></div>
-        <div class="ax a4" style="top:434px;height:46px"><span>Water, 3 liters</span></div>
-        <div class="ax a5" style="top:482px;height:46px"><span>Warm layer and shell</span></div>
-        <div class="ax a6" style="top:530px;height:46px"><span>Offline map</span></div>
-        <div class="ax hit" style="top:578px;height:46px"><span>Headlamp</span></div>
-        <span class="tap s-tap" style="left:318px;top:601px"></span>
-      </vx-phone>
-    </div></div></div>
-    <ol class="notes">
-      <li data-beat=".2-.4">No Simulator window lost behind everything else. <strong>The device lives next to your code.</strong></li>
-      <li data-beat=".42-.68">Claude reads every element by name, so it taps what it means to, not a guess at some pixels.</li>
-      <li data-beat=".7-1">A small phone, a big phone and an iPad, all live. <strong>Run on All</strong> installs everywhere at once.</li>
-    </ol>
-  </div>
-</vx-scene>
+Fixed: the Pay button now fits on
+every phone, checked on iPhone SE.</pre></div>
+      </article>
+      <article class="cell">
+        <h3><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="5.5" y="2.5" width="9" height="15" rx="2"/><path d="M8.5 14.5h3"/></svg>Reads the screen by name</h3>
+        <p>Every button and label comes back with its name and frame, like a tester sees it. No guessing at pixels.</p>
+        <div class="win"><div class="win-top"><i></i><i></i><i></i></div><pre class="code">
+<span class="c"># simulator_describe</span>
+<span class="k">Application</span> <span class="s">"Ridge"</span>
+  <span class="k">StaticText</span> <span class="s">"Plan a hike"</span>
+  <span class="k">Button</span> <span class="s">"Trail: Eagle Ridge"</span>
+  <span class="k">Button</span> <span class="s">"Date"</span>
+  <span class="k">Stepper</span> <span class="s">"Party size: 2"</span>
+  <span class="k">Switch</span> <span class="s">"Water, 3 liters"</span> <span class="m">on</span>
+  <span class="k">Switch</span> <span class="s">"Headlamp"</span> <span class="m">off</span>
+  <span class="k">Button</span> <span class="s">"Create Plan"</span>
 
-<!-- Browser: the address bar fills the screen, then a crosshair works through Ridge's site. -->
-<vx-scene length="560" timeline="browser" rest=".98" style="--tint:255,150,90">
-  <div class="stage">
-    <div class="glow"></div>
-    <h2 class="statement"><small>Browser</small><span class="line">It reads the console so you don’t have to.</span></h2>
-    <div class="world-box"><div class="world"><div class="cam" role="img" aria-label="A route types into the address bar of Ridge's website. A crosshair finds a button and clicks it, and the console reports zero errors.">
-      <vx-window class="at b-win" title="ridge">
-        <div class="b-col">
-          <div class="addr"><span class="host">localhost:5173</span><span class="route">/permits/42?tab=details</span></div>
-          <div class="site">
-            <div class="site-art"></div>
-            <div class="site-nav"><b>Ridge</b><span>Trails &nbsp;&nbsp;&nbsp; Permits &nbsp;&nbsp;&nbsp; Journal</span></div>
-            <div class="site-body">
-              <small class="b1x">PERMIT #42 · SAT, NOV 7</small>
-              <h4 class="b2x">Eagle Ridge</h4>
-              <div class="s-row b3x"><span>Two hikers, sunrise entry</span><b>$36.00</b></div>
-              <div class="s-row b3x"><span>Conservation and booking</span><b>$12.00</b></div>
-              <div class="refund b4x">Refund this permit</div>
-            </div>
+<span class="c"># simulator_tap_element</span>
+<span class="k">tap</span> <span class="s">"Headlamp"</span> <span class="g">✓</span></pre></div>
+      </article>
+      <article class="cell">
+        <h3><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 6l4 4-4 4M10 14.5h6"/></svg>Open source, one line</h3>
+        <p>MIT licensed and native Swift. One command installs it and links the <code>vibex</code> command.</p>
+        <div class="win"><div class="win-top"><i></i><i></i><i></i></div><pre class="code">
+<span class="m">~</span> % curl -fsSL https://vibex.cc/install.sh | sh
+<span class="g">==></span> Looking up the release
+<span class="g">==></span> Downloading Vibex 2.6.2
+<span class="g">==></span> Checksum verified
+<span class="g">==></span> Installing to /Applications
+<span class="g">==></span> Linked the vibex command
+<span class="g">==></span> Vibex 2.6.2 is installed.
+<span class="m">~</span> % vibex .
+<span class="cursor"></span></pre></div>
+      </article>
+    </div>
+  </section>
+
+  <!-- Surfaces -->
+  <section class="block">
+    <div class="bar"><i></i><i></i><i></i><span>Surfaces</span></div>
+    <div class="head">
+      <h2>One window, all of it live</h2>
+      <p>The simulator, the browser and the diff sit next to Claude, and Claude can drive each one.</p>
+    </div>
+    <div class="grid three">
+      <article class="cell">
+        <div class="shot device"><img src="/assets/ridge/05-plan.jpg" alt="Ridge running on the embedded iPhone" loading="lazy"></div>
+        <h3>Simulator</h3>
+        <p>A live iPhone or iPad inside your window, not lost behind it. Run on All installs on every device at once.</p>
+      </article>
+      <article class="cell">
+        <div class="shot browser">
+          <div class="addr"><span>localhost:5173</span>/permits/42</div>
+          <div class="console">
+            <div><span class="m">›</span> browser_click <span class="s">"Refund this permit"</span></div>
+            <div class="m">POST /api/refund 200 · 41 ms</div>
+            <div><span class="m">›</span> browser_console</div>
+            <div class="g">0 errors, 0 warnings</div>
           </div>
         </div>
-      </vx-window>
-      <span class="at cross"></span>
-      <div class="at console"><div class="k1x">browser_click "Refund this permit" → ok</div><div class="k2x">POST /api/refund 200 · 41 ms</div><div class="k3x" style="color:var(--green)">browser_console → 0 errors</div></div>
-      <span class="at zero">0 errors</span>
-    </div></div></div>
-    <ol class="notes">
-      <li data-beat=".16-.4">Your dev server opens in a tab next to Claude, and the address bar <strong>shows the route you’re on</strong>.</li>
-      <li data-beat=".42-.66">Claude clicks through pages, watches requests and reads every error for itself.</li>
-      <li data-beat=".72-1"><strong>Never paste a stack trace into a chat again.</strong></li>
-    </ol>
-  </div>
-</vx-scene>
+        <h3>Browser</h3>
+        <p>Your dev server in a tab next to Claude. It clicks through pages and reads the console, so you never paste a stack trace again.</p>
+      </article>
+      <article class="cell">
+        <div class="shot diff"><img src="/assets/shots/diff.jpg" alt="Side-by-side diff of PermitView.swift" loading="lazy"></div>
+        <h3>Review</h3>
+        <p>Every change as a side-by-side diff beside the running app. Stage, commit and push from the same window.</p>
+      </article>
+    </div>
+  </section>
 
-<!-- Approvals: the window sinks away, a banner taps your shoulder, the camera dives to the button. -->
-<vx-scene length="540" timeline="approve" rest=".98" style="--tint:240,160,90">
-  <div class="stage">
-    <div class="glow"></div>
-    <h2 class="statement"><small>Approvals</small><span class="line">Walk away. We’ll get you when it matters.</span></h2>
-    <div class="world-box"><div class="world"><div class="cam" role="img" aria-label="The window recedes while Claude works. A notification arrives, and Allow is clicked. All the tests pass.">
-      <vx-window class="at v-win r-win" title="ridge">
-        <img class="fill" src="/assets/shots/window-approve.jpg" alt="" loading="lazy">
-        <img class="col r1" src="/assets/shots/col-ap1.jpg" alt="" loading="lazy">
-        <img class="col r2" src="/assets/shots/col-ap2.jpg" alt="" loading="lazy">
-        <span class="press r-press"></span>
-        <div class="w-phone"><vx-phone src="/assets/ridge/05-plan.jpg"></vx-phone></div>
-      </vx-window>
-      <div class="at banner"><img src="/icon.png" alt=""><div><b>Claude needs you in Ridge</b>Allow Bash: swift test</div></div>
-    </div></div></div>
-    <ol class="notes">
-      <li data-beat=".18-.38">Long job? Go make a coffee. You don’t have to watch Claude work.</li>
-      <li data-beat=".4-.6">When it needs a yes, you get a dot on its tab, a count in the window and a notification.</li>
-      <li data-beat=".62-1">One click takes you there. One click puts it back to work. <strong>No session sits waiting for hours.</strong></li>
-    </ol>
-  </div>
-</vx-scene>
+  <!-- Design -->
+  <section id="design" class="block">
+    <div class="bar"><i></i><i></i><i></i><span>Vibex Design</span></div>
+    <div class="head">
+      <h2>See it before you build it</h2>
+      <p>Describe an app. Claude designs every screen on a canvas, as JSON in your repo, then builds exactly that.</p>
+    </div>
+    <div class="showcase">
+      <div class="win wide"><div class="win-top"><i></i><i></i><i></i><span>ridge · Design</span></div><img src="/assets/shots/design-tab.jpg" alt="The Design tab: five Ridge screens on a canvas next to the chat" loading="lazy"></div>
+    </div>
+    <div class="grid three plain">
+      <div class="mini"><h3>Real renders</h3><p>Every screen is drawn in a real device frame, not a sketch of one.</p></div>
+      <div class="mini"><h3>A sentence per change</h3><p>A wrong idea costs you one message, not a week of code.</p></div>
+      <div class="mini"><h3>Build This</h3><p>One button hands the finished design to Claude to build.</p></div>
+    </div>
+  </section>
 
-<!-- Review: the real diff wipes in, then a divider drags between before and after. -->
-<vx-scene length="560" timeline="review" rest=".72" style="--tint:255,170,90">
-  <div class="stage">
-    <div class="glow"></div>
-    <h2 class="statement"><small>Review</small><span class="line">Every change, before it counts.</span></h2>
-    <div class="world-box"><div class="world"><div class="cam" role="img" aria-label="The real diff view wipes in, then a divider drags across before and after screenshots of the app.">
-      <div class="at d-shot"><img src="/assets/shots/diff.jpg" alt="" loading="lazy"></div>
-      <vx-phone class="at cmp real">
-        <img class="shot" src="/assets/ridge/08-permit-bug.jpg" alt="" loading="lazy">
-        <div class="after"><img class="shot" src="/assets/ridge/04-permit.jpg" alt="" loading="lazy"></div>
-        <span class="cmp-tag t-after" style="left:12px">After</span><span class="cmp-tag t-before" style="right:12px">Before</span>
-        <span class="divider"></span>
-      </vx-phone>
-    </div></div></div>
-    <ol class="notes">
-      <li data-beat=".16-.46">Side-by-side diffs, right beside the running app. <strong>No more guessing what the agent touched.</strong></li>
-      <li data-beat=".48-.78">Every run saves a screenshot. Drag between before and after, and paste both into your PR.</li>
-      <li data-beat=".8-1">Commit and push from the same window. <strong>You stay the one who decides.</strong></li>
-    </ol>
-  </div>
-</vx-scene>
+  <!-- Everything else -->
+  <section class="block">
+    <div class="bar"><i></i><i></i><i></i><span>And the rest</span></div>
+    <div class="head">
+      <h2>Built for long agent sessions</h2>
+      <p>The small things that keep you out of the loop until you’re needed.</p>
+    </div>
+    <div class="grid three list">
+      <div class="mini"><h3>Parallel agents</h3><p><code>⌘Return</code> sends a message as its own agent, on its own branch. Merge the best attempt, drop the rest.</p></div>
+      <div class="mini"><h3>Approvals that find you</h3><p>When Claude needs a yes you get a dot on its tab and a notification. One click and it’s back to work.</p></div>
+      <div class="mini"><h3>Native Claude chat</h3><p>All of Claude Code, with Plan and Auto modes and every slash command. Your CLAUDE.md and skills carry over.</p></div>
+      <div class="mini"><h3>AI usage</h3><p>Session and plan limits for Claude Code and Codex, with a nudge before you run out. Read from logs on your Mac.</p></div>
+      <div class="mini"><h3>Skills and MCP</h3><p>Browse and install skills and MCP servers from inside Vibex, for one project or all of them.</p></div>
+      <div class="mini"><h3>Any agent</h3><p>The terminal runs Codex, Gemini CLI or Aider, and Vibex’s tools are a standard MCP server any client can use.</p></div>
+    </div>
+  </section>
 
-<!-- Skills and MCP: tools drift in deep space, then fly forward and lock into a grid. -->
-<vx-scene length="500" timeline="skills" rest=".98" style="--tint:167,139,250">
-  <div class="stage">
-    <div class="glow"></div>
-    <h2 class="statement"><small>Skills and MCP</small><span class="line">New abilities, one click away.</span></h2>
-    <div class="world-box"><div class="world"><div class="cam" role="img" aria-label="Tools like Figma, Linear and Sentry fly forward out of the dark and lock into a marketplace grid, and some get installed.">
-      <div class="at m-search"><span>⌕</span><span class="s-type">Search skills and MCP servers</span></div>
-      <div class="at m-tile t0" style="left:250px;top:210px"><img src="/logos/figma.svg" alt="">Figma<small>Designs in context</small></div>
-      <div class="at m-tile t1" style="left:530px;top:210px"><img src="/logos/linear.svg" alt="">Linear<small>Issues, fast</small><span class="installed i1">✓</span></div>
-      <div class="at m-tile t2" style="left:810px;top:210px"><img src="/logos/sentry.svg" alt="">Sentry<small>Errors and releases</small></div>
-      <div class="at m-tile t3" style="left:1090px;top:210px"><img src="/logos/supabase.svg" alt="">Supabase<small>Tables, migrations</small><span class="installed i2">✓</span></div>
-      <div class="at m-tile t4" style="left:250px;top:420px"><img src="/logos/playwright.svg" alt="">Playwright<small>Drive a browser</small></div>
-      <div class="at m-tile t5" style="left:530px;top:420px"><img src="/logos/github.svg" alt="">GitHub<small>PRs and Actions</small><span class="installed i3">✓</span></div>
-      <div class="at m-tile t6" style="left:810px;top:420px"><img src="/logos/notion.svg" alt="">Notion<small>Docs and databases</small></div>
-      <div class="at m-tile t7" style="left:1090px;top:420px"><img src="/logos/postgresql.svg" alt="">Postgres<small>Query your data</small></div>
-      <div class="at m-tile t8" style="left:250px;top:630px"><img src="/logos/slack.svg" alt="">Slack<small>Channels and threads</small></div>
-      <div class="at m-tile t9" style="left:530px;top:630px"><img src="/logos/react.svg" alt="">React<small>Component skills</small></div>
-      <div class="at m-tile t10" style="left:810px;top:630px"><img src="/logos/swift.svg" alt="">Swift<small>Write modern Swift</small><span class="installed i4">✓</span></div>
-      <div class="at m-tile t11" style="left:1090px;top:630px"><img src="/logos/docker.svg" alt="">Docker<small>Containers and images</small></div>
-    </div></div></div>
-    <ol class="notes">
-      <li data-beat=".3-.54">Browse skills and MCP servers from inside Vibex, without leaving your work.</li>
-      <li data-beat=".56-.78">It asks for any API key, then installs for this project or for all of them.</li>
-      <li data-beat=".8-1">You can always see what’s connected, what needs a sign-in and what’s failing.</li>
-    </ol>
-  </div>
-</vx-scene>
-
-<!-- Usage: a ring fills the whole stage and warms up as you near the limit. -->
-<vx-scene length="500" timeline="usage" rest=".98" style="--tint:245,215,110">
-  <div class="stage">
-    <div class="glow"></div>
-    <h2 class="statement"><small>AI Usage</small><span class="line">Never hit a limit by surprise.</span></h2>
-    <div class="world-box"><div class="world"><div class="cam" role="img" aria-label="A large ring fills to 82 percent and warms to orange while daily bars rise behind it. A notice arrives before the limit.">
-      <div class="at skyline"></div>
-      <div class="at gauge">
-        <svg viewBox="0 0 780 780" aria-hidden="true"><circle cx="390" cy="390" r="360" stroke="rgba(255,255,255,.07)"/><circle class="fill" cx="390" cy="390" r="360" stroke="#f5d76e" pathLength="1"/><circle class="hot" cx="390" cy="390" r="360" stroke="#f0a05a" pathLength="1"/></svg>
-        <div class="gauge-text"><div><b class="g-num" data-suffix="%">0%</b>of this session</div></div>
+  <!-- Open source -->
+  <section class="block">
+    <div class="bar"><i></i><i></i><i></i><span>Open source</span></div>
+    <div class="grid two">
+      <div class="cell free">
+        <div class="price">$0</div>
+        <h2>Free, and not just for now.</h2>
+        <p>MIT licensed and built in the open. Read every line, fork it, ship your own. You only pay for the AI tools you already use.</p>
+        <ul class="ticks"><li>No account, no subscription, no trial</li><li>No tracking. Usage numbers stay on your Mac</li><li>Use it at work, change it, keep it</li></ul>
+        <a class="btn ghost" href="https://github.com/uwussimo/vibex">Star on GitHub</a>
       </div>
-      <div class="at nudge"><b>You’ve used 82% of this session</b>Wrap up, or plan the big change for after the reset.</div>
-    </div></div></div>
-    <ol class="notes">
-      <li data-beat=".18-.44">Session and plan limits at a glance, for Claude Code and Codex.</li>
-      <li data-beat=".46-.72">A nudge before you run out, not after, so a big refactor doesn’t die halfway.</li>
-      <li data-beat=".74-1">It’s all read from logs on your Mac. <strong>Nothing leaves your machine.</strong></li>
-    </ol>
-  </div>
-</vx-scene>
-
-<!-- Everything else -->
-<section class="section"><div class="wrap">
-  <vx-reveal class="center"><h2>The small things add up too.</h2></vx-reveal>
-  <vx-reveal class="bento">
-    <div class="tile"><h3>One button to run</h3><p>iOS, macOS, Node, Swift, Rust or Go. Vibex works out how your project runs, and Claude can start it too.</p></div>
-    <div class="tile"><h3>Files, always current</h3><p>A file tree that updates as Claude adds and deletes things, with read-only code, Markdown and images.</p></div>
-    <div class="tile"><h3>Quick open</h3><p><code>⇧⌘P</code> finds any file or command, so you never go hunting through folders.</p></div>
-    <div class="tile"><h3>Use your favorite agent</h3><p>The terminal runs Codex, Gemini CLI or Aider. The tools are standard MCP, so any client can use them.</p></div>
-    <div class="tile"><h3>One window per project</h3><p>Each project keeps its own tabs, layout and Claude, right where you left them.</p></div>
-    <div class="tile"><h3>Native, and quick</h3><p>Swift and AppKit, not a browser in a box. It updates itself in the background.</p></div>
-  </vx-reveal>
-</div></section>
-
-<!-- Open source: zero price, and honest about the limits -->
-<section class="section" id="open-source"><div class="wrap">
-  <vx-reveal class="free">
-    <div>
-      <div class="figure">$0</div>
-      <h2 style="margin-top:14px">Free. Not free for now.</h2>
-      <p class="lede" style="margin-top:14px">Vibex is MIT licensed and built in the open. Read every line, fork it, ship your own. You only pay for the AI tools you already use.</p>
-      <ul class="ticks"><li>No account, no subscription, no trial</li><li>No tracking. Usage numbers stay on your Mac</li><li>Use it at work, change it, keep it</li></ul>
-      <div class="cta-row" style="margin-top:26px"><vx-star big></vx-star></div>
-      <p class="assure">A star costs you nothing, and it’s how other people find this.</p>
+      <div class="cell honest">
+        <h3>Before you install</h3>
+        <ul>
+          <li>Mac only, on macOS 26.</li>
+          <li>The simulator needs Xcode 26 with an iOS runtime.</li>
+          <li>Claude Code is set up for you, but you bring your own plan.</li>
+          <li>Vibex isn’t notarized yet. The install command handles that; with the DMG, macOS asks you to allow it once.</li>
+        </ul>
+      </div>
     </div>
-    <div class="honest">
-      <h3>What it won’t do, so you don’t find out later</h3>
-      <ul>
-        <li>It’s Mac only, and needs macOS 26.</li>
-        <li>The simulator pane needs Xcode 26 with an iOS runtime.</li>
-        <li>Claude Code is set up for you, but it isn’t included. You bring your own plan.</li>
-        <li>Vibex isn’t notarized yet. The install command handles that; with the DMG, macOS asks you to allow it once.</li>
-      </ul>
+  </section>
+
+  <!-- FAQ -->
+  <section id="faq" class="block">
+    <div class="bar"><i></i><i></i><i></i><span>FAQ</span></div>
+    <div class="head"><h2>Questions</h2></div>
+    <div class="faq">
+      <details><summary>Is it really free?</summary><p>Yes. It’s open source under the MIT license, with no paid tier, no trial and no account. You only pay for the AI tools you already use, like Claude Code.</p></details>
+      <details><summary>Do I have to change how I work?</summary><p>No. It’s the real Claude Code, so your CLAUDE.md, skills, hooks and MCP servers carry over. Your repo stays as it is, and a full terminal is one tab away.</p></details>
+      <details><summary>What do I need?</summary><p>A Mac on macOS 26, plus Claude Code. Xcode 26 with an iOS simulator runtime is only needed for the simulator. Setup checks each one and installs what it can.</p></details>
+      <details><summary>Does it work with Codex?</summary><p>Yes. The terminal runs any agent CLI, and Vibex registers its MCP server and skill with Codex as well as Claude Code. AI Usage reads Codex’s limits too.</p></details>
+      <details><summary>What can it run?</summary><p>iOS and macOS apps from Xcode or XcodeGen, web apps with a dev server (npm, pnpm, yarn or bun), and Swift, Rust and Go command-line projects. Anything else runs in the terminal like always.</p></details>
+      <details><summary>Is my code sent anywhere?</summary><p>Vibex sends your code nowhere itself. Claude Code talks to Anthropic as it always does, and usage numbers come from local logs. Vibex contacts GitHub for updates, and skills.sh and the MCP registry when you browse them.</p></details>
+      <details><summary>How does it update?</summary><p>Vibex checks GitHub releases in the background and offers the new version in its own window, or you can run the install command again.</p></details>
     </div>
-  </vx-reveal>
-</div></section>
+  </section>
 
-<!-- FAQ -->
-<section class="section" id="faq" style="padding-top:0"><div class="wrap">
-  <vx-reveal class="center"><h2>Questions</h2></vx-reveal>
-  <vx-reveal class="faq">
-    <details><summary>Is it really free?</summary><p>Yes. It’s open source under the MIT license, with no paid tier, no trial and no account. You only pay for the AI tools you already use, like Claude Code.</p></details>
-    <details><summary>Do I have to change how I work?</summary><p>No. It’s the real Claude Code, so your CLAUDE.md, skills, hooks and MCP servers carry over. Your repo stays as it is, and a full terminal is one tab away.</p></details>
-    <details><summary>What do I need?</summary><p>A Mac on macOS 26, Apple silicon or Intel, plus Claude Code. Xcode 26 with an iOS simulator runtime is only needed for the simulator. Setup checks each one and installs what it can.</p></details>
-    <details><summary>Does it work with Codex or other agents?</summary><p>Yes. The terminal runs any agent CLI, like Codex, Gemini CLI or Aider. Vibex’s tools are a standard MCP server on your Mac, so any MCP client can use them, and AI Usage reads Codex’s limits too. The native chat and Claude Code setup are for Claude.</p></details>
-    <details><summary>What can it run?</summary><p>iOS and macOS apps from Xcode or XcodeGen, web apps with a dev server (npm, pnpm, yarn or bun, so Vite, Next.js and the rest), and Swift, Rust and Go command-line projects. Anything else runs in the terminal like it always has.</p></details>
-    <details><summary>Is my code or usage sent anywhere?</summary><p>Vibex sends your code nowhere itself. Claude Code talks to Anthropic as it always does. Usage numbers come from local logs. Vibex contacts GitHub for updates, skills.sh and the MCP registry when you browse them, and a server’s own site to fetch its icon.</p></details>
-    <details><summary>Why does macOS warn me when I first open it?</summary><p>Vibex isn’t notarized yet. The install command handles it. With the DMG, open System Settings → Privacy &amp; Security and choose Open Anyway.</p></details>
-    <details><summary>How does it update?</summary><p>Vibex checks GitHub releases in the background and offers the new version in its own window, or you can run the install command again.</p></details>
-  </vx-reveal>
-</div></section>
+  <!-- Final call -->
+  <section class="final">
+    <div class="sky small">
+      <img src="/icon.png" alt="" width="72" height="72" loading="lazy">
+      <h2>Stop being your agent’s eyes.</h2>
+      <p>Paste one line. A minute from now, Claude can see what it builds.</p>
+      <div class="actions">
+        <button class="cmd light" type="button" data-copy="curl -fsSL https://vibex.cc/install.sh | sh"><span class="prompt">$</span><code>curl -fsSL https://vibex.cc/install.sh | sh</code><span class="copied" aria-live="polite">Copy</span></button>
+      </div>
+      <p class="fine">Or <a href="https://github.com/uwussimo/vibex/releases/latest">download the DMG</a>.</p>
+    </div>
+  </section>
 
-<!-- The end: the art, one line, and the two things we'd like you to do. -->
-<section class="final center" id="install">
-  <div class="final-art"></div>
-  <div class="wrap">
-    <vx-reveal>
-      <img class="final-icon" src="/icon.png" alt="" width="96" height="96" loading="lazy">
-      <h2>Give your agent eyes.</h2>
-      <p class="lede">Paste one line. A minute from now, Claude can see what it builds.</p>
-      <div class="cta-row"><vx-install></vx-install><vx-star big></vx-star></div>
-      <p class="assure">Free forever. No account. Or <a href="https://github.com/uwussimo/vibex/releases/latest">download the DMG</a>.</p>
-    </vx-reveal>
-    <vx-reveal><ol class="steps">
-      <li><b>1. Paste the command</b>It checks the release, installs Vibex and links the <code>vibex</code> command.</li>
-      <li><b>2. Open a project</b>Setup shows what’s missing, with one button to fix each thing.</li>
-      <li><b>3. Ask Claude for something</b>Then watch it run, look and fix, instead of asking you to.</li>
-    </ol></vx-reveal>
-  </div>
-</section>
-</main>
-<vx-footer></vx-footer>
-<vx-star-float></vx-star-float>
+  <footer class="foot">
+    <div class="foot-brand"><img src="/icon.png" alt="" width="22" height="22">Vibex<p>A native Mac workstation for coding agents. MIT licensed.</p></div>
+    <div><h4>Product</h4><a href="#features">Features</a><a href="#design">Vibex Design</a><a href="https://github.com/uwussimo/vibex/releases/latest">Download</a></div>
+    <div><h4>Project</h4><a href="https://github.com/uwussimo/vibex">GitHub</a><a href="https://github.com/uwussimo/vibex/releases">Releases</a><a href="https://github.com/uwussimo/vibex/issues">Issues</a></div>
+    <div><h4>Install</h4><a href="/install.sh">install.sh</a><a href="#faq">FAQ</a></div>
+  </footer>
+</div>
 </body>
 </html>
