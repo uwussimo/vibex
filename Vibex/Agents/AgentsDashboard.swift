@@ -4,25 +4,29 @@ import SwiftUI
 /// behind them. Shown in the AI Usage editor tab.
 struct AgentsDashboard: View {
     let store: AgentUsageStore
+    /// Off only for rendering to an image, which can't see inside a scroll view.
+    var scrolls = true
 
     var body: some View {
         VStack(spacing: 0) {
             header
             if let summary = store.summary {
-                ScrollView {
-                    content(summary)
-                        .padding(.horizontal, 20)
-                        .padding(.bottom, 16)
-                        .frame(maxWidth: 980)
-                        .frame(maxWidth: .infinity)
+                let page = content(summary)
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 18)
+                    .frame(maxWidth: 980)
+                    .frame(maxWidth: .infinity)
+                if scrolls {
+                    ScrollView { page }.scrollIndicators(.automatic)
+                } else {
+                    page
                 }
-                .scrollIndicators(.automatic)
             } else {
                 VStack(spacing: 10) {
                     ProgressView().controlSize(.small)
                     Text("Reading Claude Code logs…")
                         .font(.vibex(size: 12.5))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Theme.muted)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
@@ -34,11 +38,16 @@ struct AgentsDashboard: View {
 
     private var header: some View {
         HStack(spacing: 10) {
-            Text("AI Usage")
-                .font(.vibex(size: 20, weight: .semibold))
+            VStack(alignment: .leading, spacing: 1) {
+                Text("Usage")
+                    .font(.vibex(size: 20, weight: .semibold))
+                Text("Claude Code and Codex on this Mac, read from their own logs.")
+                    .font(.vibex(size: 12))
+                    .foregroundStyle(Theme.muted)
+            }
             Spacer()
             Circle()
-                .fill(Color.accentColor)
+                .fill(Theme.green)
                 .frame(width: 7, height: 7)
                 .opacity(store.isRefreshing ? 1 : 0.35)
                 .animation(.easeInOut(duration: 0.3), value: store.isRefreshing)
@@ -47,7 +56,8 @@ struct AgentsDashboard: View {
         }
         .padding(.leading, 22)
         .padding(.trailing, 10)
-        .frame(height: 50)
+        .frame(height: 64)
+        .overlay(alignment: .bottom) { Rectangle().fill(Theme.line).frame(height: 1) }
     }
 
     private func content(_ summary: AgentUsageSummary) -> some View {
@@ -66,7 +76,7 @@ struct AgentsDashboard: View {
             Grid(horizontalSpacing: 12, verticalSpacing: 12) {
                 GridRow {
                     SharesCard(title: "Models", icon: .cpu, shares: summary.models, tint: AgentColors.claude)
-                    SharesCard(title: "Projects", icon: .folder, shares: summary.projects, tint: Color.primary.opacity(0.75))
+                    SharesCard(title: "Projects", icon: .folder, shares: summary.projects, tint: Theme.text)
                 }
             }
             ActivityCard(summary: summary)
@@ -74,9 +84,10 @@ struct AgentsDashboard: View {
     }
 }
 
+/// Each tool keeps its own colour, the only colour on the page besides warnings.
 enum AgentColors {
-    static let claude = Color(red: 0.85, green: 0.47, blue: 0.34)
-    static let codex = Color(red: 0.47, green: 0.55, blue: 1.0)
+    static let claude = Color(nsColor: .vibex(0xC8643F, 0xDE7A52))
+    static let codex = Color(nsColor: .vibex(0x4A63D9, 0x7F92FF))
 }
 
 // MARK: - Card chrome
@@ -84,31 +95,34 @@ enum AgentColors {
 private struct Card<Content: View, Accessory: View>: View {
     let title: String
     let icon: Icon
-    var tint: Color = .secondary
+    var tint: Color = Theme.muted
     @ViewBuilder var accessory: Accessory
     @ViewBuilder var content: Content
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 7) {
-                IconView(icon, size: 15)
+                IconView(icon, size: 13)
                     .foregroundStyle(tint)
-                    .frame(width: 18)
-                Text(title)
-                    .font(.vibex(size: 14, weight: .semibold))
+                    .frame(width: 15)
+                Text(title.uppercased())
+                    .font(.vibex(size: 11, weight: .semibold))
+                    .tracking(0.6)
+                    .foregroundStyle(Theme.muted)
                 Spacer(minLength: 6)
                 accessory
             }
+            .frame(minHeight: 22)
             content
         }
-        .padding(14)
+        .padding(16)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .card(radius: 18)
+        .card(radius: Theme.cardRadius)
     }
 }
 
 extension Card where Accessory == EmptyView {
-    init(title: String, icon: Icon, tint: Color = .secondary, @ViewBuilder content: () -> Content) {
+    init(title: String, icon: Icon, tint: Color = Theme.muted, @ViewBuilder content: () -> Content) {
         self.init(title: title, icon: icon, tint: tint, accessory: { EmptyView() }, content: content)
     }
 }
@@ -121,9 +135,9 @@ private struct Badge: View {
         Text(text)
             .font(.vibex(size: 11.5, weight: .semibold))
             .foregroundStyle(tint)
-            .padding(.horizontal, 7)
+            .padding(.horizontal, 6)
             .padding(.vertical, 2)
-            .background(Capsule().fill(tint.opacity(0.16)))
+            .background(RoundedRectangle(cornerRadius: Theme.chipRadius, style: .continuous).fill(tint.opacity(0.14)))
     }
 }
 
@@ -135,14 +149,14 @@ private struct Meter: View {
     var body: some View {
         GeometryReader { geometry in
             ZStack(alignment: .leading) {
-                Capsule().fill(Color.primary.opacity(0.1))
-                Capsule().fill(tint).frame(width: max(8, geometry.size.width * min(1, max(0, value))))
+                RoundedRectangle(cornerRadius: 2, style: .continuous).fill(Theme.raised)
+                RoundedRectangle(cornerRadius: 2, style: .continuous).fill(tint).frame(width: max(4, geometry.size.width * min(1, max(0, value))))
                 if let marker {
-                    Rectangle().fill(Color.primary.opacity(0.8)).frame(width: 2).offset(x: geometry.size.width * min(1, marker) - 1)
+                    Rectangle().fill(Theme.text).frame(width: 2).offset(x: geometry.size.width * min(1, marker) - 1)
                 }
             }
         }
-        .frame(height: 8)
+        .frame(height: 6)
         .animation(.spring(response: 0.4, dampingFraction: 1), value: value)
     }
 }
@@ -184,7 +198,7 @@ private struct ResetLabel: View {
                     Label(UsageFormat.countdown(to: resetsAt, from: context.date), systemImage: "arrow.clockwise")
                         .labelStyle(.titleAndIcon)
                         .font(.vibex(size: 12))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Theme.muted)
                         .help("Resets \(resetsAt.formatted(date: .omitted, time: .shortened))")
                 }
             }
@@ -320,11 +334,11 @@ private struct CodexCard: View {
                     ? "Reset \(window.resetsAt!.formatted(.dateTime.month(.abbreviated).day())); not used since"
                     : "Updated \(limits.updated.formatted(.relative(presentation: .named)))")
                     .font(.vibex(size: 11.5))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Theme.muted)
             } else {
                 Text(installed ? "No usage reported yet" : "Needs the Codex app or CLI")
                     .font(.vibex(size: 12.5))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Theme.muted)
                 if !installed {
                     Link("Get Codex", destination: URL(string: "https://openai.com/codex")!)
                         .font(.vibex(size: 12, weight: .medium))
@@ -353,7 +367,7 @@ private struct SpendingCard: View {
             }
             .menuStyle(.borderlessButton)
             .fixedSize()
-            .foregroundStyle(.secondary)
+            .foregroundStyle(Theme.muted)
         } content: {
             HStack(alignment: .firstTextBaseline, spacing: 6) {
                 Text(UsageFormat.money(summary.periodCost))
@@ -363,7 +377,7 @@ private struct SpendingCard: View {
                     .minimumScaleFactor(0.6)
                     .layoutPriority(1)
                     .contentTransition(.numericText())
-                Text("API value").font(.vibex(size: 12)).foregroundStyle(.secondary)
+                Text("API value").font(.vibex(size: 12)).foregroundStyle(Theme.muted)
                 Spacer(minLength: 4)
                 if let multiple {
                     Badge(text: "\(multiple)×", tint: AgentColors.claude)
@@ -372,7 +386,7 @@ private struct SpendingCard: View {
             }
             Text("\(UsageFormat.tokens(summary.periodTokens)) tokens · \(Int((summary.cacheShare * 100).rounded()))% from cache")
                 .font(.vibex(size: 12))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Theme.muted)
         }
     }
 
@@ -395,7 +409,7 @@ private struct NowCard: View {
             if sessions.isEmpty {
                 Text("Nothing running")
                     .font(.vibex(size: 12.5))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Theme.muted)
             } else {
                 VStack(alignment: .leading, spacing: 10) {
                     ForEach(sessions.prefix(3)) { session in
@@ -413,7 +427,7 @@ private struct NowCard: View {
                             }
                             Text("\(session.model) · \(UsageFormat.tokens(session.output)) written · \(UsageFormat.money(session.cost))")
                                 .font(.vibex(size: 12))
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(Theme.muted)
                                 .lineLimit(1)
                         }
                     }
@@ -438,7 +452,7 @@ private struct TrendCard: View {
         Card(title: "Trend", icon: .barChart) {
             Text(caption)
                 .font(.vibex(size: 12.5, weight: .medium))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Theme.muted)
                 .monospacedDigit()
                 .contentTransition(.numericText())
         } content: {
@@ -446,7 +460,7 @@ private struct TrendCard: View {
             HStack(alignment: .bottom, spacing: days.count > 45 ? 2 : 4) {
                 ForEach(days) { day in
                     let isToday = day.id == days.last?.id
-                    RoundedRectangle(cornerRadius: 3, style: .continuous)
+                    RoundedRectangle(cornerRadius: 2, style: .continuous)
                         .fill(fill(day, isToday: isToday))
                         .frame(height: max(3, 104 * day.cost / peak))
                         .frame(maxWidth: .infinity, maxHeight: 104, alignment: .bottom)
@@ -464,12 +478,12 @@ private struct TrendCard: View {
                 Text(label(days.last))
             }
             .font(.vibex(size: 11, weight: .medium))
-            .foregroundStyle(.tertiary)
+            .foregroundStyle(Theme.faint)
         }
     }
 
     private func fill(_ day: AgentUsageSummary.Day, isToday: Bool) -> Color {
-        if day.cost == 0 { return Color.primary.opacity(0.08) }
+        if day.cost == 0 { return Theme.raised }
         if day.id == hovered || isToday { return AgentColors.claude }
         return AgentColors.claude.opacity(0.55)
     }
@@ -495,7 +509,7 @@ private struct SharesCard: View {
     var body: some View {
         Card(title: title, icon: icon) {
             if shares.isEmpty {
-                Text("No usage in this period").font(.vibex(size: 12.5)).foregroundStyle(.secondary)
+                Text("No usage in this period").font(.vibex(size: 12.5)).foregroundStyle(Theme.muted)
             } else {
                 let top = shares.first?.cost ?? 1
                 VStack(spacing: 9) {
@@ -511,7 +525,7 @@ private struct SharesCard: View {
                                 .frame(width: 64, alignment: .leading)
                             Text(UsageFormat.money(share.cost))
                                 .font(.vibex(size: 13, weight: .medium))
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(Theme.muted)
                                 .monospacedDigit()
                                 .lineLimit(1)
                                 .fixedSize()
@@ -532,7 +546,7 @@ private struct ActivityCard: View {
             if summary.streak > 0 {
                 Label("\(summary.streak)", systemImage: "flame.fill")
                     .font(.vibex(size: 12.5, weight: .semibold))
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(Theme.orange)
                     .help("\(summary.streak)-day streak")
             }
         } content: {
@@ -542,7 +556,7 @@ private struct ActivityCard: View {
                     Text(UsageFormat.money(summary.activityCost))
                         .font(.vibex(size: 22, weight: .semibold))
                         .monospacedDigit()
-                    Text("13 weeks").font(.vibex(size: 12)).foregroundStyle(.secondary)
+                    Text("13 weeks").font(.vibex(size: 12)).foregroundStyle(Theme.muted)
                     Spacer().frame(height: 10)
                     stat("Active days", "\(summary.activeDays)")
                     if let busiest = summary.busiestDay {
@@ -561,8 +575,8 @@ private struct ActivityCard: View {
             ForEach(weeks.indices, id: \.self) { column in
                 VStack(spacing: 3) {
                     ForEach(weeks[column]) { day in
-                        RoundedRectangle(cornerRadius: 3, style: .continuous)
-                            .fill(Color.primary.opacity(Self.opacity(day.cost, levels)))
+                        RoundedRectangle(cornerRadius: 2, style: .continuous)
+                            .fill(day.cost == 0 ? Theme.raised : AgentColors.claude.opacity(Self.opacity(day.cost, levels)))
                             .frame(width: 12, height: 12)
                             .help("\(day.date.formatted(date: .abbreviated, time: .omitted)): \(UsageFormat.money(day.cost))")
                     }
@@ -573,7 +587,7 @@ private struct ActivityCard: View {
 
     private func stat(_ title: String, _ value: String) -> some View {
         HStack {
-            Text(title).foregroundStyle(.secondary)
+            Text(title).foregroundStyle(Theme.muted)
             Spacer()
             Text(value).monospacedDigit()
         }

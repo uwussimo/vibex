@@ -437,7 +437,7 @@ final class EditorAreaViewController: NSViewController {
             ))
         }
         if agentsHost != nil {
-            items.append(EditorTabsModel.Item(tab: .agents, title: "AI Usage", icon: .barChart))
+            items.append(EditorTabsModel.Item(tab: .agents, title: "Usage", icon: .barChart))
         }
         if skillsHost != nil {
             items.append(EditorTabsModel.Item(tab: .skills, title: "Skills", icon: .skills))
