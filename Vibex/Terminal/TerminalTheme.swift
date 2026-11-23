@@ -1,22 +1,23 @@
 import AppKit
 import SwiftTerm
 
-/// The terminal stays dark, like the code panels on the site: near-black ink set into the paper
-/// window, so Claude Code's default (dark) theme reads as intended.
+/// The terminal on paper, the main surface of the window: the site's sheet colour, ink text and an
+/// ANSI palette tuned to stay readable on a light background. Claude Code reads best here with its
+/// light theme (`/theme`).
 enum TerminalTheme {
-    static let background = NSColor(hex: 0x17171A)   // Theme.ink
-    static let foreground = NSColor(srgbRed: 0.898, green: 0.898, blue: 0.918, alpha: 1)   // #E5E5EA
-    static let caret = NSColor(hex: 0xF4F3F0)
-    static let selection = NSColor(hex: 0xF4F3F0, alpha: 0.22)
-    static let tabBar = NSColor(hex: 0x1F1F23)
+    static let background = NSColor(hex: 0xFBFBF9)   // Theme.background
+    static let foreground = NSColor(hex: 0x26262B)
+    static let caret = NSColor(hex: 0x17171A)
+    static let selection = NSColor(hex: 0x17171A, alpha: 0.12)
+    static let tabBar = NSColor(hex: 0xF4F3F0)       // Theme.surface
     static let font = AppFont.code(size: 13)
 
-    /// ANSI 0–15.
+    /// ANSI 0–15, readable on paper. White (7, 15) is a light grey so "white" text still shows.
     static let ansi: [SwiftTerm.Color] = [
-        rgb(0x3A3A3C), rgb(0xFF6B6B), rgb(0x5AD178), rgb(0xFFD166),
-        rgb(0x6CA8FF), rgb(0xD18BFF), rgb(0x5CD6E8), rgb(0xD1D1D6),
-        rgb(0x7C7C80), rgb(0xFF8A80), rgb(0x7EE59A), rgb(0xFFE08A),
-        rgb(0x8FBFFF), rgb(0xE3ADFF), rgb(0x8AE6F3), rgb(0xF2F2F7),
+        rgb(0x26262B), rgb(0xC9372C), rgb(0x1F7A45), rgb(0x8A6100),
+        rgb(0x2F6FDB), rgb(0x7C5CD6), rgb(0x1B7C83), rgb(0x8C8B90),
+        rgb(0x5C5B61), rgb(0xD2453D), rgb(0x2F9E62), rgb(0xA87A0C),
+        rgb(0x4A86E8), rgb(0x9277E0), rgb(0x2793A0), rgb(0xB5B3B8),
     ]
 
     static func apply(to terminal: LocalProcessTerminalView) {

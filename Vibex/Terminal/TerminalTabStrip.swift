@@ -13,6 +13,6 @@ struct TerminalTabStrip: View {
     let actions: TabStripActions
 
     var body: some View {
-        TabStrip(items: model.tabs, selectedID: model.selectedID, dark: true, actions: actions)
+        TabStrip(items: model.tabs, selectedID: model.selectedID, dark: false, actions: actions)
     }
 }

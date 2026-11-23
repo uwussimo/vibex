@@ -186,7 +186,21 @@ struct ActivityButton: View {
     var body: some View {
         Button(action: action) {
             VStack(spacing: 3) {
-                if let logo { BrandLogoView(logo, size: 18) } else { IconView(icon, size: 18) }
+                if let logo {
+                    BrandLogoView(logo, size: 18)
+                } else if let glyph = icon.activityGlyph {
+                    // Line when idle, solid when it's the section you're in.
+                    Image(isSelected ? glyph + ".fill" : glyph)
+                        .renderingMode(.template)
+                        .resizable()
+                        .interpolation(.high)
+                        .frame(width: 20, height: 20)
+                        .frame(width: 18, height: 18)
+                        .contentTransition(.opacity)
+                        .accessibilityHidden(true)
+                } else {
+                    IconView(icon, size: 18)
+                }
                 Text(label)
                     .font(.vibex(size: 9.5, weight: isSelected ? .medium : .regular))
                     .lineLimit(1)
@@ -245,5 +259,28 @@ struct ActivityButton: View {
             .offset(x: -1, y: 2)
             .contentTransition(.numericText())
             .transition(.scale(scale: 0.5).combined(with: .opacity))
+    }
+}
+
+private extension Icon {
+    /// The activity bar's own glyphs: Phosphor (MIT, Vibex/Resources/Activity.xcassets), which draws
+    /// every icon in a matching line and solid weight.
+    var activityGlyph: String? {
+        let name: String? = switch self {
+        case .terminal: "terminal-window"
+        case .phone: "device-mobile"
+        case .globe: "globe"
+        case .feather: "pen-nib"
+        case .beaker: "flask"
+        case .files: "folder-simple"
+        case .branch: "git-branch"
+        case .skills: "graduation-cap"
+        case .server: "plugs"
+        case .hardDrive: "hard-drives"
+        case .barChart: "chart-bar"
+        case .settings: "gear-six"
+        default: nil
+        }
+        return name.map { "ph." + $0 }
     }
 }
