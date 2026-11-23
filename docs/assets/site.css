@@ -503,3 +503,26 @@ h3 { font-size: 15.5px; font-weight: 500; letter-spacing: -.01em; }
 .ios .island { width: 126px; height: 37px; top: 11px; margin-left: -63px; background: #05050a; }
 .phone { padding: 9px; border-radius: 17% / 8%; }
 .phone .screen { inset: 9px; border-radius: 14% / 6.4%; }
+
+/* ---------- The iPhone mockup (assets/iphone.png, 389×800) ----------
+   The app screen sits in the mockup's opening (17, 14, 356×772) and the PNG is laid over it,
+   so its own bezel, island and buttons frame the screen. */
+.phone, .mini-phone {
+  padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none; overflow: visible;
+  aspect-ratio: auto;
+}
+.phone::before, .mini-phone::before { content: ""; display: block; aspect-ratio: 389 / 800; }
+.phone::after, .mini-phone::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 1;
+  background: url(/assets/iphone.png) center / 100% 100% no-repeat;
+}
+.phone { filter: drop-shadow(0 34px 40px rgba(20,10,30,.35)); }
+.phone .screen, .mini-phone .screen-host {
+  inset: auto; left: 4.37%; top: 1.75%; width: 91.52%; height: 96.5%;
+  border-radius: 15.2% / 7%;
+}
+.phone .flag { z-index: 2; }
+.ios .island { display: none; }
+/* The Simulator card shows the top of the phone, cut by the card. */
+.shot.device { display: block; padding: 22px 0 0; }
+.shot.device .mini-phone { width: 52%; height: auto; margin: 0 auto; border-radius: 0; }
