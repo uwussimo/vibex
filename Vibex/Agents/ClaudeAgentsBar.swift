@@ -161,7 +161,7 @@ private struct AgentPill: View {
             .monospacedDigit()
             .padding(.horizontal, 9)
             .frame(height: 26)
-            .background(RoundedRectangle(cornerRadius: 7, style: .continuous).fill(Color.white.opacity(isCurrent ? 0.09 : (isHovering ? 0.05 : 0))))
+            .background(RoundedRectangle(cornerRadius: 7, style: .continuous).fill(Theme.wash(isCurrent ? 0.09 : (isHovering ? 0.05 : 0))))
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)

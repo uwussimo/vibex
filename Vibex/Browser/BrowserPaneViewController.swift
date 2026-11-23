@@ -46,7 +46,7 @@ final class BrowserPaneViewController: NSViewController, NSMenuItemValidation {
         toolbar.translatesAutoresizingMaskIntoConstraints = false
         container.translatesAutoresizingMaskIntoConstraints = false
         container.wantsLayer = true
-        container.layer?.backgroundColor = NSColor.black.cgColor
+        container.layer?.backgroundColor = Theme.NS.background.cgColor
 
         root.addSubview(toolbar)
         root.addSubview(container)

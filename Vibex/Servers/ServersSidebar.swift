@@ -174,7 +174,7 @@ private struct ServerRow: View {
             }
             .padding(.horizontal, 8)
             .frame(height: 44)
-            .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Color.white.opacity(isHovering ? 0.05 : 0)))
+            .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Theme.wash(isHovering ? 0.05 : 0)))
             .contentShape(Rectangle())
         }
         .buttonStyle(PressFeedbackButtonStyle())

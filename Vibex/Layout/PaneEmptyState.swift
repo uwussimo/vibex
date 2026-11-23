@@ -18,7 +18,7 @@ struct PaneEmptyState: View {
                     .font(.vibex(size: 17, weight: .semibold))
                 Text("Open a terminal to start, or bring back the simulator or browser.")
                     .font(.vibex(size: 12.5))
-                    .foregroundStyle(.white.opacity(0.55))
+                    .foregroundStyle(Theme.muted)
                     .multilineTextAlignment(.center)
             }
             VStack(spacing: 8) {
@@ -28,10 +28,10 @@ struct PaneEmptyState: View {
             }
             .frame(width: 260)
         }
-        .foregroundStyle(.white)
+        .foregroundStyle(Theme.text)
         .padding(24)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(nsColor: TerminalTheme.background))
+        .background(Theme.background)
     }
 }
 
@@ -53,15 +53,17 @@ private struct EmptyStateRow: View {
                 Spacer()
                 Text(shortcut)
                     .font(.vibex(size: 12))
-                    .foregroundStyle(isPrimary ? .white.opacity(0.75) : .white.opacity(0.4))
+                    .foregroundStyle(isPrimary ? Color.white.opacity(0.7) : Theme.faint)
             }
+            .foregroundStyle(isPrimary ? Color.white : Theme.text)
             .padding(.horizontal, 14)
             .frame(height: 38)
             .background(
-                RoundedRectangle(cornerRadius: 9, style: .continuous)
-                    .fill(isPrimary ? Color.accentColor : Color.white.opacity(isHovering ? 0.12 : 0.07))
+                RoundedRectangle(cornerRadius: Theme.controlRadius, style: .continuous)
+                    .fill(isPrimary ? Theme.accent : (isHovering ? Theme.raised : Theme.card))
             )
-            .contentShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: Theme.controlRadius, style: .continuous).strokeBorder(isPrimary ? Color.clear : Theme.line))
+            .contentShape(RoundedRectangle(cornerRadius: Theme.controlRadius, style: .continuous))
         }
         .buttonStyle(PressFeedbackButtonStyle())
         .onHover { isHovering = $0 }

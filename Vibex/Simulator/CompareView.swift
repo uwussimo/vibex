@@ -162,7 +162,7 @@ struct CompareView: View {
         let height = max(left.size.height, right.size.height)
         let size = NSSize(width: left.size.width + right.size.width + gap, height: height)
         let image = NSImage(size: size, flipped: false) { _ in
-            NSColor(hex: 0x0C0C0F).setFill()
+            Theme.NS.background.setFill()
             NSRect(origin: .zero, size: size).fill()
             left.draw(in: NSRect(x: 0, y: 0, width: left.size.width, height: left.size.height))
             right.draw(in: NSRect(x: left.size.width + gap, y: 0, width: right.size.width, height: right.size.height))

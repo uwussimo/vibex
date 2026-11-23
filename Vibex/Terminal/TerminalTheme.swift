@@ -1,13 +1,14 @@
 import AppKit
 import SwiftTerm
 
-/// Always-dark terminal look, tuned to sit next to Netflix without competing with it.
+/// The terminal stays dark, like the code panels on the site: near-black ink set into the paper
+/// window, so Claude Code's default (dark) theme reads as intended.
 enum TerminalTheme {
-    static let background = NSColor(srgbRed: 0.071, green: 0.071, blue: 0.086, alpha: 1)   // #121216, a step above the window
+    static let background = NSColor(hex: 0x17171A)   // Theme.ink
     static let foreground = NSColor(srgbRed: 0.898, green: 0.898, blue: 0.918, alpha: 1)   // #E5E5EA
-    static let caret = NSColor(srgbRed: 0.42, green: 0.66, blue: 1.0, alpha: 1)             // #6CA8FF
-    static let selection = caret.withAlphaComponent(0.32)
-    static let tabBar = NSColor(srgbRed: 0.075, green: 0.075, blue: 0.090, alpha: 1)       // #131317, Theme.surface
+    static let caret = NSColor(hex: 0xF4F3F0)
+    static let selection = NSColor(hex: 0xF4F3F0, alpha: 0.22)
+    static let tabBar = NSColor(hex: 0x1F1F23)
     static let font = AppFont.code(size: 13)
 
     /// ANSI 0–15.

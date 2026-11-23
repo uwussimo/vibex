@@ -609,7 +609,7 @@ private struct EditorTabCell: View {
                 IconView(.close, size: 11)
                     .foregroundStyle(Theme.muted)
                     .frame(width: 16, height: 16)
-                    .background(Circle().fill(Color.white.opacity(isHovering ? 0.1 : 0)))
+                    .background(Circle().fill(Theme.wash(isHovering ? 0.1 : 0)))
                     // A 24pt hit area around the 16pt circle.
                     .frame(width: 24, height: 24)
                     .contentShape(Rectangle())
@@ -624,7 +624,7 @@ private struct EditorTabCell: View {
         .frame(minWidth: 90, maxWidth: 210)
         .background(
             RoundedRectangle(cornerRadius: 7, style: .continuous)
-                .fill(Color.white.opacity(isSelected ? 0.08 : (isHovering ? 0.04 : 0)))
+                .fill(Theme.wash(isSelected ? 0.08 : (isHovering ? 0.04 : 0)))
         )
         .overlay(
             RoundedRectangle(cornerRadius: 7, style: .continuous)

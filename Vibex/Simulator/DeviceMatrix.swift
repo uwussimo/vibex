@@ -223,7 +223,7 @@ final class DeviceMatrixViewController: NSViewController {
         let gap: CGFloat = 60
         let size = NSSize(width: widths.reduce(0, +) + gap * CGFloat(images.count - 1), height: height)
         let combined = NSImage(size: size, flipped: false) { _ in
-            NSColor(hex: 0x0C0C0F).setFill()
+            Theme.NS.background.setFill()
             NSRect(origin: .zero, size: size).fill()
             var x: CGFloat = 0
             for (index, image) in images.enumerated() {

@@ -160,7 +160,7 @@ private struct DesignLayerRow: View {
         .padding(.leading, CGFloat(depth) * 12 + 2)
         .padding(.trailing, 4)
         .frame(height: 24)
-        .background(RoundedRectangle(cornerRadius: 5, style: .continuous).fill(isSelected ? Theme.accent.opacity(0.22) : (isHovering ? Color.white.opacity(0.05) : .clear)))
+        .background(RoundedRectangle(cornerRadius: 5, style: .continuous).fill(isSelected ? Theme.accent.opacity(0.22) : (isHovering ? Theme.wash(0.05) : .clear)))
         .overlay(alignment: .top) { if isDropTarget { Rectangle().fill(Theme.accent).frame(height: 2) } }
         .contentShape(Rectangle())
         .onTapGesture { model.select(element: node.path, in: screen) }
@@ -574,7 +574,7 @@ private extension View {
     func designFieldStyle(isFocused: Bool = false) -> some View {
         padding(.horizontal, 7)
             .frame(height: 24)
-            .background(Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 5, style: .continuous))
+            .background(Theme.wash(0.06), in: RoundedRectangle(cornerRadius: 5, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: 5, style: .continuous).strokeBorder(isFocused ? Theme.accent : .clear))
     }
 }
@@ -627,7 +627,7 @@ private struct DesignTextArea: View {
             .lineLimit(2...8)
             .focused($isFocused)
             .padding(7)
-            .background(Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 5, style: .continuous))
+            .background(Theme.wash(0.06), in: RoundedRectangle(cornerRadius: 5, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: 5, style: .continuous).strokeBorder(isFocused ? Theme.accent : .clear))
             .onAppear { draft = value }
             .onChange(of: value) { _, new in if !isFocused { draft = new } }
@@ -804,7 +804,7 @@ private struct DesignColorInput: View {
         RoundedRectangle(cornerRadius: 3, style: .continuous)
             .fill(theme.color(value) ?? .clear)
             .frame(width: 14, height: 14)
-            .overlay(RoundedRectangle(cornerRadius: 3, style: .continuous).strokeBorder(Color.white.opacity(0.2)))
+            .overlay(RoundedRectangle(cornerRadius: 3, style: .continuous).strokeBorder(Theme.wash(0.2)))
     }
 }
 

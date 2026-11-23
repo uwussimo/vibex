@@ -410,7 +410,7 @@ private struct QAResultDetail: View {
                                 }
                                 .padding(.horizontal, 6)
                                 .frame(height: 26)
-                                .background(RoundedRectangle(cornerRadius: 5, style: .continuous).fill(shown == step.index ? Color.white.opacity(0.06) : .clear))
+                                .background(RoundedRectangle(cornerRadius: 5, style: .continuous).fill(shown == step.index ? Theme.wash(0.06) : .clear))
                                 .contentShape(Rectangle())
                             }
                             .buttonStyle(.plain)

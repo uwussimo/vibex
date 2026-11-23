@@ -95,7 +95,7 @@ private struct ExplorerRow: View {
         .padding(.trailing, 8)
         .frame(height: 24)
         .background(
-            Rectangle().fill(isSelected ? Theme.accent.opacity(0.16) : Color.white.opacity(isHovering ? 0.045 : 0))
+            Rectangle().fill(isSelected ? Theme.accent.opacity(0.16) : Theme.wash(isHovering ? 0.045 : 0))
         )
         .overlay(alignment: .leading) {
             if isSelected { Rectangle().fill(Theme.accent).frame(width: 2) }

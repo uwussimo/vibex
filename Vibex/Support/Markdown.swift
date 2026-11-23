@@ -338,7 +338,7 @@ private struct CodeBlock: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Color(hex: 0x101014)))
+        .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Theme.code).overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(Theme.line)))
         .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(Theme.line))
     }
 

@@ -17,7 +17,7 @@ struct ToolbarIconButton: View {
                 .foregroundStyle(isActive ? Theme.accent : (isHovering && isEnabled ? Theme.text : Theme.muted))
                 .background(
                     RoundedRectangle(cornerRadius: 6, style: .continuous)
-                        .fill(isHovering && isEnabled ? Color.white.opacity(0.08) : Color.clear)
+                        .fill(isHovering && isEnabled ? Theme.wash(0.08) : Color.clear)
                 )
                 .contentShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
         }

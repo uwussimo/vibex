@@ -122,7 +122,7 @@ private struct InstalledServerRow: View {
         }
         .padding(.horizontal, 8)
         .frame(height: 44)
-        .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Color.white.opacity(isHovering ? 0.05 : 0)))
+        .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Theme.wash(isHovering ? 0.05 : 0)))
         .onHover { isHovering = $0 }
         .help(server.isVibex ? "Vibex's own server; it registers itself" : helpText)
     }

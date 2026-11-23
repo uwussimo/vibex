@@ -856,7 +856,7 @@ private struct ClaudeSuggestionMenu: View {
                             }
                             .padding(.horizontal, 12)
                             .frame(height: 28)
-                            .background(index == highlighted ? Color.white.opacity(0.07) : .clear)
+                            .background(index == highlighted ? Theme.wash(0.07) : .clear)
                             .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)

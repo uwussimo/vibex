@@ -196,7 +196,7 @@ struct ActivityButton: View {
                 .frame(width: 48, height: 44)
                 .background(
                     RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .fill(Color.white.opacity(isSelected ? 0.08 : (isHovering ? 0.045 : 0)))
+                        .fill(Theme.wash(isSelected ? 0.08 : (isHovering ? 0.045 : 0)))
                 )
                 .overlay(alignment: .topTrailing) { indicator }
                 .contentShape(Rectangle())

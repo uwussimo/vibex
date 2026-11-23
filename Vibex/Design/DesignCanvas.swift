@@ -202,7 +202,7 @@ private struct DesignDots: View {
                 }
                 x += spacing
             }
-            context.fill(dots, with: .color(.white.opacity(0.09)))
+            context.fill(dots, with: .color(Theme.ink.opacity(1.1 * 0.09)))
         }
         .background(Theme.background)
     }

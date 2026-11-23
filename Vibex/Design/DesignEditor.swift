@@ -292,7 +292,7 @@ struct DesignKitBoard: View {
             }
             .padding(20)
             .background(theme.color(token: "background"), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(.white.opacity(0.1)))
+            .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(Theme.ink.opacity(0.1)))
         }
     }
 
@@ -361,7 +361,7 @@ struct DesignKitBoard: View {
             .padding(20)
             .frame(width: 320, alignment: .leading)
             .background(theme.color(token: "background"), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(.white.opacity(0.1)))
+            .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(Theme.ink.opacity(0.1)))
         }
     }
 
