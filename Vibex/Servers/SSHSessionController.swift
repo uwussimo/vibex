@@ -133,7 +133,7 @@ enum TerminalPromptLine {
 ///
 /// SwiftTerm parses output on its own thread and doesn't hand the bytes over, so this reads the
 /// screen after each batch instead, through the copies SwiftTerm makes for this purpose.
-final class ManagedTerminalView: LocalProcessTerminalView {
+final class ManagedTerminalView: VibexTerminalView {
     /// `ssh` prompts while connecting. Past this, a "Password:" on screen belongs to the remote
     /// machine, not to `ssh`, and no saved secret should go anywhere near it.
     static let watchLimit: Duration = .seconds(120)

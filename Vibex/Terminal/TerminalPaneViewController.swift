@@ -357,7 +357,7 @@ final class TerminalPaneViewController: NSViewController {
     }
 
     private func makeTerminalView() -> LocalProcessTerminalView {
-        makeTerminalView(LocalProcessTerminalView(frame: container.bounds))
+        makeTerminalView(VibexTerminalView(frame: container.bounds))
     }
 
     private func makeTerminalView<Terminal: LocalProcessTerminalView>(_ terminal: Terminal) -> Terminal {
