@@ -125,6 +125,11 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
             windowID: session.windowID,
             actions: ActivityBarActions(
                 showTerminal: { [weak self] in self?.showTerminalOrWaiting() },
+                newTerminal: { [weak self] in
+                    guard let self else { return }
+                    workspace.focusTerminal(nil)
+                    workspace.terminalPane.newTab(nil)
+                },
                 showSimulator: { [weak self] in self?.workspace.focusSimulator(nil) },
                 showBrowser: { [weak self] in self?.workspace.focusBrowser(nil) },
                 showDesign: { [weak self] in self?.showDesign(nil) },

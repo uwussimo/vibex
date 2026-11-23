@@ -22,10 +22,11 @@ struct ActivityBar: View {
                 label: "Terminal",
                 help: waiting > 0
                     ? "Claude is waiting in \(waiting) tab\(waiting == 1 ? "" : "s") (⌘1)"
-                    : (panes.terminal ? "Terminal (⌘1)" : "Open Terminal (⌘1)"),
+                    : (panes.terminal ? "Terminal (⌘1). Double-click for a new tab (⌘T)" : "Open Terminal (⌘1)"),
                 isSelected: panes.terminal,
                 attention: waiting,
-                action: actions.showTerminal
+                action: actions.showTerminal,
+                doubleAction: actions.newTerminal
             )
             ActivityButton(
                 icon: .phone,
@@ -138,6 +139,8 @@ struct ActivityBar: View {
 
 struct ActivityBarActions {
     var showTerminal: () -> Void
+    /// A double-click on Terminal opens another tab.
+    var newTerminal: () -> Void
     var showSimulator: () -> Void
     var showBrowser: () -> Void
     var showDesign: () -> Void
@@ -164,6 +167,8 @@ struct ActivityButton: View {
     var attention = 0
     var dot: Color?
     let action: () -> Void
+    /// Runs on the second click of a double-click, after `action` ran for the first.
+    var doubleAction: (() -> Void)?
     @State private var isHovering = false
 
     var body: some View {
@@ -199,6 +204,7 @@ struct ActivityButton: View {
                 .contentShape(Rectangle())
         }
         .buttonStyle(PressFeedbackButtonStyle())
+        .simultaneousGesture(TapGesture(count: 2).onEnded { doubleAction?() }, including: doubleAction == nil ? .subviews : .all)
         .frame(width: ActivityBar.width, height: 46)
         .overlay(alignment: .leading) {
             // Grows from the middle when selected, like the indicator in VS Code and Xcode's navigator.

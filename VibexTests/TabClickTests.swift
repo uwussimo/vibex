@@ -66,6 +66,40 @@ import Testing
         try await Task.sleep(for: .milliseconds(200))
     }
 
+    @Test func `double-clicking Terminal in the activity bar opens another tab, and terminals are padded`() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("vibex-bar-\(UUID().uuidString)")
+        let folder = root.appendingPathComponent("habits")
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let store = ProjectStore(directory: root.appendingPathComponent("state"))
+        let project = Project(url: folder)
+        var state = ProjectState()
+        state.browserTabURLs = ["about:blank"]
+        state.terminalDirectories = [folder.path]
+        store.save(state, for: project)
+        let controller = MainWindowController(session: ProjectSession(project: project, store: store))
+        let window = try #require(controller.window)
+        window.setFrame(NSRect(x: -6000, y: 200, width: 1500, height: 820), display: false)
+        controller.showWindow(nil)
+        defer { controller.close() }
+        try await Task.sleep(for: .seconds(1.5))
+        let pane = controller.workspace.terminalPane
+        #expect(pane.tabBarModel.tabs.count == 1)
+
+        // The Terminal button is the first in the bar.
+        let content = try #require(window.contentView)
+        let button = content.convert(NSPoint(x: ActivityBar.width / 2, y: content.bounds.maxY - 31), to: nil)
+        try await click(button, in: window, count: 1)
+        #expect(pane.tabBarModel.tabs.count == 1)
+        try await click(button, in: window, count: 2)
+        #expect(pane.tabBarModel.tabs.count == 2)
+
+        let terminal = try #require(pane.view.firstSubview(of: VibexTerminalView.self))
+        let container = try #require(terminal.superview)
+        #expect(terminal.frame.minX == TerminalPaneViewController.padding.width)
+        #expect(container.bounds.maxX - terminal.frame.maxX == TerminalPaneViewController.padding.width)
+    }
+
     @Test func `double-clicking a tab opens another like it`() async throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("vibex-dup-\(UUID().uuidString)")
         let folder = root.appendingPathComponent("habits")
@@ -155,5 +189,15 @@ import Testing
         try await click(row, in: window, count: 1)
         try await click(row, in: window, count: 2)
         #expect(counts == [1, 2])
+    }
+}
+
+private extension NSView {
+    func firstSubview<T: NSView>(of type: T.Type) -> T? {
+        for subview in subviews {
+            if let match = subview as? T { return match }
+            if let match = subview.firstSubview(of: type) { return match }
+        }
+        return nil
     }
 }

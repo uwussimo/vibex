@@ -30,6 +30,8 @@ final class TerminalPaneViewController: NSViewController {
     }
 
     let session: ProjectSession
+    /// Space between the terminal's text and the pane's edges.
+    static let padding = CGSize(width: 14, height: 10)
     private var tabs: [Tab] = []
     private var selectedID: UUID?
     var selectedTabID: UUID? { selectedID }
@@ -270,7 +272,9 @@ final class TerminalPaneViewController: NSViewController {
             subview.removeFromSuperview()
         }
         if tab.content.superview == nil {
-            tab.content.frame = container.bounds
+            // A margin of the terminal's own colour, so text never touches the window's edges.
+            // Autoresizing keeps the margins as the pane resizes.
+            tab.content.frame = container.bounds.insetBy(dx: Self.padding.width, dy: Self.padding.height)
             container.addSubview(tab.content)
         }
         syncTabBar()
