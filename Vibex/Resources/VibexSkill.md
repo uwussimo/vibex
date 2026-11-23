@@ -1,13 +1,13 @@
 ---
 name: vibex
-description: How to work inside Vibex, the Mac workstation this session may be running in (Claude chat or terminal, embedded iOS Simulator, side browser and Git in one window), and how to use its MCP tools (simulator_*, browser_*, terminal_*, vibex_*) to build, run, test and verify fast. Use it whenever TERM_PROGRAM is Vibex or VIBEX_PROJECT is set, whenever those MCP tools are available, and whenever the task involves running, viewing, tapping or testing an iOS app or a web page.
+description: How to work inside Vibex, the Mac workstation this session may be running in (terminal, embedded iOS Simulator, side browser and Git in one window), and how to use its MCP tools (simulator_*, browser_*, terminal_*, vibex_*) to build, run, test and verify fast. Use it whenever TERM_PROGRAM is Vibex or VIBEX_PROJECT is set, whenever those MCP tools are available, and whenever the task involves running, viewing, tapping or testing an iOS app or a web page.
 ---
 
 <!-- Installed by Vibex {{VERSION}}. Vibex keeps this file current and replaces it when it updates. -->
 
 # Working in Vibex
 
-Vibex is one native Mac window per project: you on the left (a Claude chat or a terminal), and on the
+Vibex is one native Mac window per project: you on the left in a terminal, and on the
 right a live iOS Simulator and a browser, with every diff you make in Source Control. Its MCP server lets
 you run the app and see it yourself. **You don't have to ask the user to check anything, and you don't
 have to guess whether it works: run it and look.**

@@ -151,11 +151,11 @@ every phone, checked on iPhone SE.</pre></div>
         <div class="win"><div class="win-top"><i></i><i></i><i></i></div><pre class="code">
 <span class="m">~</span> % curl -fsSL https://vibex.cc/install.sh | sh
 <span class="g">==></span> Looking up the release
-<span class="g">==></span> Downloading Vibex 2.7.1
+<span class="g">==></span> Downloading Vibex 2.8.0
 <span class="g">==></span> Checksum verified
 <span class="g">==></span> Installing to /Applications
 <span class="g">==></span> Linked the vibex command
-<span class="g">==></span> Vibex 2.7.1 is installed.
+<span class="g">==></span> Vibex 2.8.0 is installed.
 <span class="m">~</span> % vibex .
 <span class="cursor"></span></pre></div>
       </article>
@@ -229,10 +229,10 @@ every phone, checked on iPhone SE.</pre></div>
       <p>The small things that keep you out of the loop until you’re needed.</p>
     </div>
     <div class="grid three list">
-      <div class="mini"><h3>Parallel agents</h3><p><code>⌘Return</code> sends a message as its own agent, on its own branch. Merge the best attempt, drop the rest.</p></div>
+      <div class="mini"><h3>Keep Awake</h3><p>Keeps the Mac up for an hour, until 6 PM, or just while Claude Code is working. From Settings or the menu bar, no extra app.</p></div>
       <div class="mini"><h3>Approvals that find you</h3><p>When Claude needs a yes you get a dot on its tab and a notification. One click and it’s back to work.</p></div>
-      <div class="mini"><h3>Native Claude chat</h3><p>All of Claude Code, with Plan and Auto modes and every slash command. Your CLAUDE.md and skills carry over.</p></div>
-      <div class="mini"><h3>AI usage</h3><p>Session and plan limits for Claude Code and Codex, with a nudge before you run out. Read from logs on your Mac.</p></div>
+      <div class="mini"><h3>Light and Dark</h3><p>Paper by day, ink by night, or whatever your Mac uses. The terminal switches with it, and Claude Code follows with <code>/theme</code> on Auto.</p></div>
+      <div class="mini"><h3>Usage</h3><p>Session and plan limits for Claude Code and Codex, with a nudge before you run out. Read from logs on your Mac.</p></div>
       <div class="mini"><h3>Skills and MCP</h3><p>Browse and install skills and MCP servers from inside Vibex, for one project or all of them.</p></div>
       <div class="mini"><h3>Any agent</h3><p>The terminal runs Codex, Gemini CLI or Aider, and Vibex’s tools are a standard MCP server any client can use.</p></div>
     </div>
@@ -268,8 +268,9 @@ every phone, checked on iPhone SE.</pre></div>
     <div class="faq">
       <details><summary>Is it really free?</summary><p>Yes. It’s open source under the MIT license, with no paid tier, no trial and no account. You only pay for the AI tools you already use, like Claude Code.</p></details>
       <details><summary>Do I have to change how I work?</summary><p>No. It’s the real Claude Code, so your CLAUDE.md, skills, hooks and MCP servers carry over. Your repo stays as it is, and a full terminal is one tab away.</p></details>
-      <details><summary>What do I need?</summary><p>A Mac on macOS 26, plus Claude Code. Xcode 26 with an iOS simulator runtime is only needed for the simulator. Setup checks each one and installs what it can.</p></details>
-      <details><summary>Does it work with Codex?</summary><p>Yes. The terminal runs any agent CLI, and Vibex registers its MCP server and skill with Codex as well as Claude Code. AI Usage reads Codex’s limits too.</p></details>
+      <details><summary>What do I need?</summary><p>A Mac on macOS 26, plus Claude Code. Xcode 26 with an iOS simulator runtime is only needed for the simulator. Get Started checks each one and installs what it can.</p></details>
+      <details><summary>What happens the first time I open it?</summary><p>Settings opens on Get Started. One button installs Claude Code, Vibex’s skill and approval alerts and the <code>vibex</code> command, and asks for notifications. Only Full Disk Access and Xcode need you, once. Then open a folder: Claude Code is already running in its terminal.</p></details>
+      <details><summary>Does it work with Codex?</summary><p>Yes. The terminal runs any agent CLI, and Vibex registers its MCP server and skill with Codex as well as Claude Code. Usage reads Codex’s limits too.</p></details>
       <details><summary>What can it run?</summary><p>iOS and macOS apps from Xcode or XcodeGen, web apps with a dev server (npm, pnpm, yarn or bun), and Swift, Rust and Go command-line projects. Anything else runs in the terminal like always.</p></details>
       <details><summary>Is my code sent anywhere?</summary><p>Vibex sends your code nowhere itself. Claude Code talks to Anthropic as it always does, and usage numbers come from local logs. Vibex contacts GitHub for updates, and skills.sh and the MCP registry when you browse them.</p></details>
       <details><summary>How does it update?</summary><p>Vibex checks GitHub releases in the background and offers the new version in its own window, or you can run the install command again.</p></details>
